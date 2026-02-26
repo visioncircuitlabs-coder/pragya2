@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pragya-postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: pragya_dev
+      POSTGRES_USER: pragya_user
+      POSTGRES_PASSWORD: pragya_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pragya_user -d pragya_dev']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pragya-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: pragya-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pragya-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  pragya-network:
+    driver: bridge

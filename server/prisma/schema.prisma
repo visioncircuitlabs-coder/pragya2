@@ -1,0 +1,268 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  password           String
+  role               UserRole
+  emailVerified      Boolean             @default(false)
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  emailVerifications EmailVerification[]
+  employerProfile    EmployerProfile?
+  jobSeekerProfile   JobSeekerProfile?
+  refreshTokens      RefreshToken[]
+  studentProfile     StudentProfile?
+  userAssessments    UserAssessment[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model StudentProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  fullName          String
+  phone             String?
+  dateOfBirth       DateTime?
+  gender            String?
+  schoolName        String?
+  grade             String?
+  location          String?
+  state             String?
+  profilePictureUrl String?
+  isPragyaVerified  Boolean   @default(false)
+  verificationDate  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JobSeekerProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  fullName          String
+  phone             String?
+  dateOfBirth       DateTime?
+  gender            String?
+  location          String?
+  state             String?
+  educationLevel    String?
+  fieldOfStudy      String?
+  currentStatus     String?
+  yearsOfExperience Int?
+  resumeUrl         String?
+  profilePictureUrl String?
+  isPragyaVerified  Boolean   @default(false)
+  verificationDate  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmployerProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  companyName    String
+  companySize    String?
+  industry       String?
+  website        String?
+  contactPerson  String?
+  phone          String?
+  address        String?
+  companyLogoUrl String?
+  isVerified     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Assessment {
+  id              String           @id @default(cuid())
+  title           String
+  description     String?
+  type            AssessmentType
+  timeLimit       Int?
+  passingScore    Float?
+  isActive        Boolean          @default(true)
+  allowedRoles    UserRole[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  questions       Question[]
+  userAssessments UserAssessment[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  assessmentId  String
+  section       String
+  text          String
+  textMl        String?
+  orderIndex    Int
+  createdAt     DateTime       @default(now())
+  options       Option[]
+  assessment    Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  userResponses UserResponse[]
+
+  @@index([assessmentId])
+  @@index([section])
+}
+
+model Option {
+  id            String         @id @default(cuid())
+  questionId    String
+  text          String
+  textMl        String?
+  orderIndex    Int
+  isCorrect     Boolean        @default(false)
+  scoreValue    Int            @default(0)
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userResponses UserResponse[]
+
+  @@index([questionId])
+}
+
+model UserAssessment {
+  id                     String           @id @default(cuid())
+  userId                 String
+  assessmentId           String
+  status                 AssessmentStatus @default(NOT_STARTED)
+  startedAt              DateTime?
+  completedAt            DateTime?
+  totalScore             Float?
+  sectionScores          Json?
+  lastQuestionIndex      Int              @default(0)
+  ipAddress              String?
+  userAgent              String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  aiAnalyzedAt           DateTime?
+  aiInsights             Json?
+  aiSummary              String?
+  aptitudeScores         Json?
+  careerMatches          Json?
+  sectorMatches          Json?
+  clarityIndex           Int?
+  employabilityScores    Json?
+  personalityScores      Json?
+  reportGeneratedAt      DateTime?
+  reportUrl              String?
+  riasecCode             String?
+  riasecScores           Json?
+  academicReadinessIndex Int?
+  areasForImprovement    String[]
+  performanceLevel       String?
+  topStrengths           String[]
+  assessment             Assessment       @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user                   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses              UserResponse[]
+
+  @@unique([userId, assessmentId])
+  @@index([userId])
+  @@index([assessmentId])
+  @@index([status])
+}
+
+model UserResponse {
+  id               String         @id @default(cuid())
+  userAssessmentId String
+  questionId       String
+  selectedOptionId String
+  answeredAt       DateTime       @default(now())
+  question         Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption   Option         @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+  userAssessment   UserAssessment @relation(fields: [userAssessmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userAssessmentId, questionId])
+  @@index([userAssessmentId])
+  @@index([questionId])
+  @@index([selectedOptionId])
+}
+
+model Career {
+  id                String   @id @default(cuid())
+  title             String
+  titleMl           String?
+  description       String
+  descriptionMl     String?
+  riasecCodes       String
+  primaryCode       String
+  secondaryCode     String?
+  tertiaryCode      String?
+  industry          String
+  category          String
+  educationLevel    String
+  minLogicalScore   Int?     @default(0)
+  minNumericalScore Int?     @default(0)
+  minVerbalScore    Int?     @default(0)
+  minSpatialScore   Int?     @default(0)
+  personalityFit    String?
+  averageSalary     String?
+  growthProspect    String?
+  workEnvironment   String?
+  keySkills         String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([riasecCodes])
+  @@index([primaryCode])
+  @@index([industry])
+  @@index([category])
+}
+
+enum UserRole {
+  STUDENT
+  JOB_SEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum AssessmentType {
+  APTITUDE
+  PERSONALITY
+  EMPLOYABILITY
+}
+
+enum AssessmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}

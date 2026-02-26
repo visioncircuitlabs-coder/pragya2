@@ -1,0 +1,566 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+/**
+ * Careers Database for RIASEC-based matching
+ * 50+ careers spanning all 6 RIASEC types
+ */
+
+const careers = [
+    // REALISTIC (R) - Practical, hands-on work
+    {
+        title: 'Mechanical Engineer',
+        titleMl: 'മെക്കാനിക്കൽ എഞ്ചിനീയർ',
+        description: 'Designs, develops, and maintains mechanical systems and equipment.',
+        riasecCodes: 'RIC', primaryCode: 'R', secondaryCode: 'I', tertiaryCode: 'C',
+        industry: 'Manufacturing', category: 'Engineering', educationLevel: 'Graduate',
+        minLogicalScore: 60, minNumericalScore: 70, minSpatialScore: 65,
+        averageSalary: '₹5-12 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'CAD/CAM, Problem-solving, Technical drawing',
+    },
+    {
+        title: 'Electrician',
+        titleMl: 'ഇലക്ട്രീഷ്യൻ',
+        description: 'Installs, repairs, and maintains electrical systems in buildings.',
+        riasecCodes: 'RIC', primaryCode: 'R', secondaryCode: 'I', tertiaryCode: 'C',
+        industry: 'Construction', category: 'Skilled Trade', educationLevel: 'Diploma',
+        minLogicalScore: 50, minNumericalScore: 50,
+        averageSalary: '₹2.5-6 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Electrical systems, Safety protocols, Troubleshooting',
+    },
+    {
+        title: 'Civil Engineer',
+        titleMl: 'സിവിൽ എഞ്ചിനീയർ',
+        description: 'Designs and oversees construction of infrastructure projects.',
+        riasecCodes: 'RIC', primaryCode: 'R', secondaryCode: 'I', tertiaryCode: 'C',
+        industry: 'Construction', category: 'Engineering', educationLevel: 'Graduate',
+        minLogicalScore: 60, minNumericalScore: 65, minSpatialScore: 60,
+        averageSalary: '₹4-10 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'AutoCAD, Project management, Structural analysis',
+    },
+    {
+        title: 'Automobile Technician',
+        titleMl: 'ഓട്ടോമൊബൈൽ ടെക്നീഷ്യൻ',
+        description: 'Diagnoses and repairs vehicle mechanical and electrical systems.',
+        riasecCodes: 'RCI', primaryCode: 'R', secondaryCode: 'C', tertiaryCode: 'I',
+        industry: 'Automotive', category: 'Skilled Trade', educationLevel: 'Diploma',
+        minLogicalScore: 50, minSpatialScore: 55,
+        averageSalary: '₹2-5 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Diagnostics, Vehicle repair, Electronics',
+    },
+    {
+        title: 'Welder',
+        titleMl: 'വെൽഡർ',
+        description: 'Joins metal parts using welding equipment and techniques.',
+        riasecCodes: 'RCE', primaryCode: 'R', secondaryCode: 'C', tertiaryCode: 'E',
+        industry: 'Manufacturing', category: 'Skilled Trade', educationLevel: 'High School',
+        minSpatialScore: 50,
+        averageSalary: '₹2-4 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Welding techniques, Blueprint reading, Safety',
+    },
+    {
+        title: 'Carpenter',
+        titleMl: 'മരപ്പണിക്കാരൻ',
+        description: 'Constructs and repairs wooden structures and furniture.',
+        riasecCodes: 'RCE', primaryCode: 'R', secondaryCode: 'C', tertiaryCode: 'E',
+        industry: 'Construction', category: 'Skilled Trade', educationLevel: 'High School',
+        minSpatialScore: 55,
+        averageSalary: '₹2-5 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Woodworking, Measurement, Design reading',
+    },
+    {
+        title: 'Plumber',
+        titleMl: 'പ്ലംബർ',
+        description: 'Installs and repairs water supply and drainage systems.',
+        riasecCodes: 'RCI', primaryCode: 'R', secondaryCode: 'C', tertiaryCode: 'I',
+        industry: 'Construction', category: 'Skilled Trade', educationLevel: 'High School',
+        minLogicalScore: 45,
+        averageSalary: '₹2-4 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Pipe fitting, Problem-solving, Blueprint reading',
+    },
+    {
+        title: 'Heavy Equipment Operator',
+        titleMl: 'ഹെവി ഇക്വിപ്മെന്റ് ഓപ്പറേറ്റർ',
+        description: 'Operates heavy machinery like cranes, bulldozers, and excavators.',
+        riasecCodes: 'RCE', primaryCode: 'R', secondaryCode: 'C', tertiaryCode: 'E',
+        industry: 'Construction', category: 'Operations', educationLevel: 'High School',
+        minSpatialScore: 60,
+        averageSalary: '₹3-6 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Machine operation, Safety, Coordination',
+    },
+
+    // INVESTIGATIVE (I) - Analytical, research-oriented
+    {
+        title: 'Software Engineer',
+        titleMl: 'സോഫ്റ്റ്‌വെയർ എഞ്ചിനീയർ',
+        description: 'Designs, develops, and maintains software applications and systems.',
+        riasecCodes: 'IRC', primaryCode: 'I', secondaryCode: 'R', tertiaryCode: 'C',
+        industry: 'Technology', category: 'Engineering', educationLevel: 'Graduate',
+        minLogicalScore: 70, minNumericalScore: 60,
+        averageSalary: '₹6-25 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Programming, Problem-solving, System design',
+    },
+    {
+        title: 'Data Scientist',
+        titleMl: 'ഡാറ്റ സയന്റിസ്റ്റ്',
+        description: 'Analyzes complex data sets to extract insights and build predictive models.',
+        riasecCodes: 'ICA', primaryCode: 'I', secondaryCode: 'C', tertiaryCode: 'A',
+        industry: 'Technology', category: 'Analytics', educationLevel: 'Post-Graduate',
+        minLogicalScore: 75, minNumericalScore: 80,
+        averageSalary: '₹8-30 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Machine learning, Statistics, Python/R',
+    },
+    {
+        title: 'Research Scientist',
+        titleMl: 'ഗവേഷണ ശാസ്ത്രജ്ഞൻ',
+        description: 'Conducts scientific research to advance knowledge in a specific field.',
+        riasecCodes: 'IRA', primaryCode: 'I', secondaryCode: 'R', tertiaryCode: 'A',
+        industry: 'Research', category: 'Science', educationLevel: 'Post-Graduate',
+        minLogicalScore: 80, minNumericalScore: 70,
+        averageSalary: '₹6-15 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Research methodology, Data analysis, Scientific writing',
+    },
+    {
+        title: 'Medical Laboratory Technician',
+        titleMl: 'മെഡിക്കൽ ലാബ് ടെക്നീഷ്യൻ',
+        description: 'Performs laboratory tests to help diagnose and treat diseases.',
+        riasecCodes: 'IRC', primaryCode: 'I', secondaryCode: 'R', tertiaryCode: 'C',
+        industry: 'Healthcare', category: 'Medical', educationLevel: 'Diploma',
+        minLogicalScore: 55, minNumericalScore: 50,
+        averageSalary: '₹2.5-5 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Lab techniques, Equipment handling, Record keeping',
+    },
+    {
+        title: 'Pharmacist',
+        titleMl: 'ഫാർമസിസ്റ്റ്',
+        description: 'Dispenses medications and provides drug information to patients.',
+        riasecCodes: 'ICS', primaryCode: 'I', secondaryCode: 'C', tertiaryCode: 'S',
+        industry: 'Healthcare', category: 'Pharmacy', educationLevel: 'Graduate',
+        minLogicalScore: 60, minNumericalScore: 55,
+        averageSalary: '₹3-8 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Drug knowledge, Patient communication, Attention to detail',
+    },
+    {
+        title: 'Doctor / Physician',
+        titleMl: 'ഡോക്ടർ',
+        description: 'Diagnoses and treats patients with medical conditions.',
+        riasecCodes: 'ISR', primaryCode: 'I', secondaryCode: 'S', tertiaryCode: 'R',
+        industry: 'Healthcare', category: 'Medical', educationLevel: 'Post-Graduate',
+        minLogicalScore: 80, minNumericalScore: 65, minVerbalScore: 70,
+        averageSalary: '₹8-30 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Diagnosis, Patient care, Medical knowledge',
+    },
+    {
+        title: 'Economist',
+        titleMl: 'സാമ്പത്തിക ശാസ്ത്രജ്ഞൻ',
+        description: 'Studies economic data and trends to advise on policy and business decisions.',
+        riasecCodes: 'ICA', primaryCode: 'I', secondaryCode: 'C', tertiaryCode: 'A',
+        industry: 'Finance', category: 'Economics', educationLevel: 'Post-Graduate',
+        minLogicalScore: 70, minNumericalScore: 75,
+        averageSalary: '₹6-15 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Economic modeling, Data analysis, Research',
+    },
+    {
+        title: 'Biotechnologist',
+        titleMl: 'ബയോടെക്നോളജിസ്റ്റ്',
+        description: 'Applies biological processes to develop products and technologies.',
+        riasecCodes: 'IRA', primaryCode: 'I', secondaryCode: 'R', tertiaryCode: 'A',
+        industry: 'Biotechnology', category: 'Science', educationLevel: 'Graduate',
+        minLogicalScore: 70, minNumericalScore: 60,
+        averageSalary: '₹4-12 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'Lab techniques, Research, Bioinformatics',
+    },
+
+    // ARTISTIC (A) - Creative, expressive work
+    {
+        title: 'Graphic Designer',
+        titleMl: 'ഗ്രാഫിക് ഡിസൈനർ',
+        description: 'Creates visual content for print and digital media.',
+        riasecCodes: 'ARI', primaryCode: 'A', secondaryCode: 'R', tertiaryCode: 'I',
+        industry: 'Media', category: 'Design', educationLevel: 'Graduate',
+        minSpatialScore: 65,
+        averageSalary: '₹3-10 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Adobe Suite, Typography, Visual design',
+    },
+    {
+        title: 'Content Writer',
+        titleMl: 'കണ്ടന്റ് റൈറ്റർ',
+        description: 'Creates written content for websites, blogs, and marketing materials.',
+        riasecCodes: 'AIE', primaryCode: 'A', secondaryCode: 'I', tertiaryCode: 'E',
+        industry: 'Media', category: 'Writing', educationLevel: 'Graduate',
+        minVerbalScore: 70,
+        averageSalary: '₹3-8 LPA', growthProspect: 'High', workEnvironment: 'Remote',
+        keySkills: 'Writing, SEO, Research',
+    },
+    {
+        title: 'UI/UX Designer',
+        titleMl: 'UI/UX ഡിസൈനർ',
+        description: 'Designs user interfaces and experiences for digital products.',
+        riasecCodes: 'AIR', primaryCode: 'A', secondaryCode: 'I', tertiaryCode: 'R',
+        industry: 'Technology', category: 'Design', educationLevel: 'Graduate',
+        minLogicalScore: 55, minSpatialScore: 70,
+        averageSalary: '₹5-18 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Figma, User research, Prototyping',
+    },
+    {
+        title: 'Photographer',
+        titleMl: 'ഫോട്ടോഗ്രാഫർ',
+        description: 'Captures images for various purposes including events and commercial use.',
+        riasecCodes: 'ARE', primaryCode: 'A', secondaryCode: 'R', tertiaryCode: 'E',
+        industry: 'Media', category: 'Creative', educationLevel: 'Diploma',
+        minSpatialScore: 60,
+        averageSalary: '₹2-8 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Photography, Photo editing, Lighting',
+    },
+    {
+        title: 'Interior Designer',
+        titleMl: 'ഇന്റീരിയർ ഡിസൈനർ',
+        description: 'Designs interior spaces for functionality and aesthetics.',
+        riasecCodes: 'AER', primaryCode: 'A', secondaryCode: 'E', tertiaryCode: 'R',
+        industry: 'Design', category: 'Creative', educationLevel: 'Graduate',
+        minSpatialScore: 70,
+        averageSalary: '₹4-12 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Space planning, AutoCAD, Material selection',
+    },
+    {
+        title: 'Video Editor',
+        titleMl: 'വീഡിയോ എഡിറ്റർ',
+        description: 'Edits video content for films, commercials, and social media.',
+        riasecCodes: 'ARI', primaryCode: 'A', secondaryCode: 'R', tertiaryCode: 'I',
+        industry: 'Media', category: 'Creative', educationLevel: 'Diploma',
+        minSpatialScore: 55,
+        averageSalary: '₹3-10 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Premiere Pro, After Effects, Storytelling',
+    },
+    {
+        title: 'Fashion Designer',
+        titleMl: 'ഫാഷൻ ഡിസൈനർ',
+        description: 'Creates clothing and accessory designs for fashion industry.',
+        riasecCodes: 'AER', primaryCode: 'A', secondaryCode: 'E', tertiaryCode: 'R',
+        industry: 'Fashion', category: 'Design', educationLevel: 'Graduate',
+        minSpatialScore: 65,
+        averageSalary: '₹3-15 LPA', growthProspect: 'Medium', workEnvironment: 'Hybrid',
+        keySkills: 'Design software, Pattern making, Trend analysis',
+    },
+    {
+        title: 'Animator',
+        titleMl: 'ആനിമേറ്റർ',
+        description: 'Creates animated content for films, games, and digital media.',
+        riasecCodes: 'AIR', primaryCode: 'A', secondaryCode: 'I', tertiaryCode: 'R',
+        industry: 'Entertainment', category: 'Creative', educationLevel: 'Graduate',
+        minSpatialScore: 70, minLogicalScore: 50,
+        averageSalary: '₹4-15 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'Animation software, Drawing, Storytelling',
+    },
+
+    // SOCIAL (S) - Helping, teaching, caring
+    {
+        title: 'Nurse',
+        titleMl: 'നഴ്‌സ്',
+        description: 'Provides patient care and assists doctors in medical treatments.',
+        riasecCodes: 'SIR', primaryCode: 'S', secondaryCode: 'I', tertiaryCode: 'R',
+        industry: 'Healthcare', category: 'Medical', educationLevel: 'Diploma',
+        minVerbalScore: 55,
+        averageSalary: '₹2.5-6 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'Patient care, Medical knowledge, Communication',
+    },
+    {
+        title: 'Teacher / Educator',
+        titleMl: 'അധ്യാപകൻ',
+        description: 'Teaches students in schools or educational institutions.',
+        riasecCodes: 'SAE', primaryCode: 'S', secondaryCode: 'A', tertiaryCode: 'E',
+        industry: 'Education', category: 'Teaching', educationLevel: 'Graduate',
+        minVerbalScore: 65,
+        averageSalary: '₹3-8 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Communication, Subject expertise, Patience',
+    },
+    {
+        title: 'HR Manager',
+        titleMl: 'എച്ച്ആർ മാനേജർ',
+        description: 'Manages employee relations, recruitment, and workplace policies.',
+        riasecCodes: 'SEC', primaryCode: 'S', secondaryCode: 'E', tertiaryCode: 'C',
+        industry: 'Corporate', category: 'Human Resources', educationLevel: 'Graduate',
+        minVerbalScore: 60, minLogicalScore: 50,
+        averageSalary: '₹5-15 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'People management, Communication, Labor laws',
+    },
+    {
+        title: 'Social Worker',
+        titleMl: 'സോഷ്യൽ വർക്കർ',
+        description: 'Helps individuals and communities overcome challenges.',
+        riasecCodes: 'SEA', primaryCode: 'S', secondaryCode: 'E', tertiaryCode: 'A',
+        industry: 'Social Services', category: 'Community', educationLevel: 'Graduate',
+        minVerbalScore: 60,
+        averageSalary: '₹2.5-6 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Counseling, Community outreach, Empathy',
+    },
+    {
+        title: 'Counselor / Psychologist',
+        titleMl: 'കൗൺസലർ',
+        description: 'Provides mental health support and therapy to individuals.',
+        riasecCodes: 'SIA', primaryCode: 'S', secondaryCode: 'I', tertiaryCode: 'A',
+        industry: 'Healthcare', category: 'Mental Health', educationLevel: 'Post-Graduate',
+        minVerbalScore: 70, minLogicalScore: 55,
+        averageSalary: '₹4-12 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'Active listening, Therapy techniques, Empathy',
+    },
+    {
+        title: 'Customer Service Executive',
+        titleMl: 'കസ്റ്റമർ സർവീസ് എക്സിക്യൂട്ടീവ്',
+        description: 'Handles customer inquiries and resolves complaints.',
+        riasecCodes: 'SCE', primaryCode: 'S', secondaryCode: 'C', tertiaryCode: 'E',
+        industry: 'Services', category: 'Customer Support', educationLevel: 'High School',
+        minVerbalScore: 55,
+        averageSalary: '₹2-4 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Communication, Problem-solving, Patience',
+    },
+    {
+        title: 'Physiotherapist',
+        titleMl: 'ഫിസിയോതെറാപ്പിസ്റ്റ്',
+        description: 'Helps patients recover physical functionality through therapy.',
+        riasecCodes: 'SRI', primaryCode: 'S', secondaryCode: 'R', tertiaryCode: 'I',
+        industry: 'Healthcare', category: 'Medical', educationLevel: 'Graduate',
+        minLogicalScore: 50, minVerbalScore: 55,
+        averageSalary: '₹3-8 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'Physical therapy, Patient care, Anatomy',
+    },
+    {
+        title: 'Dietitian / Nutritionist',
+        titleMl: 'ഡയറ്റീഷ്യൻ',
+        description: 'Provides nutritional advice and creates diet plans.',
+        riasecCodes: 'SIC', primaryCode: 'S', secondaryCode: 'I', tertiaryCode: 'C',
+        industry: 'Healthcare', category: 'Nutrition', educationLevel: 'Graduate',
+        minLogicalScore: 50, minVerbalScore: 55,
+        averageSalary: '₹3-7 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Nutrition science, Communication, Assessment',
+    },
+
+    // ENTERPRISING (E) - Leadership, business-oriented
+    {
+        title: 'Business Development Manager',
+        titleMl: 'ബിസിനസ് ഡെവലപ്മെന്റ് മാനേജർ',
+        description: 'Identifies business opportunities and builds client relationships.',
+        riasecCodes: 'ECS', primaryCode: 'E', secondaryCode: 'C', tertiaryCode: 'S',
+        industry: 'Corporate', category: 'Sales', educationLevel: 'Graduate',
+        minVerbalScore: 65, minLogicalScore: 55,
+        averageSalary: '₹6-20 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Sales, Negotiation, Relationship building',
+    },
+    {
+        title: 'Marketing Manager',
+        titleMl: 'മാർക്കെറ്റിംഗ് മാനേജർ',
+        description: 'Develops and executes marketing strategies to promote products.',
+        riasecCodes: 'EAS', primaryCode: 'E', secondaryCode: 'A', tertiaryCode: 'S',
+        industry: 'Marketing', category: 'Marketing', educationLevel: 'Graduate',
+        minVerbalScore: 65, minLogicalScore: 50,
+        averageSalary: '₹6-18 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Digital marketing, Strategy, Analytics',
+    },
+    {
+        title: 'Sales Executive',
+        titleMl: 'സെയിൽസ് എക്സിക്യൂട്ടീവ്',
+        description: 'Sells products or services and maintains customer relationships.',
+        riasecCodes: 'ECS', primaryCode: 'E', secondaryCode: 'C', tertiaryCode: 'S',
+        industry: 'Sales', category: 'Sales', educationLevel: 'High School',
+        minVerbalScore: 55,
+        averageSalary: '₹2.5-8 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Communication, Persuasion, Customer handling',
+    },
+    {
+        title: 'Entrepreneur',
+        titleMl: 'സംരംഭകൻ',
+        description: 'Starts and manages own business ventures.',
+        riasecCodes: 'ERI', primaryCode: 'E', secondaryCode: 'R', tertiaryCode: 'I',
+        industry: 'Various', category: 'Business', educationLevel: 'Graduate',
+        minLogicalScore: 60, minVerbalScore: 60,
+        averageSalary: 'Variable', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Leadership, Risk-taking, Business acumen',
+    },
+    {
+        title: 'Real Estate Agent',
+        titleMl: 'റിയൽ എസ്റ്റേറ്റ് ഏജന്റ്',
+        description: 'Helps clients buy, sell, or rent properties.',
+        riasecCodes: 'ECS', primaryCode: 'E', secondaryCode: 'C', tertiaryCode: 'S',
+        industry: 'Real Estate', category: 'Sales', educationLevel: 'High School',
+        minVerbalScore: 55,
+        averageSalary: '₹3-15 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Negotiation, Market knowledge, Communication',
+    },
+    {
+        title: 'Event Manager',
+        titleMl: 'ഇവന്റ് മാനേജർ',
+        description: 'Plans and executes events like conferences and weddings.',
+        riasecCodes: 'EAS', primaryCode: 'E', secondaryCode: 'A', tertiaryCode: 'S',
+        industry: 'Events', category: 'Management', educationLevel: 'Graduate',
+        minLogicalScore: 50, minVerbalScore: 60,
+        averageSalary: '₹3-10 LPA', growthProspect: 'Medium', workEnvironment: 'Hybrid',
+        keySkills: 'Project management, Coordination, Creativity',
+    },
+    {
+        title: 'Product Manager',
+        titleMl: 'പ്രോഡക്ട് മാനേജർ',
+        description: 'Oversees product development from conception to launch.',
+        riasecCodes: 'EIC', primaryCode: 'E', secondaryCode: 'I', tertiaryCode: 'C',
+        industry: 'Technology', category: 'Management', educationLevel: 'Graduate',
+        minLogicalScore: 65, minVerbalScore: 60,
+        averageSalary: '₹10-35 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Product strategy, Stakeholder management, Analytics',
+    },
+    {
+        title: 'Lawyer / Advocate',
+        titleMl: 'അഭിഭാഷകൻ',
+        description: 'Provides legal advice and represents clients in court.',
+        riasecCodes: 'ESI', primaryCode: 'E', secondaryCode: 'S', tertiaryCode: 'I',
+        industry: 'Legal', category: 'Law', educationLevel: 'Graduate',
+        minLogicalScore: 70, minVerbalScore: 75,
+        averageSalary: '₹4-25 LPA', growthProspect: 'Medium', workEnvironment: 'Hybrid',
+        keySkills: 'Legal knowledge, Argumentation, Research',
+    },
+
+    // CONVENTIONAL (C) - Organized, detail-oriented work
+    {
+        title: 'Accountant',
+        titleMl: 'അക്കൗണ്ടന്റ്',
+        description: 'Manages financial records and prepares financial statements.',
+        riasecCodes: 'CIE', primaryCode: 'C', secondaryCode: 'I', tertiaryCode: 'E',
+        industry: 'Finance', category: 'Accounting', educationLevel: 'Graduate',
+        minNumericalScore: 70, minLogicalScore: 55,
+        averageSalary: '₹3-10 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Accounting software, Financial analysis, Taxation',
+    },
+    {
+        title: 'Bank Clerk',
+        titleMl: 'ബാങ്ക് ക്ലർക്ക്',
+        description: 'Handles banking transactions and customer service.',
+        riasecCodes: 'CSE', primaryCode: 'C', secondaryCode: 'S', tertiaryCode: 'E',
+        industry: 'Banking', category: 'Finance', educationLevel: 'Graduate',
+        minNumericalScore: 55,
+        averageSalary: '₹3-5 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Banking operations, Customer service, Accuracy',
+    },
+    {
+        title: 'Data Entry Operator',
+        titleMl: 'ഡാറ്റ എൻട്രി ഓപ്പറേറ്റർ',
+        description: 'Enters and manages data in computer systems.',
+        riasecCodes: 'CRI', primaryCode: 'C', secondaryCode: 'R', tertiaryCode: 'I',
+        industry: 'Various', category: 'Administrative', educationLevel: 'High School',
+        minNumericalScore: 50,
+        averageSalary: '₹1.5-3 LPA', growthProspect: 'Low', workEnvironment: 'Office',
+        keySkills: 'Typing speed, Accuracy, Computer skills',
+    },
+    {
+        title: 'Administrative Assistant',
+        titleMl: 'അഡ്മിനിസ്ട്രേറ്റീവ് അസിസ്റ്റന്റ്',
+        description: 'Provides administrative support to organizations.',
+        riasecCodes: 'CES', primaryCode: 'C', secondaryCode: 'E', tertiaryCode: 'S',
+        industry: 'Corporate', category: 'Administrative', educationLevel: 'High School',
+        minVerbalScore: 50,
+        averageSalary: '₹2-5 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Organization, Communication, MS Office',
+    },
+    {
+        title: 'Quality Control Inspector',
+        titleMl: 'ക്വാളിറ്റി കൺട്രോൾ ഇൻസ്പെക്ടർ',
+        description: 'Inspects products to ensure they meet quality standards.',
+        riasecCodes: 'CRI', primaryCode: 'C', secondaryCode: 'R', tertiaryCode: 'I',
+        industry: 'Manufacturing', category: 'Quality', educationLevel: 'Diploma',
+        minLogicalScore: 50, minNumericalScore: 45,
+        averageSalary: '₹2.5-5 LPA', growthProspect: 'Medium', workEnvironment: 'Office',
+        keySkills: 'Attention to detail, Quality standards, Documentation',
+    },
+    {
+        title: 'Supply Chain Coordinator',
+        titleMl: 'സപ്ലൈ ചെയിൻ കോർഡിനേറ്റർ',
+        description: 'Manages logistics and supply chain operations.',
+        riasecCodes: 'CER', primaryCode: 'C', secondaryCode: 'E', tertiaryCode: 'R',
+        industry: 'Logistics', category: 'Operations', educationLevel: 'Graduate',
+        minLogicalScore: 55, minNumericalScore: 55,
+        averageSalary: '₹4-10 LPA', growthProspect: 'High', workEnvironment: 'Hybrid',
+        keySkills: 'Logistics, ERP systems, Vendor management',
+    },
+    {
+        title: 'Tax Consultant',
+        titleMl: 'ടാക്സ് കൺസൾട്ടന്റ്',
+        description: 'Advises clients on tax planning and compliance.',
+        riasecCodes: 'CIE', primaryCode: 'C', secondaryCode: 'I', tertiaryCode: 'E',
+        industry: 'Finance', category: 'Taxation', educationLevel: 'Graduate',
+        minNumericalScore: 70, minLogicalScore: 60,
+        averageSalary: '₹4-15 LPA', growthProspect: 'High', workEnvironment: 'Office',
+        keySkills: 'Tax laws, Financial planning, Analysis',
+    },
+    {
+        title: 'Insurance Agent',
+        titleMl: 'ഇൻഷുറൻസ് ഏജന്റ്',
+        description: 'Sells insurance policies and advises clients on coverage.',
+        riasecCodes: 'CES', primaryCode: 'C', secondaryCode: 'E', tertiaryCode: 'S',
+        industry: 'Insurance', category: 'Sales', educationLevel: 'High School',
+        minVerbalScore: 55, minNumericalScore: 50,
+        averageSalary: '₹2-8 LPA', growthProspect: 'Medium', workEnvironment: 'Field',
+        keySkills: 'Sales, Product knowledge, Customer relations',
+    },
+];
+
+async function seedCareers() {
+    console.log('🚀 Starting Careers Database Seeding...\n');
+
+    // Clear existing careers
+    console.log('🗑️  Clearing existing careers...');
+    await prisma.career.deleteMany({});
+    console.log('✅ Cleared existing careers\n');
+
+    // Seed careers
+    console.log('📝 Seeding careers...');
+    let count = 0;
+
+    for (const career of careers) {
+        await prisma.career.create({
+            data: {
+                title: career.title,
+                titleMl: career.titleMl,
+                description: career.description,
+                riasecCodes: career.riasecCodes,
+                primaryCode: career.primaryCode,
+                secondaryCode: career.secondaryCode || null,
+                tertiaryCode: career.tertiaryCode || null,
+                industry: career.industry,
+                category: career.category,
+                educationLevel: career.educationLevel,
+                minLogicalScore: career.minLogicalScore || null,
+                minNumericalScore: career.minNumericalScore || null,
+                minVerbalScore: career.minVerbalScore || null,
+                minSpatialScore: career.minSpatialScore || null,
+                averageSalary: career.averageSalary || null,
+                growthProspect: career.growthProspect || null,
+                workEnvironment: career.workEnvironment || null,
+                keySkills: career.keySkills || null,
+            },
+        });
+        count++;
+    }
+
+    console.log(`✅ Created ${count} careers\n`);
+
+    // RIASEC distribution
+    const riasecCounts = await prisma.career.groupBy({
+        by: ['primaryCode'],
+        _count: { primaryCode: true },
+        orderBy: { primaryCode: 'asc' },
+    });
+
+    console.log('📊 RIASEC Distribution:');
+    riasecCounts.forEach(r => console.log(`   • ${r.primaryCode}: ${r._count.primaryCode} careers`));
+
+    console.log('\n🎉 Careers seeding completed successfully!');
+}
+
+seedCareers()
+    .then(async () => {
+        await prisma.$disconnect();
+        process.exit(0);
+    })
+    .catch(async (e) => {
+        console.error('❌ Error seeding careers:', e);
+        await prisma.$disconnect();
+        process.exit(1);
+    });

@@ -1,0 +1,40 @@
+{
+    "name": "pragya-monorepo",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Pragya Career Ecosystem - Full Stack Application",
+    "workspaces": [
+        "client",
+        "server",
+        "shared"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+        "dev:client": "npm run dev --workspace=client",
+        "dev:server": "npm run dev --workspace=server",
+        "build": "npm run build --workspaces",
+        "build:client": "npm run build --workspace=client",
+        "build:server": "npm run build --workspace=server",
+        "test": "npm run test --workspaces",
+        "test:client": "npm run test --workspace=client",
+        "test:server": "npm run test --workspace=server",
+        "lint": "npm run lint --workspaces",
+        "clean": "rimraf client/dist client/.next server/dist node_modules",
+        "docker:up": "docker-compose up -d",
+        "docker:down": "docker-compose down",
+        "docker:logs": "docker-compose logs -f"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2",
+        "rimraf": "^5.0.5",
+        "tailwindcss": "^4.2.0"
+    },
+    "engines": {
+        "node": ">=20.0.0",
+        "npm": ">=10.0.0"
+    },
+    "dependencies": {
+        "adm-zip": "^0.5.16",
+        "xmldom": "^0.6.0"
+    }
+}

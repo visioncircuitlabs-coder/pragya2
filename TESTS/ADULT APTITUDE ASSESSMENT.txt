@@ -1,0 +1,268 @@
+﻿PRAGYA 360" EMPLOYABILITY ASSESSMENT
+
+A) Logical & Analytical Reasoning (യുക്തിപരമായ ചിന്ത)
+A1 (E): If safety risk is high → stop work. Today risk is high. What should happen? സുരക്ഷാ ഭീഷണി കൂടുതലാണെങ്കിൽ ജോലി നിർത്തുക എന്നതാണ് നിയമം. ഇന്ന് ഭീഷണി കൂടുതലാണ്. എന്ത് ചെയ്യണം?
+* A. Stop work (ജോലി നിർത്തുക) ✅
+* B. Work faster (വേഗത്തിൽ ജോലി ചെയ്യുക)
+* C. Inform later only (പിന്നീട് അറിയിക്കുക)
+* D. Continue silently (ശബ്ദമില്ലാതെ തുടരുക)
+A2 (E): All "certified workers" are allowed inside. Raju is certified. What is correct? എല്ലാ "സർട്ടിഫൈഡ് തൊഴിലാളികൾക്കും" ഉള്ളിൽ പ്രവേശിക്കാം. രാജു സർട്ടിഫൈഡ് ആണ്. ഏതാണ് ശരി?
+* A. Raju is allowed (രാജുവിന് അനുമതിയുണ്ട്) ✅
+* B. Raju is not allowed (രാജുവിന് അനുമതിയില്ല)
+* C. No one is allowed (ആർക്കും അനുമതിയില്ല)
+* D. Cannot be known (പറയാൻ കഴിയില്ല)
+A3 (M): If fragile → top layer. If wet → separate box. Which item needs separate box AND top layer? പൊട്ടാൻ സാധ്യതയുള്ളവ (Fragile) ഏറ്റവും മുകളിൽ വെക്കണം. നനഞ്ഞവ (Wet) പ്രത്യേക ബോക്സിൽ വെക്കണം. പ്രത്യേക ബോക്സും ടോപ്പ് ലെയറും ആവശ്യമായത് ഏതിന്?
+* A. Dry non-fragile (ഉണങ്ങിയ പൊട്ടാത്ത വസ്തു)
+* B. Wet fragile (നനഞ്ഞ പൊട്ടാൻ സാധ്യതയുള്ള വസ്തു) ✅
+* C. Dry fragile (ഉണങ്ങിയ പൊട്ടാൻ സാധ്യതയുള്ള വസ്തു)
+* D. Wet non-fragile (നനഞ്ഞ പൊട്ടാത്ത വസ്തു)
+A4 (M): "If overheated, it slows down." The machine is NOT slowing down. "ചൂട് കൂടിയാൽ മെഷീൻ വേഗത കുറയ്ക്കും." മെഷീൻ വേഗത കുറയ്ക്കുന്നില്ല. ഇതിനർത്ഥം:
+* A. Machine is overheated (ചൂട് കൂടുതലാണ്)
+* B. Machine is NOT overheated (ചൂട് കൂടിയിട്ടില്ല) ✅
+* C. Machine is broken (മെഷീൻ കേടാണ്)
+* D. Cannot say (പറയാൻ കഴിയില്ല)
+
+A5 (M): P is faster than Q. R is slower than Q. Who is slowest? P, Q-വിനേക്കാൾ വേഗമുള്ളവനാണ്. R, Q-വിനേക്കാൾ വേഗത കുറഞ്ഞവനാണ്. ഏറ്റവും വേഗത കുറഞ്ഞത് ആര്?
+* A. P
+* B. Q
+* C. R ✅
+* D. Cannot say (പറയാൻ കഴിയില്ല)
+A6 (M): If C2 fails, product must not go to C3. Today C2 failed. What is correct? C2 പരാജയപ്പെട്ടാൽ ഉൽപ്പന്നം C3-ലേക്ക് അയക്കാൻ പാടില്ല. ഇന്ന് C2 പരാജയപ്പെട്ടു. ഏതാണ് ശരി?
+* A. Send to C3 (C3-ലേക്ക് അയക്കുക)
+* B. Skip C3 (C3 ഒഴിവാക്കുക) ✅
+* C. Repeat C1 (C1 വീണ്ടും ചെയ്യുക)
+* D. No action (ഒന്നും ചെയ്യേണ്ടതില്ല)
+A7 (H): Start Task B only if Task A is finished AND power is stable. Today: A finished, power unstable. ടാസ്ക് A കഴിയുകയും പവർ സ്റ്റേബിൾ ആയിരിക്കുകയും ചെയ്താൽ മാത്രം B തുടങ്ങുക. ഇന്ന്: A കഴിഞ്ഞു, പവർ അസ്ഥിരമാണ്.
+* A. Start Task B (B തുടങ്ങുക)
+* B. Don't start Task B (B തുടങ്ങരുത്) ✅
+* C. Start Task B slowly (പതുക്കെ തുടങ്ങുക)
+* D. Start and inform later (തുടങ്ങുക, ശേഷം അറിയിക്കുക)
+A8 (H): Reject if (small AND metal) OR (large AND cracked). Which will be accepted? ചെറുതും ലോഹവും ആയവ, അല്ലെങ്കിൽ വലുതും വിള്ളലുള്ളതും ആയവ ഒഴിവാക്കുക. താഴെ പറയുന്നവയിൽ ഏത് സ്വീകരിക്കും?
+* A. Small metal (ചെറിയ ലോഹം)
+* B. Large cracked (വലിയ വിള്ളലുള്ളത്)
+* C. Small plastic (ചെറിയ പ്ലാസ്റ്റിക്) ✅
+* D. Large cracked but clean (വൃത്തിയുള്ള വലിയ വിള്ളലുള്ള വസ്തു)
+
+B) Numerical Reasoning (ഗണിതപരമായ ചിന്ത)
+B1 (E): You earn ₹900 for 9 hours. Pay per hour? 9 മണിക്കൂർ ജോലിക്ക് ₹900 ലഭിക്കുന്നു. ഒരു മണിക്കൂർ കൂലി എത്ര?
+* A. ₹80
+* B. ₹90
+* C. ₹100 ✅
+* D. ₹120
+B2 (E): A worker makes 6 pieces in 1 hour. In 2 hours, how many? ഒരു തൊഴിലാളി 1 മണിക്കൂറിൽ 6 എണ്ണം നിർമ്മിക്കുന്നു. 2 മണിക്കൂറിൽ എത്ര എണ്ണം?
+* A. 8
+* B. 10
+* C. 12 ✅
+* D. 18
+B3 (M): Buy for ₹240, sell for ₹300. What is the gain? ₹240-ന് വാങ്ങി ₹300-ന് വിറ്റു. ലാഭം എത്ര?
+* A. ₹40
+* B. ₹50
+* C. ₹60 ✅
+* D. ₹80
+B4 (M): Bus A: 120 km in 3 hrs. Bus B: 150 km in 4 hrs. Which is faster? ബസ് A: 3 മണിക്കൂറിൽ 120 കി.മീ. ബസ് B: 4 മണിക്കൂറിൽ 150 കി.മീ. വേഗത കൂടുതൽ ഏതിന്?
+* A. A ✅
+* B. B
+* C. Same (തുല്യം)
+* D. Cannot say
+B5 (M): 4 people take 8 hours. 8 people (same speed) take how long? 4 പേർക്ക് ഒരു ജോലി തീർക്കാൻ 8 മണിക്കൂർ വേണം. എങ്കിൽ 8 പേർക്ക് എത്ര സമയം വേണം?
+* A. 2 hrs
+* B. 4 hrs ✅
+* C. 6 hrs
+* D. 8 hrs
+B6 (M): 5 screen guards used per day. A pack of 60 lasts about: ദിവസം 5 സ്ക്രീൻ ഗാർഡുകൾ ഉപയോഗിക്കുന്നു. 60 എണ്ണമുള്ള ഒരു പാക്കറ്റ് എത്ര ദിവസം വരും?
+* A. 10 days
+* B. 12 days ✅
+* C. 15 days
+* D. 20 days
+B7 (H): Output drops from 40 to 30 units/day. For 300 units, extra days needed? ഉൽപ്പാദനം പ്രതിദിനം 40-ൽ നിന്ന് 30-ലേക്ക് കുറഞ്ഞു. 300 എണ്ണം തീർക്കാൻ എത്ര അധികം ദിവസം വേണം?
+* A. 1 day
+* B. 2 days ✅
+* C. 3 days
+* D. 4 days
+B8 (H): Price increases by 25%. How much of earlier quantity can you buy with same money? വില 25% കൂടി. അതേ പണം കൊണ്ട് പഴയ അളവിന്റെ എത്ര ഭാഗം വാങ്ങാൻ കഴിയും?
+* A. Same
+* B. 80% ✅
+* C. 60%
+* D. 40%
+
+C) Verbal Reasoning (ഭാഷാപരമായ ധാരണ)
+C1 (E): "Helmet compulsory in this area." Best action: "ഈ ഭാഗത്ത് ഹെൽമെറ്റ് നിർബന്ധമാണ്." ഏറ്റവും നല്ല നടപടി:
+* A. Wear helmet (ധരിക്കുക) ✅
+* B. Carry (കൈയ്യിൽ പിടിക്കുക)
+* C. Wear later
+* D. Ignore
+C2 (E): "Submit report by 5 PM." means: "റിപ്പോർട്ട് വൈകുന്നേരം 5 മണിക്ക് മുൻപായി നൽകുക" എന്നാൽ:
+* A. Anytime
+* B. Before 5 PM ✅
+* C. After 5 PM
+* D. Next day
+C3 (M): "Do not switch on until indicator turns green." It is red now. "ഇൻഡിക്കേറ്റർ പച്ചയാകുന്നതുവരെ ഓൺ ചെയ്യരുത്." ഇപ്പോൾ ചുവപ്പാണ്. എന്ത് ചെയ്യണം?
+* A. Switch on
+* B. Wait (കാത്തിരിക്കുക) ✅
+* C. Shake
+* D. Call someone
+C4 (M): "If delays continue, delivery will be rescheduled." Delays continue. "താമസം തുടർന്നാൽ ഡെലിവറി സമയം മാറ്റും." താമസം തുടരുന്നു. എന്ത് സംഭവിക്കും?
+* A. Earlier
+* B. Cancelled
+* C. Rescheduled (സമയം മാറ്റും) ✅
+* D. Guaranteed
+C5 (M): Which is the clearest instruction? ഏറ്റവും വ്യക്തമായ നിർദ്ദേശം ഏതാണ്?
+* A. Do it neatly
+* B. Do it quickly
+* C. Put labels on all boxes (എല്ലാ ബോക്സിലും ലേബൽ ഒട്ടിക്കുക) ✅
+* D. Handle carefully
+C6 (M): "Finish this first. Then help others if time remains." Correct priority? "ആദ്യം ഇത് തീർക്കുക. സമയം ബാക്കിയുണ്ടെങ്കിൽ മാത്രം മറ്റുള്ളവരെ സഹായിക്കുക." ശരിയായ ക്രമം?
+* A. Help others first
+* B. Finish your work first (സ്വന്തം ജോലി ആദ്യം തീർക്കുക) ✅
+* C. Both
+* D. Skip
+C7 (H): "Inform me if the issue repeats." The issue repeats 3 times. "പ്രശ്നം ആവർത്തിച്ചാൽ അറിയിക്കുക." അത് 3 തവണ ആവർത്തിച്ചു. എന്ത് ചെയ്യണം?
+* A. Wait
+* B. Inform now (ഉടൻ അറിയിക്കുക) ✅
+* C. Fix silently
+* D. Ignore
+C8 (H): "I didn't break the tool, but I used it last." This means: "ഞാനല്ല ഇത് പൊട്ടിച്ചത്, പക്ഷെ അവസാനം ഉപയോഗിച്ചത് ഞാനാണ്." ഇതിനർത്ഥം:
+* A. He broke it
+* B. Someone else may have broken it (മറ്റാരെങ്കിലുമാകാം പൊട്ടിച്ചത്) ✅
+* C. Not broken
+* D. Never used
+
+D) Spatial & Visual Reasoning (രൂപങ്ങളും ദിശകളും)
+
+D1 (E): Rotation: ▲ → ▶ → ▼ → ?
+* A. ◀ ✅
+* B. ▲
+* C. ■
+* D. ○
+D2 (E): ⬛ ▢ ⬛ ▢ ⬛ ?
+* A. ⬛
+* B. ▢ ✅
+* C. △
+* D. ○
+D3 (M): Adds one side: Triangle (3) → Square (4) → Pentagon (5) → ? ഓരോ വശം കൂടി വരുന്നു: ത്രികോണം (3) → ചതുരം (4) → പഞ്ചഭുജം (5) → ?
+* A. Triangle
+* B. Hexagon (ഷഡ്ഭുജം-6) ✅
+* C. Octagon
+* D. Circle
+D4 (M): Mirror → rotate 90°. Start: ▶ ക്രമം: പ്രതിബിംബം → 90° തിരിക്കുക. തുടക്കം: ▶
+* A. ▲ ✅
+* B. ▼
+* C. ▶
+* D. ◀
+D5 (M): Outer same, inner changes: □• □× □• □× ? പുറമെ ഒരേപോലെ, ഉള്ളിലെ അടയാളം മാറുന്നു. അടുത്തത് ഏത്?
+* A. □• ✅
+* B. □×
+* C. ○•
+* D. △•
+D6 (M): Which pair does NOT follow the rule? ഏതാണ് നിയമം പാലിക്കാത്ത ജോഡി?
+* A. ⬜→◻︎
+* B. ⬛→◼︎
+* C. △→▲
+* D. ⬜→◼︎ ✅
+D7 (H): Rotates 90° AND alternates fill. Start: ◻︎ (hollow), Step 1: ◼︎ (filled). Step 2? 90° തിരിയുന്നു, ഒപ്പം നിറം മാറുന്നു. ഘട്ടം 2 എന്തായിരിക്കും?
+* A. ◻︎ (hollow) ✅
+* B. ◼︎ (filled)
+* C. △
+* D. ○
+D8 (H): Row: Shape 1 + Shape 2 = Shape 3. (Same = filled). Row: ◻︎ + ◻︎ → ? വരി: 1 + 2 = 3. (ഒരേ രൂപം വന്നാൽ ഉള്ളിൽ നിറയുന്നു). ◻︎ + ◻︎ എന്നാൽ:
+* A. ◻︎
+* B. ◼︎ ✅
+* C. △
+* D. ○
+
+E) Attention & Speed (ശ്രദ്ധയും വേഗതയും)
+E1 (E): Find the exactly identical pair: കൃത്യമായി ഒരുപോലെയുള്ള ജോഡി കണ്ടെത്തുക:
+* A. ABBA - ABAB
+* B. ABAB - BABA
+* C. ABBA - ABBA ✅
+* D. AABB - ABAB
+E2 (E): Which is different in pattern type? ക്രമത്തിൽ വ്യത്യാസമുള്ളത് ഏത്?
+* A. 7-7-7
+* B. 4-4-4
+* C. 9-9-9
+* D. 8-9-8 ✅
+E3 (M): Which violates the rule "+2 each step"? "+2 വീതം കൂടുക" എന്ന നിയമം തെറ്റിക്കുന്നത് ഏത്?
+* A. 3,5,8,9 ✅
+* B. 2,4,6,8
+* C. 6,8,10,12
+* D. 1,3,5,7
+E4 (M): Rule: Circle after Triangle; Triangle after Square. Square, Triangle, Circle, Square, Triangle, ___? നിയമം: ത്രികോണത്തിന് ശേഷം വട്ടം; ചതുരത്തിന് ശേഷം ത്രികോണം. എങ്കിൽ വിട്ട ഭാഗം പൂരിപ്പിക്കുക.
+* A. Square
+* B. Triangle
+* C. Circle ✅
+* D. Stop
+E5 (M): Which string has exactly two 'A's? കൃത്യം രണ്ട് 'A' ഉള്ളത് ഏതിൽ?
+* A. BBAAB ✅
+* B. ABAAA
+* C. AABAA
+* D. BBBBB
+E6 (M): Middle symbol is different from both sides: നടുവിലത്തെ ചിഹ്നം രണ്ട് വശങ്ങളിൽ നിന്നും വ്യത്യസ്തമായത് ഏത്?
+* A. ○○○
+* B. ▲▲▲
+* C. ■□■ ✅
+* D. ●●●
+E7 (H): If two same in a row, choose 'STOP'. Scan: A B C C D E അടുത്തടുത്തായി രണ്ട് ഒരേ അക്ഷരങ്ങൾ കണ്ടാൽ 'STOP' തിരഞ്ഞെടുക്കുക. ഇതിൽ ഏതാണ് ഉത്തരം?
+* A. GO
+* B. STOP ✅
+* C. REPEAT
+* D. IGNORE
+E8 (H): Pattern: 1st and 3rd same, 2nd and 4th same. ക്രമം: ഒന്നും മൂന്നും ഒരേപോലെ, രണ്ടും നാലും ഒരേപോലെ. ഏതാണ് ശരി?
+* A. A B A B ✅
+* B. A A B B
+* C. A B B A
+* D. A A A B
+
+F) Work-Style Problem Solving (ജോലിസ്ഥലത്തെ തീരുമാനങ്ങൾ)
+F1 (E): Mistake fixable safely in 1 minute. Best action: ഒരു തെറ്റ് 1 മിനിറ്റിൽ സുരക്ഷിതമായി തിരുത്താം. എന്ത് ചെയ്യണം?
+* A. Fix safely and inform (തിരുത്തി അറിയിക്കുക) ✅
+* B. Ignore
+* C. Wait
+* D. Tell others
+F2 (E): Material is missing and work will stop. Best first step: സാമഗ്രികൾ തീർന്നതിനാൽ ജോലി തടസ്സപ്പെടുന്നു. ആദ്യം എന്ത് ചെയ്യണം?
+* A. Continue wrongly
+* B. Inform supervisor (മേലധികാരിയെ അറിയിക്കുക) ✅
+* C. Leave
+* D. Wait silently
+F3 (M): A customer gives unclear requirements. Best action: ഉപഭോക്താവ് വ്യക്തമല്ലാത്ത ആവശ്യങ്ങൾ നൽകുന്നു. എന്ത് ചെയ്യണം?
+* A. Guess
+* B. Ask clear questions (ചോദിച്ച് വ്യക്തത വരുത്തുക) ✅
+* C. Start and change later
+* D. Avoid
+F4 (M): A coworker repeats the same error daily. Best approach: സഹപ്രവർത്തകൻ എന്നും ഒരേ തെറ്റ് ആവർത്തിക്കുന്നു. എന്ത് ചെയ്യണം?
+* A. Mock them
+* B. Explain politely (മര്യാദയോടെ പറഞ്ഞു കൊടുക്കുക) ✅
+* C. Ignore
+* D. Report immediately
+F5 (M): A new method is introduced. You are unsure. Best action: പുതിയൊരു രീതി അവതരിപ്പിച്ചു. നിങ്ങൾക്ക് ഉറപ്പില്ല. എന്ത് ചെയ്യണം?
+* A. Continue old method
+* B. Confirm steps and proceed (ചോദിച്ച് ഉറപ്പുവരുത്തി തുടങ്ങുക) ✅
+* C. Refuse
+* D. Delay
+F6 (M): Quality is dropping because of speed pressure. Best decision: വേഗത്തിൽ ചെയ്യാനുള്ള സമ്മർദ്ദം കാരണം ഗുണനിലവാരം കുറയുന്നു. എന്ത് ചെയ്യണം?
+* A. Maintain quality and communicate (ഗുണനിലവാരം ഉറപ്പാക്കി സമയം അറിയിക്കുക) ✅
+* B. Hide defects
+* C. Skip checks
+* D. Rush
+F7 (H): A machine makes unusual sound. Stopping it may delay delivery. Best action: മെഷീൻ അസാധാരണമായ ശബ്ദമുണ്ടാക്കുന്നു. നിർത്തിയാൽ ഡെലിവറി വൈകും. എന്ത് ചെയ്യണം?
+* A. Continue
+* B. Stop safely and report (നിർത്തി ഉടൻ റിപ്പോർട്ട് ചെയ്യുക) ✅
+* C. Increase speed
+* D. Ask customer
+F8 (H): If output doubles while cost rises slightly, efficiency: ചെലവ് അല്പം മാത്രം കൂടിയപ്പോൾ ഉൽപ്പാദനം ഇരട്ടിയായെങ്കിൽ, കാര്യക്ഷമത (Efficiency):
+* A. Decreases (കുറയുന്നു)
+* B. Stays same (മാറ്റമില്ല)
+* C. Improves (കൂടുന്നു/മെച്ചപ്പെടുന്നു) ✅
+* D. Cannot say (പറയാൻ കഴിയില്ല)
+
+
+
+
+
+
+
+
+
+
+
+
+
