@@ -55,8 +55,8 @@ export class AuthService {
         // Generate email verification token
         const verificationToken = await this.createEmailVerificationToken(user.id);
 
-        // Send verification email (non-blocking)
-        this.emailService.sendVerificationEmail(user.email, verificationToken).catch(console.error);
+        // Send OTP email (non-blocking)
+        this.emailService.sendOtpEmail(user.email, verificationToken).catch(console.error);
 
         // Generate tokens
         const tokens = await this.generateTokens(user.id, user.email, user.role);
@@ -228,11 +228,26 @@ export class AuthService {
         if (!user) {
             // Don't reveal if user exists
             this.logger.log(`Verification resend attempted for non-existent email: ${email.substring(0, 3)}...`);
-            return { message: 'If this email exists, a verification link has been sent' };
+            return { message: 'If this email exists, a verification code has been sent' };
         }
 
         if (user.emailVerified) {
             throw new BadRequestException('Email is already verified');
+        }
+
+        // 60-second cooldown check
+        const lastToken = await this.prisma.emailVerification.findFirst({
+            where: { userId: user.id },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        if (lastToken) {
+            const secondsSinceLastSend = (Date.now() - lastToken.createdAt.getTime()) / 1000;
+            if (secondsSinceLastSend < 60) {
+                throw new BadRequestException(
+                    `Please wait ${Math.ceil(60 - secondsSinceLastSend)} seconds before requesting a new code`,
+                );
+            }
         }
 
         // Delete old tokens
@@ -240,16 +255,16 @@ export class AuthService {
             where: { userId: user.id },
         });
 
-        // Create new token
-        const verificationToken = await this.createEmailVerificationToken(user.id);
-        await this.emailService.sendVerificationEmail(user.email, verificationToken);
+        // Create new OTP
+        const otp = await this.createEmailVerificationToken(user.id);
+        await this.emailService.sendOtpEmail(user.email, otp);
 
         this.logger.logBusinessEvent('VERIFICATION_EMAIL_RESENT', {
             userId: user.id,
             email: user.email,
         });
 
-        return { message: 'If this email exists, a verification link has been sent' };
+        return { message: 'If this email exists, a verification code has been sent' };
     }
 
     async getMe(userId: string) {
@@ -324,19 +339,20 @@ export class AuthService {
     }
 
     private async createEmailVerificationToken(userId: string): Promise<string> {
-        const token = randomBytes(32).toString('hex');
+        // Generate 6-digit OTP (100000–999999)
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
         const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours
+        expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minutes
 
         await this.prisma.emailVerification.create({
             data: {
                 userId,
-                token,
+                token: otp,
                 expiresAt,
             },
         });
 
-        return token;
+        return otp;
     }
 
     private sanitizeUser(user: any) {

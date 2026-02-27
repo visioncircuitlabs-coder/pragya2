@@ -55,7 +55,7 @@ export default function Register() {
                 fullName: formData.fullName,
                 companyName: formData.role === UserRole.EMPLOYER ? formData.companyName : undefined
             });
-            router.push('/dashboard');
+            router.push('/verify-email');
         } catch (err: unknown) {
             const errorData = err as { response?: { data?: { message?: string } }; message?: string };
             const errorMessage = typeof errorData === 'string' ? errorData :

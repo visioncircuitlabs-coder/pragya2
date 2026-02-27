@@ -38,12 +38,14 @@ export class AuthController {
     }
 
     @Post('verify-email')
+    @Throttle({ default: { limit: 5, ttl: 600000 } })
     @HttpCode(HttpStatus.OK)
     async verifyEmail(@Body() dto: VerifyEmailDto) {
         return this.authService.verifyEmail(dto.token);
     }
 
     @Post('resend-verification')
+    @Throttle({ default: { limit: 5, ttl: 600000 } })
     @HttpCode(HttpStatus.OK)
     async resendVerification(@Body() dto: ResendVerificationDto) {
         return this.authService.resendVerification(dto.email);

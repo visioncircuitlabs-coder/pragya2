@@ -72,6 +72,48 @@ export class EmailService {
         }
     }
 
+    async sendOtpEmail(email: string, otp: string): Promise<void> {
+        const mailOptions = {
+            from: this.configService.get('EMAIL_FROM') || 'noreply@pragya.in',
+            to: email,
+            subject: 'Your Pragya verification code',
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #014b3b;">Verify your email</h1>
+          <p>Use the following 6-digit code to verify your Pragya account:</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #014b3b; background: #f0fdf4; padding: 16px 32px; border-radius: 12px; display: inline-block;">
+              ${otp}
+            </span>
+          </div>
+          <p style="color: #666;">This code expires in <strong>10 minutes</strong>.</p>
+          <p style="color: #666;">If you didn't create a Pragya account, you can safely ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"/>
+          <p style="color: #999; font-size: 12px;">Pragya - India's Pioneer Youth-Developed Career Ecosystem</p>
+        </div>
+      `,
+        };
+
+        if (this.transporter) {
+            try {
+                await this.transporter.sendMail(mailOptions);
+                this.logger.log(`OTP email sent to ${email}`);
+            } catch (error) {
+                this.logger.error(`Failed to send OTP email to ${email}:`, error);
+                throw error;
+            }
+        } else {
+            // Log OTP to console for development
+            this.logger.log(`
+        ========== OTP EMAIL ==========
+        To: ${email}
+        Subject: ${mailOptions.subject}
+        OTP Code: ${otp}
+        ===============================
+      `);
+        }
+    }
+
     async sendPasswordResetEmail(email: string, token: string): Promise<void> {
         const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3001';
         const resetUrl = `${frontendUrl}/reset-password?token=${token}`;

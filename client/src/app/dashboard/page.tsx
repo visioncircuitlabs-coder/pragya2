@@ -73,6 +73,13 @@ export default function DashboardPage() {
         }
     }, [isLoading, isAuthenticated, router]);
 
+    // Redirect unverified users to OTP page
+    useEffect(() => {
+        if (!isLoading && isAuthenticated && user && !user.emailVerified) {
+            router.push('/verify-email');
+        }
+    }, [isLoading, isAuthenticated, user, router]);
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -219,8 +226,11 @@ export default function DashboardPage() {
                                         <p className="text-sm text-gray-600 mb-3">
                                             Please verify your email address to unlock all features of the platform.
                                         </p>
-                                        <button className="text-sm font-semibold text-amber-700 hover:text-amber-800 underline">
-                                            Resend Verification Link
+                                        <button
+                                            onClick={() => router.push('/verify-email')}
+                                            className="text-sm font-semibold text-amber-700 hover:text-amber-800 underline"
+                                        >
+                                            Verify Email
                                         </button>
                                     </div>
                                 </div>
