@@ -327,7 +327,7 @@ export class AssessmentsService {
                 studentScores.riasec as any,
                 studentScores.aptitude,
             );
-            // Convert student personality (3-point scale) to job-seeker format (5-point scale)
+            // Convert student personality (4-point scale) to job-seeker format (5-point scale)
             // so sector matching can compute meaningful personalityFit scores
             const studentToJobSeekerTraitMap: Record<string, string> = {
                 'Responsibility & Discipline': 'Work Discipline & Task Reliability',
@@ -341,10 +341,10 @@ export class AssessmentsService {
             for (const [studentTrait, jobSeekerTrait] of Object.entries(studentToJobSeekerTraitMap)) {
                 const traitData = studentScores.personality[studentTrait];
                 if (traitData) {
-                    // Student: 6 questions × 3-point scale (score range 6-18, avg 1-3)
-                    // Sector ideal: 1-5 scale. Map 1-3 → 1-5: mapped = 1 + (avg - 1) * 2
+                    // Student: 6 questions × 4-point scale (score range 6-24, avg 1-4)
+                    // Sector ideal: 1-5 scale. Map 1-4 → 1-5: mapped = 1 + (avg - 1) * (4/3)
                     const avgPerQuestion = traitData.score / 6;
-                    const mappedAverage = 1 + (avgPerQuestion - 1) * 2;
+                    const mappedAverage = 1 + (avgPerQuestion - 1) * (4 / 3);
                     convertedPersonality[jobSeekerTrait] = {
                         score: traitData.score,
                         maxScore: traitData.maxScore,

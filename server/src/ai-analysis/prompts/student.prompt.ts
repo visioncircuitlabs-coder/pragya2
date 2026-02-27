@@ -75,7 +75,7 @@ ${aptitudeLines}
 Holland Code: ${riasecCode} (${hollandCodeExpanded})
 ${riasecLines}
 
-## MODULE 3: PERSONALITY TRAITS (3-point scale per question, 6 questions per trait)
+## MODULE 3: PERSONALITY TRAITS (4-point scale per question, 6 questions per trait)
 ${personalityLines}
 
 ## MODULE 4: SKILL & CAREER READINESS (4-point scale per question, 6 questions per section)

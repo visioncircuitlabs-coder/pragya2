@@ -68,7 +68,7 @@ const PERSONALITY_SECTIONS = [
     'Integrity & Responsibility',
 ];
 
-// Student personality trait sections (3-point scale)
+// Student personality trait sections (4-point scale)
 const STUDENT_PERSONALITY_SECTIONS = [
     'Responsibility & Discipline',
     'Stress Tolerance',
@@ -150,11 +150,11 @@ export interface StudentRiasecScores {
     C: number;
 }
 
-// Student Personality scores (3-point scale, 6 questions per trait)
+// Student Personality scores (4-point scale, 6 questions per trait)
 export interface StudentPersonalityScores {
     [trait: string]: {
         score: number;
-        maxScore: number; // 18 per trait (6 questions × 3 max)
+        maxScore: number; // 24 per trait (6 questions × 4 max)
         level: 'Emerging' | 'Moderate' | 'Strong';
     };
 }
@@ -288,9 +288,13 @@ export class ScoringService {
             scores[code] = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
         }
 
-        // Generate Holland Code (top 3 highest scores)
+        // Generate Holland Code (top 3 highest scores, canonical RIASEC order for ties)
+        const canonicalOrder = ['R', 'I', 'A', 'S', 'E', 'C'];
         const sortedCodes = (Object.entries(scores) as [keyof RiasecScores, number][])
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => {
+                if (b[1] !== a[1]) return b[1] - a[1]; // Primary: higher score first
+                return canonicalOrder.indexOf(a[0]) - canonicalOrder.indexOf(b[0]); // Tie-breaker: canonical order
+            })
             .map(([code]) => code);
         const hollandCode = sortedCodes.slice(0, 3).join('');
 
@@ -499,8 +503,13 @@ export class ScoringService {
             scores[code] = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
         }
 
+        // Canonical RIASEC order for tie-breaking
+        const canonicalOrder = ['R', 'I', 'A', 'S', 'E', 'C'];
         const sortedCodes = (Object.entries(scores) as [keyof StudentRiasecScores, number][])
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => {
+                if (b[1] !== a[1]) return b[1] - a[1]; // Primary: higher score first
+                return canonicalOrder.indexOf(a[0]) - canonicalOrder.indexOf(b[0]); // Tie-breaker: canonical order
+            })
             .map(([code]) => code);
         const hollandCode = sortedCodes.slice(0, 3).join('');
 
@@ -508,7 +517,7 @@ export class ScoringService {
     }
 
     /**
-     * Student Personality: 3-point scale (A=1, B=2, C=3), 6 questions per trait
+     * Student Personality: 4-point scale (A=1, B=2, C=3, D=4), 6 questions per trait
      */
     private calculateStudentPersonalityScores(
         responsesBySection: Map<string, any[]>,
@@ -520,11 +529,15 @@ export class ScoringService {
             if (responses.length === 0) continue;
 
             const score = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
-            const maxScore = responses.length * 3; // 3-point scale
+            const maxScore = responses.length * 4; // 4-point scale
+            const minScore = responses.length; // All 1s = minimum possible
+
+            // Normalized: 0% = all 1s (worst), 100% = all 4s (best)
+            const percentage = (score - minScore) / (maxScore - minScore) * 100;
 
             let level: 'Emerging' | 'Moderate' | 'Strong';
-            if (score <= 10) level = 'Emerging';
-            else if (score <= 15) level = 'Moderate';
+            if (percentage < 40) level = 'Emerging';
+            else if (percentage < 75) level = 'Moderate';
             else level = 'Strong';
 
             scores[trait] = { score, maxScore, level };
@@ -566,40 +579,49 @@ export class ScoringService {
 
     /**
      * Student Clarity Index (0-100)
-     * Based on RIASEC focus + personality consistency
+     * Measures career direction focus purely from RIASEC data:
+     * Part 1 (0-60): RIASEC std dev — how differentiated interests are
+     * Part 2 (0-40): Top-3 Dominance — how much top 3 dominate over bottom 3
      */
     private calculateStudentClarityIndex(
         riasec: StudentRiasecScores,
-        personality: StudentPersonalityScores,
+        _personality: StudentPersonalityScores,
     ): number {
-        // RIASEC Focus (0-50): Higher std dev = more focused interests
         const riasecValues = Object.values(riasec);
-        const riasecMean = riasecValues.reduce((a, b) => a + b, 0) / riasecValues.length;
+        const totalRiasec = riasecValues.reduce((a, b) => a + b, 0);
+
+        // Part 1 (0-60): RIASEC Focus — std dev of 6 scores
+        const riasecMean = totalRiasec / riasecValues.length;
         const riasecVariance = riasecValues.reduce((sum, val) => sum + Math.pow(val - riasecMean, 2), 0) / riasecValues.length;
         const riasecStdDev = Math.sqrt(riasecVariance);
         // Max std dev for binary (0/1) scoring with 8 questions per type ≈ 3.3
         const maxStdDev = 3.3;
-        const riasecFocus = Math.min(50, Math.round((riasecStdDev / maxStdDev) * 50));
+        const riasecFocus = Math.min(60, Math.round((riasecStdDev / maxStdDev) * 60));
 
-        // Personality Consistency (0-50): Higher average across traits = clearer direction
-        const traitScores = Object.values(personality).map(p => p.score / p.maxScore);
-        const avgTrait = traitScores.length > 0
-            ? traitScores.reduce((a, b) => a + b, 0) / traitScores.length
-            : 0;
-        const personalityScore = Math.round(avgTrait * 50);
+        // Part 2 (0-40): Top-3 Dominance — ratio of top 3 scores to total
+        let top3Dominance = 0;
+        if (totalRiasec > 0) {
+            const sorted = [...riasecValues].sort((a, b) => b - a);
+            const top3Sum = sorted[0] + sorted[1] + sorted[2];
+            // Ratio ranges from 0.5 (equal) to 1.0 (all in top 3)
+            // Normalize: 0.5 → 0 points, 1.0 → 40 points
+            const ratio = top3Sum / totalRiasec;
+            top3Dominance = Math.min(40, Math.round(Math.max(0, (ratio - 0.5) / 0.5) * 40));
+        }
 
-        return Math.min(100, riasecFocus + personalityScore);
+        return Math.min(100, riasecFocus + top3Dominance);
     }
 
     /**
      * Calculate weighted composite score for students (0-100)
-     * Incorporates all 4 modules: Aptitude (40%), Readiness (30%), Personality (20%), RIASEC focus (10%)
+     * Aptitude (40%), Readiness (30%), Personality (30%)
+     * RIASEC focus is reported separately as Clarity Index — not mixed into composite.
      */
     private calculateWeightedStudentScore(
         aptitude: AptitudeScores,
         readiness?: StudentReadinessScores,
         personality?: StudentPersonalityScores,
-        riasec?: StudentRiasecScores,
+        _riasec?: StudentRiasecScores,
     ): number {
         // Module 1: Aptitude (40%) — weighted average of section percentages
         let aptitudeScore = 0;
@@ -617,32 +639,23 @@ export class ScoringService {
         // Module 2: Readiness (30%) — overall readiness percentage
         const readinessScore = readiness?.overall?.percentage || 0;
 
-        // Module 3: Personality (20%) — average trait score as percentage
+        // Module 3: Personality (30%) — normalized trait score as percentage
+        // Normalize: min possible = questionsPerTrait * 1, max = questionsPerTrait * scaleMax
         let personalityScore = 0;
         if (personality) {
             const traits = Object.values(personality);
             if (traits.length > 0) {
-                personalityScore = traits.reduce((sum, t) => sum + (t.score / t.maxScore) * 100, 0) / traits.length;
+                personalityScore = traits.reduce((sum, t) => {
+                    const minScore = t.maxScore / 4; // number of questions (maxScore / scaleMax)
+                    return sum + ((t.score - minScore) / (t.maxScore - minScore)) * 100;
+                }, 0) / traits.length;
             }
-        }
-
-        // Module 4: RIASEC focus (10%) — differentiation, not raw score
-        // Higher std dev = clearer career direction = better
-        let riasecFocusScore = 0;
-        if (riasec) {
-            const values = Object.values(riasec);
-            const mean = values.reduce((a, b) => a + b, 0) / values.length;
-            const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-            const stdDev = Math.sqrt(variance);
-            // Max meaningful std dev ≈ 3.3 for binary 8-question scoring
-            riasecFocusScore = Math.min(100, Math.round((stdDev / 3.3) * 100));
         }
 
         const composite = Math.round(
             aptitudeScore * 0.40 +
             readinessScore * 0.30 +
-            personalityScore * 0.20 +
-            riasecFocusScore * 0.10
+            personalityScore * 0.30
         );
 
         return Math.min(100, composite);
