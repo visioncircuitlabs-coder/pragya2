@@ -79,8 +79,8 @@ interface AssessmentResult {
     aptitudeScores?: Record<string, { percentage: number; correct: number; total: number }>;
     riasecScores?: { R: number; I: number; A: number; S: number; E: number; C: number };
     riasecCode?: string;
-    employabilityScores?: Record<string, { percentage: number }>;
-    personalityScores?: Record<string, { average: number }>;
+    employabilityScores?: Record<string, { percentage: number; score?: number; maxScore?: number }>;
+    personalityScores?: Record<string, { average?: number; score?: number; maxScore?: number; level?: string }>;
     clarityIndex?: number;
     careerMatches?: Array<{
         id: string;
@@ -133,9 +133,11 @@ interface AssessmentResult {
             rolesToAvoid: string;
         };
         sectorRecommendations?: {
-            primarySectors: { name: string; explanation: string }[];
-            growthSectors: { name: string; explanation: string }[];
-            sectorsToAvoid: string;
+            primarySectors?: { name: string; explanation: string }[];
+            growthSectors?: { name: string; explanation: string }[];
+            sectorsToAvoid?: string;
+            topSectors?: string[];
+            reasoning?: string;
         };
         developmentGuidance?: string;
         developmentRoadmap?: string;
@@ -149,12 +151,15 @@ interface AssessmentResult {
         };
         strengthsAnalysis?: string;
         areasForGrowth?: string;
+        riasecAnalysis?: string;
+        personalityAnalysis?: string;
+        readinessAnalysis?: string;
         academicStreams?: {
             recommended: string[];
             reasoning: string;
         };
         careerGuidance?: {
-            suggestedCareers: string[];
+            suggestedCareers: (string | { role: string; fitReason: string })[];
             skillsToDevelop: string[];
         };
         studyTips?: string;
@@ -236,33 +241,6 @@ export default function ResultsPage() {
         setTimeout(() => setDownloading(false), 4000);
     };
 
-    // Prepare chart data
-    const riasecChartData = result?.riasecScores
-        ? Object.entries(result.riasecScores).map(([code, score]) => ({
-            type: RIASEC_NAMES[code],
-            score: score,
-            fullMark: 32,
-        }))
-        : [];
-
-    const aptitudeChartData = result?.aptitudeScores
-        ? Object.entries(result.aptitudeScores)
-            .filter(([key]) => key !== 'overall')
-            .map(([section, data]) => ({
-                section: section.split(' ')[0], // Shorten label
-                percentage: data.percentage,
-                fullSection: section,
-            }))
-        : [];
-
-    const personalityChartData = result?.personalityScores
-        ? Object.entries(result.personalityScores).map(([trait, data]) => ({
-            trait: trait.split(' ')[0],
-            average: data.average,
-            fullTrait: trait,
-        }))
-        : [];
-
     // Loading state
     if (authLoading || loading) {
         return (
@@ -296,8 +274,55 @@ export default function ResultsPage() {
 
     if (!result) return null;
 
-    // Detect assessment type: students have no RIASEC data; job seekers always have riasecCode
-    const isStudentAssessment = !result.riasecCode;
+    // Detect assessment type: students have studentPersona in AI insights; job seekers have professionalPersona
+    const isStudentAssessment = !!result.aiInsights?.studentPersona || result.assessmentType === 'STUDENT';
+
+    // Prepare chart data
+    const riasecMaxScore = isStudentAssessment ? 8 : 32;
+    const riasecChartData = result?.riasecScores
+        ? Object.entries(result.riasecScores).map(([code, score]) => ({
+            type: RIASEC_NAMES[code],
+            score: score,
+            fullMark: riasecMaxScore,
+        }))
+        : [];
+
+    const aptitudeChartData = result?.aptitudeScores
+        ? Object.entries(result.aptitudeScores)
+            .filter(([key]) => key !== 'overall')
+            .map(([section, data]) => ({
+                section: section.split(' ')[0],
+                percentage: data.percentage,
+                fullSection: section,
+            }))
+        : [];
+
+    // Job seeker personality: average (1-5 scale)
+    // Student personality: score/maxScore with level (Emerging/Moderate/Strong)
+    const personalityChartData = result?.personalityScores
+        ? Object.entries(result.personalityScores).map(([trait, data]) => ({
+            trait: trait.split(' ')[0],
+            average: data.average ?? (data.score && data.maxScore ? (data.score / data.maxScore) * 5 : 0),
+            score: data.score,
+            maxScore: data.maxScore,
+            level: data.level,
+            fullTrait: trait,
+        }))
+        : [];
+
+    // Student readiness data (from employabilityScores field reused for students)
+    const readinessChartData = isStudentAssessment && result?.employabilityScores
+        ? Object.entries(result.employabilityScores)
+            .filter(([key]) => key !== 'overall')
+            .map(([section, data]) => ({
+                section: section.split(' ')[0],
+                percentage: data.percentage,
+                fullSection: section,
+            }))
+        : [];
+    const overallReadiness = isStudentAssessment
+        ? result?.employabilityScores?.['overall']?.percentage || 0
+        : 0;
 
     // Performance level display helper
     const getPerformanceLevelInfo = (level?: string) => {
@@ -317,7 +342,7 @@ export default function ResultsPage() {
             const apt = result.totalScore || 0;
             const emp = result.employabilityScores?.['overall']?.percentage || 0;
             const persVals = result.personalityScores
-                ? Object.values(result.personalityScores).map(p => p.average)
+                ? Object.values(result.personalityScores).map(p => p.average || 0)
                 : [];
             const avgPers = persVals.length > 0
                 ? persVals.reduce((a, b) => a + b, 0) / persVals.length
@@ -425,7 +450,7 @@ export default function ResultsPage() {
                 <div className="text-center mb-10">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                         {isStudentAssessment
-                            ? "PRAGYA Student Aptitude Assessment Results"
+                            ? "PRAGYA 360° Student Career Assessment Results"
                             : "PRAGYA 360° Assessment Results"
                         }
                     </h1>
@@ -461,8 +486,8 @@ export default function ResultsPage() {
                     </div>
                 </div>
 
-                {/* Holland Code - Only for Job Seekers */}
-                {!isStudentAssessment && result.riasecCode && (
+                {/* Holland Code - Both types (students now have RIASEC too) */}
+                {result.riasecCode && (
                     <div className="bg-gradient-to-r from-[#0e6957] to-emerald-600 rounded-3xl p-6 md:p-8 text-white text-center mb-8">
                         <Compass className="w-12 h-12 mx-auto mb-4 opacity-80" />
                         <p className="text-emerald-100 text-sm uppercase tracking-wider mb-2">Your Holland Code</p>
@@ -474,16 +499,19 @@ export default function ResultsPage() {
                                 </div>
                             ))}
                         </div>
-                        {result.aiInsights?.careerInterestAlignment && (
+                        {/* Job seeker: show careerInterestAlignment; Student: show riasecAnalysis */}
+                        {(result.aiInsights?.careerInterestAlignment || result.aiInsights?.riasecAnalysis) && (
                             <p className="text-emerald-100 text-sm max-w-2xl mx-auto">
-                                {result.aiInsights.careerInterestAlignment}
+                                {isStudentAssessment
+                                    ? result.aiInsights?.riasecAnalysis
+                                    : result.aiInsights?.careerInterestAlignment}
                             </p>
                         )}
                     </div>
                 )}
 
                 {/* Stats Grid - Shows all relevant metrics */}
-                <div className={`grid grid-cols-2 ${!isStudentAssessment ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 mb-8`}>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                     {/* Aptitude */}
                     <div className="bg-white rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center gap-3 mb-2">
@@ -497,38 +525,36 @@ export default function ResultsPage() {
                         </p>
                     </div>
 
-                    {/* Career Clarity (Job Seeker) / Academic Readiness (Student) */}
+                    {/* Career Clarity */}
                     <div className="bg-white rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
                                 <Target className="w-5 h-5 text-orange-600" />
                             </div>
+                            <span className="text-sm text-gray-500">Career Clarity</span>
+                        </div>
+                        <p className="text-2xl font-bold text-gray-900">
+                            {result.clarityIndex || 0}/100
+                        </p>
+                    </div>
+
+                    {/* Readiness (Student) / Employability (Job Seeker) */}
+                    <div className="bg-white rounded-2xl p-5 shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                                <Briefcase className="w-5 h-5 text-emerald-600" />
+                            </div>
                             <span className="text-sm text-gray-500">
-                                {isStudentAssessment ? 'Academic Readiness' : 'Career Clarity'}
+                                {isStudentAssessment ? 'Career Readiness' : 'Employability'}
                             </span>
                         </div>
                         <p className="text-2xl font-bold text-gray-900">
                             {isStudentAssessment
-                                ? `${result.academicReadinessIndex || 0}/100`
-                                : `${result.clarityIndex || 0}/100`
+                                ? `${overallReadiness.toFixed(0)}%`
+                                : `${result.employabilityScores?.['overall']?.percentage?.toFixed(0) || 0}%`
                             }
                         </p>
                     </div>
-
-                    {/* Employability - Job Seeker only */}
-                    {!isStudentAssessment && (
-                        <div className="bg-white rounded-2xl p-5 shadow-sm">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                                    <Briefcase className="w-5 h-5 text-emerald-600" />
-                                </div>
-                                <span className="text-sm text-gray-500">Employability</span>
-                            </div>
-                            <p className="text-2xl font-bold text-gray-900">
-                                {result.employabilityScores?.['overall']?.percentage?.toFixed(0) || 0}%
-                            </p>
-                        </div>
-                    )}
 
                     {/* Performance Level - Both */}
                     <div className="bg-white rounded-2xl p-5 shadow-sm">
@@ -556,26 +582,30 @@ export default function ResultsPage() {
                         </p>
                     </div>
 
-                    {/* Career Matches - Job Seeker only */}
-                    {!isStudentAssessment && (
+                    {/* Holland Code badge */}
+                    {result.riasecCode && (
                         <div className="bg-white rounded-2xl p-5 shadow-sm">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                                    <Briefcase className="w-5 h-5 text-amber-600" />
+                                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                                    <Compass className="w-5 h-5 text-indigo-600" />
                                 </div>
-                                <span className="text-sm text-gray-500">Career Matches</span>
+                                <span className="text-sm text-gray-500">Holland Code</span>
                             </div>
-                            <p className="text-2xl font-bold text-gray-900">
-                                {result.careerMatches?.length || 0}
-                            </p>
+                            <div className="flex gap-1">
+                                {result.riasecCode.split('').map((code) => (
+                                    <span key={code} className="text-2xl font-bold" style={{ color: COLORS.riasec[code as keyof typeof COLORS.riasec] || COLORS.primary }}>
+                                        {code}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
 
                 {/* Charts Row */}
-                <div className={`grid ${isStudentAssessment ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-6 mb-8`}>
-                    {/* RIASEC Radar Chart - Only for Job Seekers */}
-                    {!isStudentAssessment && (
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    {/* RIASEC Radar Chart - Both types */}
+                    {riasecChartData.length > 0 && (
                         <div className="bg-white rounded-2xl p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <Compass className="w-5 h-5 text-[#0e6957]" />
@@ -585,7 +615,7 @@ export default function ResultsPage() {
                                 <RadarChart data={riasecChartData}>
                                     <PolarGrid />
                                     <PolarAngleAxis dataKey="type" tick={{ fontSize: 12 }} />
-                                    <PolarRadiusAxis angle={30} domain={[0, 32]} tick={{ fontSize: 10 }} />
+                                    <PolarRadiusAxis angle={30} domain={[0, riasecMaxScore]} tick={{ fontSize: 10 }} />
                                     <Radar
                                         name="Score"
                                         dataKey="score"
@@ -594,7 +624,7 @@ export default function ResultsPage() {
                                         fillOpacity={0.3}
                                         strokeWidth={2}
                                     />
-                                    <Tooltip />
+                                    <Tooltip formatter={(value: unknown) => [`${value}/${riasecMaxScore}`, 'Score']} />
                                 </RadarChart>
                             </ResponsiveContainer>
                         </div>
@@ -604,12 +634,12 @@ export default function ResultsPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Brain className="w-5 h-5 text-[#0e6957]" />
-                            {isStudentAssessment ? "Aptitude Assessment Scores" : "Cognitive Aptitude"}
+                            {isStudentAssessment ? "Aptitude Scores" : "Cognitive Aptitude"}
                         </h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={aptitudeChartData} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                                <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
                                 <YAxis type="category" dataKey="section" width={70} tick={{ fontSize: 11 }} />
                                 <Tooltip
                                     formatter={(value: unknown) => [`${Number(value).toFixed(1)}%`, 'Score']}
@@ -669,52 +699,108 @@ export default function ResultsPage() {
                     </div>
                 )}
 
-                {/* Personality Traits - Only for Job Seekers */}
-                {!isStudentAssessment && personalityChartData.length > 0 && (
+                {/* Personality Traits - Both types */}
+                {personalityChartData.length > 0 && (
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Users className="w-5 h-5 text-[#0e6957]" />
                             Personality Profile
                         </h3>
+                        {result.aiInsights?.personalityAnalysis && (
+                            <p className="text-sm text-gray-600 mb-4">{result.aiInsights.personalityAnalysis}</p>
+                        )}
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                            {personalityChartData.map((item) => (
-                                <div key={item.trait} className="text-center p-4 bg-gray-50 rounded-xl">
-                                    <div className="relative w-16 h-16 mx-auto mb-3">
-                                        <svg className="w-16 h-16 transform -rotate-90">
-                                            <circle
-                                                className="text-gray-200"
-                                                strokeWidth="4"
-                                                stroke="currentColor"
-                                                fill="transparent"
-                                                r="28"
-                                                cx="32"
-                                                cy="32"
-                                            />
-                                            <circle
-                                                className="text-[#0e6957]"
-                                                strokeWidth="4"
-                                                strokeLinecap="round"
-                                                stroke="currentColor"
-                                                fill="transparent"
-                                                r="28"
-                                                cx="32"
-                                                cy="32"
-                                                strokeDasharray={`${(item.average / 5) * 176} 176`}
-                                            />
-                                        </svg>
-                                        <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-gray-900">
-                                            {item.average.toFixed(1)}
-                                        </span>
+                            {personalityChartData.map((item) => {
+                                const pct = isStudentAssessment && item.score && item.maxScore
+                                    ? (item.score / item.maxScore)
+                                    : (item.average / 5);
+                                const displayValue = isStudentAssessment
+                                    ? `${item.score}/${item.maxScore}`
+                                    : item.average.toFixed(1);
+                                const levelColor = item.level === 'Strong' ? 'text-emerald-600'
+                                    : item.level === 'Moderate' ? 'text-amber-600'
+                                        : item.level === 'Emerging' ? 'text-orange-500'
+                                            : '';
+                                return (
+                                    <div key={item.trait} className="text-center p-4 bg-gray-50 rounded-xl">
+                                        <div className="relative w-16 h-16 mx-auto mb-3">
+                                            <svg className="w-16 h-16 transform -rotate-90">
+                                                <circle
+                                                    className="text-gray-200"
+                                                    strokeWidth="4"
+                                                    stroke="currentColor"
+                                                    fill="transparent"
+                                                    r="28"
+                                                    cx="32"
+                                                    cy="32"
+                                                />
+                                                <circle
+                                                    className="text-[#0e6957]"
+                                                    strokeWidth="4"
+                                                    strokeLinecap="round"
+                                                    stroke="currentColor"
+                                                    fill="transparent"
+                                                    r="28"
+                                                    cx="32"
+                                                    cy="32"
+                                                    strokeDasharray={`${pct * 176} 176`}
+                                                />
+                                            </svg>
+                                            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-gray-900">
+                                                {displayValue}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-600 font-medium">{item.fullTrait}</p>
+                                        {item.level && (
+                                            <span className={`text-[10px] font-semibold ${levelColor}`}>{item.level}</span>
+                                        )}
                                     </div>
-                                    <p className="text-xs text-gray-600 font-medium">{item.fullTrait}</p>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
 
-                {/* Sector Matches - Job Seekers (NEW) */}
-                {!isStudentAssessment && result.sectorMatches && result.sectorMatches.length > 0 && (
+                {/* Student: Skill & Career Readiness Bars */}
+                {isStudentAssessment && readinessChartData.length > 0 && (
+                    <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-[#0e6957]" />
+                            Skill & Career Readiness
+                        </h3>
+                        {result.aiInsights?.readinessAnalysis && (
+                            <p className="text-sm text-gray-600 mb-4">{result.aiInsights.readinessAnalysis}</p>
+                        )}
+                        <div className="space-y-4">
+                            {readinessChartData.map((item) => (
+                                <div key={item.section}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-sm font-medium text-gray-700">{item.fullSection}</span>
+                                        <span className="text-sm font-semibold text-gray-900">{item.percentage.toFixed(0)}%</span>
+                                    </div>
+                                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all ${item.percentage >= 70 ? 'bg-emerald-500' : item.percentage >= 50 ? 'bg-amber-500' : 'bg-orange-400'
+                                                }`}
+                                            style={{ width: `${item.percentage}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-semibold text-gray-900">Overall Readiness</span>
+                                    <span className={`text-lg font-bold ${overallReadiness >= 70 ? 'text-emerald-600' : overallReadiness >= 50 ? 'text-amber-600' : 'text-orange-500'}`}>
+                                        {overallReadiness.toFixed(0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Sector Matches - Both types when available */}
+                {result.sectorMatches && result.sectorMatches.length > 0 && (
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                             <Briefcase className="w-5 h-5 text-[#0e6957]" />
@@ -778,8 +864,8 @@ export default function ResultsPage() {
                     </div>
                 )}
 
-                {/* Legacy Career Matches (shown below sectors if available) */}
-                {!isStudentAssessment && !result.sectorMatches?.length && result.careerMatches && result.careerMatches.length > 0 && (
+                {/* Career Matches (shown below sectors if available) */}
+                {!result.sectorMatches?.length && result.careerMatches && result.careerMatches.length > 0 && (
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Briefcase className="w-5 h-5 text-[#0e6957]" />
@@ -987,23 +1073,35 @@ export default function ResultsPage() {
                             )}
 
                             {/* Student-Specific AI Insights */}
-                            {result.aiInsights?.strengthsAnalysis && (
-                                <div className="bg-white/60 rounded-xl p-5">
-                                    <h4 className="font-medium text-gray-900 mb-2">Your Strengths</h4>
-                                    <p className="text-gray-600">{result.aiInsights.strengthsAnalysis}</p>
-                                </div>
-                            )}
-
-                            {result.aiInsights?.areasForGrowth && (
-                                <div className="bg-white/60 rounded-xl p-5">
-                                    <h4 className="font-medium text-gray-900 mb-2">Areas for Growth</h4>
-                                    <p className="text-gray-600">{result.aiInsights.areasForGrowth}</p>
+                            {isStudentAssessment && (result.aiInsights?.strengthsAnalysis || result.aiInsights?.areasForGrowth) && (
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    {result.aiInsights?.strengthsAnalysis && (
+                                        <div className="bg-white/60 rounded-xl p-5">
+                                            <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                                <Award className="w-4 h-4 text-emerald-600" />
+                                                Your Strengths
+                                            </h4>
+                                            <p className="text-gray-600 text-sm">{result.aiInsights.strengthsAnalysis}</p>
+                                        </div>
+                                    )}
+                                    {result.aiInsights?.areasForGrowth && (
+                                        <div className="bg-white/60 rounded-xl p-5">
+                                            <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                                <Target className="w-4 h-4 text-amber-600" />
+                                                Areas for Growth
+                                            </h4>
+                                            <p className="text-gray-600 text-sm">{result.aiInsights.areasForGrowth}</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
                             {result.aiInsights?.academicStreams && (
                                 <div className="bg-white/60 rounded-xl p-5">
-                                    <h4 className="font-medium text-gray-900 mb-2">Recommended Academic Streams</h4>
+                                    <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                        <Brain className="w-4 h-4 text-blue-600" />
+                                        Recommended Academic Streams
+                                    </h4>
                                     <div className="flex flex-wrap gap-2 mb-2">
                                         {result.aiInsights.academicStreams.recommended.map((stream, i) => (
                                             <span key={i} className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
@@ -1017,17 +1115,42 @@ export default function ResultsPage() {
 
                             {result.aiInsights?.careerGuidance && (
                                 <div>
-                                    <h4 className="font-medium text-gray-900 mb-3">Career Guidance</h4>
+                                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                                        <Briefcase className="w-4 h-4 text-emerald-600" />
+                                        Career Guidance
+                                    </h4>
+
+                                    {/* Student sector recommendations from AI */}
+                                    {isStudentAssessment && result.aiInsights?.sectorRecommendations?.topSectors && (
+                                        <div className="mb-4 bg-white/60 rounded-xl p-4">
+                                            <p className="text-sm font-medium text-indigo-700 mb-2">Recommended Sectors</p>
+                                            <div className="flex flex-wrap gap-2 mb-2">
+                                                {result.aiInsights.sectorRecommendations.topSectors.map((sector, i) => (
+                                                    <span key={i} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                                                        {sector}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-gray-500">{result.aiInsights.sectorRecommendations.reasoning}</p>
+                                        </div>
+                                    )}
+
                                     <div className="grid md:grid-cols-2 gap-4">
                                         <div className="bg-white/60 rounded-xl p-4">
                                             <p className="text-sm font-medium text-purple-700 mb-2">Suggested Careers</p>
-                                            <ul className="space-y-1">
-                                                {(result.aiInsights.careerGuidance.suggestedCareers as (string | { role: string })[]).map((career, i) => {
+                                            <ul className="space-y-2">
+                                                {(result.aiInsights.careerGuidance.suggestedCareers as (string | { role: string; fitReason?: string })[]).map((career, i) => {
                                                     const roleName = typeof career === 'string' ? career : career.role;
+                                                    const fitReason = typeof career === 'object' && career.fitReason ? career.fitReason : null;
                                                     return (
-                                                        <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
-                                                            <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                                                            {roleName}
+                                                        <li key={i} className="text-sm text-gray-600">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full flex-shrink-0"></span>
+                                                                <span className="font-medium text-gray-800">{roleName}</span>
+                                                            </div>
+                                                            {fitReason && (
+                                                                <p className="text-xs text-gray-400 ml-4 mt-0.5">{fitReason}</p>
+                                                            )}
                                                         </li>
                                                     );
                                                 })}
@@ -1050,14 +1173,20 @@ export default function ResultsPage() {
 
                             {result.aiInsights?.studyTips && (
                                 <div className="bg-white/60 rounded-xl p-5">
-                                    <h4 className="font-medium text-gray-900 mb-2">Study Tips</h4>
+                                    <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                        <Brain className="w-4 h-4 text-blue-600" />
+                                        Study Tips
+                                    </h4>
                                     <p className="text-gray-600">{result.aiInsights.studyTips}</p>
                                 </div>
                             )}
 
                             {result.aiInsights?.nextSteps && (
                                 <div className="bg-white/60 rounded-xl p-5">
-                                    <h4 className="font-medium text-gray-900 mb-2">Next Steps</h4>
+                                    <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                                        <Compass className="w-4 h-4 text-indigo-600" />
+                                        Next Steps
+                                    </h4>
                                     <p className="text-gray-600">{result.aiInsights.nextSteps}</p>
                                 </div>
                             )}

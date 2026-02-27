@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { ComprehensiveScores } from '../assessments/scoring.service';
+import { ComprehensiveScores, StudentRiasecScores, StudentPersonalityScores, StudentReadinessScores, AptitudeScores } from '../assessments/scoring.service';
 import { SectorMatchResult } from '../assessments/sector-matching.service';
 import { CareerMatch } from '../assessments/careers.service';
 import { LoggerService } from '../logger/logger.service';
@@ -64,7 +64,7 @@ export interface CandidateProfile {
     currentRole?: string;
 }
 
-// Student-specific AI analysis result (aptitude-focused)
+// Student-specific AI analysis result (comprehensive 4-module)
 export interface StudentAiAnalysisResult {
     studentPersona: {
         title: string;      // e.g., "The Logical Architect"
@@ -74,6 +74,9 @@ export interface StudentAiAnalysisResult {
     overallSummary: string;
     strengthsAnalysis: string;
     areasForGrowth: string;
+    riasecAnalysis: string;         // Holland Code interpretation
+    personalityAnalysis: string;    // Personality trait interpretation
+    readinessAnalysis: string;      // Skill & career readiness interpretation
     academicStreams: {
         recommended: string[];
         reasoning: string;
@@ -84,6 +87,10 @@ export interface StudentAiAnalysisResult {
             fitReason: string; // "Fits your High Logic + Moderate Social..."
         }[];
         skillsToDevelop: string[];
+    };
+    sectorRecommendations?: {
+        topSectors: string[];
+        reasoning: string;
     };
     studyTips: string;
     nextSteps: string;
@@ -100,7 +107,7 @@ export interface StudentProfile {
 @Injectable()
 export class AiAnalysisService {
     private readonly apiKey: string;
-    private readonly apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent';
+    private readonly apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
     constructor(
         private prisma: PrismaService,
@@ -215,92 +222,6 @@ export class AiAnalysisService {
         sectorMatches?: SectorMatchResult,
     ): string {
         return buildJobSeekerPrompt(profile, scores, careerMatches, sectorMatches);
-    }
-
-    // Original inline prompt moved to: prompts/job-seeker.prompt.ts
-    // This reduces service size by ~90 lines
-
-    /**
-        const topCareers = careerMatches.slice(0, 5).map(c => c.title).join(', ');
-
-        return `You are a professional career counselor generating a personalized employability report.
-
-## CANDIDATE PROFILE
-Name: ${profile.fullName}
-${profile.age ? `Age: ${profile.age}` : ''}
-${profile.gender ? `Gender: ${profile.gender}` : ''}
-${profile.location ? `Location: ${profile.location}` : ''}
-${profile.education ? `Education: ${profile.education}` : ''}
-${profile.currentRole ? `Current Role: ${profile.currentRole}` : ''}
-
-## ASSESSMENT RESULTS
-
-### APTITUDE SCORES (percentage correct)
-${Object.entries(scores.aptitude)
-                .filter(([key]) => key !== 'overall')
-                .map(([section, data]: [string, any]) => `- ${section}: ${data.percentage}%`)
-                .join('\n')}
-- Overall: ${scores.aptitude.overall.percentage}%
-
-### CAREER INTEREST (RIASEC)
-Holland Code: ${scores.riasecCode}
-- Realistic: ${scores.riasec.R}/32
-- Investigative: ${scores.riasec.I}/32
-- Artistic: ${scores.riasec.A}/32
-- Social: ${scores.riasec.S}/32
-- Enterprising: ${scores.riasec.E}/32
-- Conventional: ${scores.riasec.C}/32
-
-### EMPLOYABILITY SKILLS
-${Object.entries(scores.employability)
-                .filter(([key]) => key !== 'overall')
-                .map(([section, data]: [string, any]) => `- ${section}: ${data.percentage}%`)
-                .join('\n')}
-- Overall: ${scores.employability.overall.percentage}%
-
-### PERSONALITY TRAITS (1-5 scale)
-${Object.entries(scores.personality)
-                .map(([trait, data]: [string, any]) => `- ${trait}: ${data.average}`)
-                .join('\n')}
-
-### TOP CAREER MATCHES
-${topCareers}
-
-### CAREER DIRECTION CLARITY INDEX
-Score: ${scores.clarityIndex}/100
-
-## GENERATE THE FOLLOWING SECTIONS
-
-1. **Employability Profile Summary** (3-4 sentences summarizing overall job readiness)
-2. **Cognitive & Aptitude Analysis** (2-3 sentences highlighting cognitive strengths)
-3. **Career Interest Alignment** (2-3 sentences interpreting RIASEC code ${scores.riasecCode})
-4. **Work Personality Snapshot** (2-3 sentences on key personality traits)
-5. **Employability Skill Readiness** (2-3 sentences on skills)
-6. **Best-Fit Career Role Clusters**:
-   - Primary Fit Roles: [3-4 roles matching their profile]
-   - Growth Roles (with upskilling): [2-3 roles they could grow into]
-   - Roles to avoid: [brief note on mismatched careers]
-7. **Career Development Guidance** (2-3 sentences on short/mid-term focus areas)
-8. **Career Direction Clarity Index** (ONE word: LOW, MEDIUM, or HIGH based on score ${scores.clarityIndex}/100 + brief justification)
-
-Respond in this exact JSON format:
-{
-  "employabilitySummary": "...",
-  "aptitudeAnalysis": "...",
-  "careerInterestAlignment": "...",
-  "personalitySnapshot": "...",
-  "skillReadiness": "...",
-  "careerRecommendations": {
-    "primaryRoles": ["...", "...", "..."],
-    "growthRoles": ["...", "..."],
-    "rolesToAvoid": "..."
-  },
-  "developmentGuidance": "...",
-  "clarityIndex": {
-    "level": "HIGH",
-    "justification": "..."
-  }
-}`;
     }
 
     /**
@@ -482,22 +403,28 @@ Respond in this exact JSON format:
     }
 
     /**
-     * Generate AI analysis specifically for student aptitude assessments
+     * Generate AI analysis for student 4-module assessment
+     * Modules: Aptitude, RIASEC, Personality, Readiness
      */
     async generateStudentAnalysis(
         profile: StudentProfile,
-        aptitudeScores: Record<string, { correct: number; total: number; percentage: number }>,
+        aptitudeScores: AptitudeScores,
+        riasecScores: StudentRiasecScores,
+        riasecCode: string,
+        personalityScores: StudentPersonalityScores,
+        readinessScores: StudentReadinessScores,
     ): Promise<StudentAiAnalysisResult | null> {
         if (!this.apiKey) {
             this.logger.warn('AI analysis skipped - no API key configured');
-            return this.getStudentFallbackAnalysis(aptitudeScores);
+            return this.getStudentFallbackAnalysis(aptitudeScores, riasecScores, riasecCode, personalityScores, readinessScores);
         }
 
         const startTime = Date.now();
-        const prompt = this.buildStudentPrompt(profile, aptitudeScores);
+        const prompt = this.buildStudentPrompt(profile, aptitudeScores, riasecScores, riasecCode, personalityScores, readinessScores);
 
         this.logger.logBusinessEvent('GEMINI_STUDENT_API_REQUEST', {
             student: profile.fullName,
+            hollandCode: riasecCode,
             promptLength: prompt.length,
         });
 
@@ -509,7 +436,7 @@ Respond in this exact JSON format:
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
                         temperature: 0.7,
-                        maxOutputTokens: 2048,
+                        maxOutputTokens: 4096,
                         responseMimeType: 'application/json',
                     },
                 }),
@@ -520,7 +447,7 @@ Respond in this exact JSON format:
             if (!response.ok) {
                 const error = await response.text();
                 this.logger.error(`Gemini API error: ${error}`, undefined, 'AiAnalysisService');
-                return this.getStudentFallbackAnalysis(aptitudeScores);
+                return this.getStudentFallbackAnalysis(aptitudeScores, riasecScores, riasecCode, personalityScores, readinessScores);
             }
 
             const data = await response.json();
@@ -528,193 +455,226 @@ Respond in this exact JSON format:
 
             if (!generatedText) {
                 this.logger.warn('Empty response from Gemini');
-                return this.getStudentFallbackAnalysis(aptitudeScores);
+                return this.getStudentFallbackAnalysis(aptitudeScores, riasecScores, riasecCode, personalityScores, readinessScores);
             }
 
             const analysis = JSON.parse(generatedText) as StudentAiAnalysisResult;
 
             this.logger.logBusinessEvent('GEMINI_STUDENT_API_SUCCESS', {
                 student: profile.fullName,
+                hollandCode: riasecCode,
                 duration: `${duration}ms`,
             });
 
             return analysis;
         } catch (error) {
             this.logger.error(`Student AI analysis failed: ${error}`, undefined, 'AiAnalysisService');
-            return this.getStudentFallbackAnalysis(aptitudeScores);
+            return this.getStudentFallbackAnalysis(aptitudeScores, riasecScores, riasecCode, personalityScores, readinessScores);
         }
     }
 
     /**
-     * Build student-focused AI prompt
+     * Build student-focused AI prompt (4-module)
      * Delegates to extracted prompt builder for maintainability
      */
     private buildStudentPrompt(
         profile: StudentProfile,
-        aptitudeScores: Record<string, { correct: number; total: number; percentage: number }>,
+        aptitudeScores: AptitudeScores,
+        riasecScores: StudentRiasecScores,
+        riasecCode: string,
+        personalityScores: StudentPersonalityScores,
+        readinessScores: StudentReadinessScores,
     ): string {
-        return buildStudentPromptFn(profile, aptitudeScores);
-    }
-
-    // Original inline prompt moved to: prompts/student.prompt.ts
-    // This reduces service size by ~80 lines
-
-    /**
-        const scoreLines = Object.entries(aptitudeScores)
-            .filter(([key]) => key !== 'overall')
-            .map(([section, data]) => `- ${section}: ${data.percentage}%`)
-            .join('\n');
-
-        const overallScore = aptitudeScores['overall']?.percentage || 0;
-
-        return `You are a warm, encouraging, but direct senior career mentor and teacher for school students. 
-Generate a personalized "Student Persona" and career guidance based on their aptitude test scores.
-
-## CORE RULES (CRITICAL):
-1. **"AVERAGE" IS THE FLOOR**: NEVER use words like "Weak", "Poor", "Bad", "Low", or "Below Average". 
-   - If a score is low, describe it as "**Average**", "**Developing**", or "**Ready for Growth**".
-   - Example: Instead of "Low numerical skills", say "Your numerical skills are developing and can be improved with practice."
-2. **TEACHER TONE**: Be specific, actionable, and inspiring. Talk *to* the student, not *about* them.
-3. **SMART CAREER MATCHING**: Suggest careers that:
-   - **MAXIMIZE** their high-scoring areas.
-   - **MINIMIZE** reliance on their lower-scoring areas.
-   - Example: High Verbal + "Average" Math -> Suggest Law, Journalism, Psychology (Avoid Engineering/Finance).
-4. **NO GENERIC ADVICE**: Instead of "Improve time management", say "Try the Pomodoro technique (25 min work, 5 min break)."
-
-## STUDENT PROFILE
-Name: ${profile.fullName}
-${profile.grade ? `Grade: ${profile.grade}` : ''}
-${profile.schoolName ? `School: ${profile.schoolName}` : ''}
-${profile.location ? `Location: ${profile.location}` : ''}
-
-## APTITUDE TEST RESULTS (0-100%)
-${scoreLines}
-- Overall Score: ${overallScore}%
-
-## GENERATE THE FOLLOWING IN JSON FORMAT:
-
-1. **studentPersona**:
-   - **title**: A creative, positive title summarizing their brain type (e.g., "The Logical Architect", "The Emerging Explorer", "The Creative Strategist").
-   - **description**: 2 sentences explaining their learning style based on their score mix.
-   - **superpower**: One unique strength derived from their highest scores (or "Curiosity" if scores are balanced).
-2. **overallSummary**: 2-3 sentences summarizing their cognitive profile (Warm tone).
-3. **strengthsAnalysis**: Highlight 2-3 strongest areas.
-4. **areasForGrowth**: 2-3 areas to develop (Use "Developing" or "Focus Area" language only).
-5. **academicStreams**: 
-   - recommended: Array of 2-3 streams (e.g., "Science with Math", "Humanities", "Commerce").
-   - reasoning: Why these fit their detailed profile.
-6. **careerGuidance**:
-   - **suggestedCareers**: Array of objects with:
-     - "role": Job title
-     - "fitReason": Specific reason linking to their scores (e.g., "Good fit because it uses your high Verbal skill but doesn't require complex Math").
-   - **skillsToDevelop**: 4-5 actionable skills.
-7. **studyTips**: Specific, actionable study techniques.
-8. **nextSteps**: Immediate recommended actions.
-
-Respond ONLY in this JSON format:
-{
-  "studentPersona": {
-    "title": "...",
-    "description": "...",
-    "superpower": "..."
-  },
-  "overallSummary": "...",
-  "strengthsAnalysis": "...",
-  "areasForGrowth": "...",
-  "academicStreams": {
-    "recommended": ["...", "..."],
-    "reasoning": "..."
-  },
-  "careerGuidance": {
-    "suggestedCareers": [
-      { "role": "...", "fitReason": "..." },
-      { "role": "...", "fitReason": "..." }
-    ],
-    "skillsToDevelop": ["...", "..."]
-  },
-  "studyTips": "...",
-  "nextSteps": "..."
-}`;
+        return buildStudentPromptFn(profile, aptitudeScores, riasecScores, riasecCode, personalityScores, readinessScores);
     }
 
     /**
      * Fallback analysis for students when AI is unavailable
+     * Uses all 4 modules to generate meaningful narratives
      */
     private getStudentFallbackAnalysis(
-        aptitudeScores: Record<string, { correct: number; total: number; percentage: number }>,
+        aptitudeScores: AptitudeScores,
+        riasecScores: StudentRiasecScores,
+        riasecCode: string,
+        personalityScores: StudentPersonalityScores,
+        readinessScores: StudentReadinessScores,
     ): StudentAiAnalysisResult {
-        // Find top strengths
-        const sections = Object.entries(aptitudeScores)
+        const riasecNames: Record<string, string> = {
+            R: 'Realistic', I: 'Investigative', A: 'Artistic',
+            S: 'Social', E: 'Enterprising', C: 'Conventional',
+        };
+        const riasecDescriptions: Record<string, string> = {
+            R: 'hands-on, practical problem-solving',
+            I: 'analytical thinking and research',
+            A: 'creative expression and innovation',
+            S: 'helping others and interpersonal connection',
+            E: 'leadership, persuasion, and entrepreneurship',
+            C: 'organization, structure, and systematic processes',
+        };
+
+        // Aptitude analysis
+        const aptSections = Object.entries(aptitudeScores)
             .filter(([key]) => key !== 'overall')
-            .sort((a, b) => b[1].percentage - a[1].percentage);
+            .map(([name, data]) => ({ name, pct: data.percentage }))
+            .sort((a, b) => b.pct - a.pct);
+        const topApt = aptSections.slice(0, 2);
+        const weakApt = aptSections.slice(-2);
+        const overallApt = aptitudeScores['overall']?.percentage || 0;
 
-        const topStrengths = sections.slice(0, 2).map(([name]) => name);
-        const weakAreas = sections.slice(-2).map(([name]) => name);
-        const overallScore = aptitudeScores['overall']?.percentage || 0;
+        // RIASEC analysis
+        const topCodes = riasecCode.split('').map(c => riasecNames[c] || c);
+        const topCodeDesc = riasecCode.split('').map(c => riasecDescriptions[c] || '');
 
-        // Determine academic streams based on strengths
+        // Personality analysis
+        const personalityEntries = Object.entries(personalityScores)
+            .map(([trait, data]) => ({ trait, ...data }))
+            .sort((a, b) => b.score - a.score);
+        const topTraits = personalityEntries.slice(0, 2);
+        const developingTraits = personalityEntries.filter(t => t.level === 'Emerging');
+
+        // Readiness analysis
+        const readinessEntries = Object.entries(readinessScores)
+            .filter(([key]) => key !== 'overall')
+            .map(([section, data]) => ({ section, ...data }))
+            .sort((a, b) => b.percentage - a.percentage);
+        const topReadiness = readinessEntries.slice(0, 2);
+        const weakReadiness = readinessEntries.slice(-2);
+        const overallReadiness = readinessScores['overall']?.percentage || 0;
+
+        // Dynamic persona
+        const compositeScore = Math.round(overallApt * 0.4 + overallReadiness * 0.3 + (topTraits[0]?.score / topTraits[0]?.maxScore || 0.5) * 100 * 0.3);
+        const personaTitle = compositeScore >= 75 ? 'The Strategic Achiever'
+            : compositeScore >= 60 ? 'The Emerging Professional'
+                : compositeScore >= 45 ? 'The Aspiring Builder'
+                    : 'The Curious Explorer';
+
+        // Academic streams based on RIASEC + aptitude
         const streams: string[] = [];
-        if (topStrengths.some(s => s.includes('Numerical') || s.includes('Mechanical'))) {
+        if (riasecCode.includes('I') || topApt.some(a => a.name.includes('Numerical') || a.name.includes('Abstract'))) {
             streams.push('Science with Mathematics');
         }
-        if (topStrengths.some(s => s.includes('Verbal') || s.includes('Abstract'))) {
-            streams.push('Humanities');
+        if (riasecCode.includes('A') || topApt.some(a => a.name.includes('Verbal'))) {
+            streams.push('Humanities & Liberal Arts');
         }
-        if (topStrengths.some(s => s.includes('Spatial') || s.includes('Mechanical'))) {
-            streams.push('Engineering');
+        if (riasecCode.includes('E') || riasecCode.includes('C')) {
+            streams.push('Commerce & Business Studies');
+        }
+        if (riasecCode.includes('R') || topApt.some(a => a.name.includes('Spatial') || a.name.includes('Mechanical'))) {
+            streams.push('Engineering & Technology');
+        }
+        if (riasecCode.includes('S')) {
+            streams.push('Social Sciences & Education');
         }
         if (streams.length === 0) streams.push('Commerce', 'Humanities');
 
+        // Career suggestions using RIASEC + aptitude
+        const suggestedCareers = this.getSuggestedCareersFromRiasec(riasecCode, topApt.map(a => a.name));
+
+        // Skill gaps from readiness
+        const skillsToDevelop = weakReadiness.map(r => r.section);
+        if (skillsToDevelop.length < 4) {
+            if (developingTraits.length > 0) skillsToDevelop.push(`${developingTraits[0].trait} awareness`);
+            skillsToDevelop.push('Critical Thinking');
+        }
+
+        // Sector recommendations based on RIASEC
+        const sectorMap: Record<string, string[]> = {
+            R: ['Manufacturing & Engineering', 'Construction & Infrastructure'],
+            I: ['Technology & IT', 'Healthcare & Life Sciences', 'Research & Development'],
+            A: ['Creative Arts & Design', 'Media & Entertainment'],
+            S: ['Education & Training', 'Healthcare & Social Services', 'NGO & Community Development'],
+            E: ['Business & Management', 'Finance & Banking', 'Sales & Marketing'],
+            C: ['Government & Administration', 'Finance & Accounting', 'Logistics & Supply Chain'],
+        };
+        const topSectors = [...new Set(riasecCode.split('').flatMap(c => (sectorMap[c] || []).slice(0, 2)))].slice(0, 4);
+
         return {
             studentPersona: {
-                title: overallScore >= 70 ? 'The Analytical Achiever' : 'The Practical Learner',
-                description: `You approach problems with ${topStrengths[0] ? 'structured thinking' : 'curiosity'} and learn best through ${topStrengths.includes('Spatial') ? 'visual aids' : 'practical application'}.`,
-                superpower: topStrengths[0] || 'Adaptability'
+                title: personaTitle,
+                description: `You have a ${topCodes[0]}-${topCodes[1]} orientation, meaning you are drawn to ${topCodeDesc[0]} and ${topCodeDesc[1]}. Your strongest cognitive area is ${topApt[0].name} (${topApt[0].pct}%), which reflects your natural ability to process information in this domain.`,
+                superpower: `${topApt[0].name} combined with your ${topCodes[0]} interest`,
             },
-            overallSummary: `Based on your assessment results, you demonstrate ${overallScore >= 70 ? 'strong' : overallScore >= 50 ? 'moderate' : 'developing'} cognitive abilities. Your profile shows particular strength in ${topStrengths.join(' and ')}.`,
-            strengthsAnalysis: `You excel in ${topStrengths.join(' and ')}, which indicates strong ${topStrengths.includes('Numerical') ? 'logical-mathematical' : 'analytical'} thinking abilities. These skills are valuable for many academic and career paths.`,
-            areasForGrowth: `You have an opportunity to further develop your ${weakAreas.join(' and ')} skills. Consistent practice in these areas will round out your profile.`,
+            overallSummary: `Your 360° assessment reveals a ${topCodes.join('-')} career interest profile (Holland Code: ${riasecCode}) with an overall aptitude of ${overallApt}% and career readiness of ${overallReadiness}%. Your personality profile shows strong ${topTraits[0]?.trait || 'adaptive'} tendencies, and your top cognitive strength is ${topApt[0].name}. This combination points toward career paths that blend ${topCodeDesc[0]} with ${topCodeDesc[1]}.`,
+            strengthsAnalysis: `Your top cognitive strengths are ${topApt[0].name} (${topApt[0].pct}%) and ${topApt[1].name} (${topApt[1].pct}%). On the personality front, your ${topTraits[0]?.trait || 'leading trait'} is rated "${topTraits[0]?.level || 'Strong'}", indicating maturity in this area. In career readiness, you score highest in ${topReadiness[0]?.section || 'general skills'} (${topReadiness[0]?.percentage || 0}%). Your ${riasecCode} Holland Code confirms interests that align well with these strengths.`,
+            areasForGrowth: `Your developing areas include ${weakApt[0].name} (${weakApt[0].pct}%) in aptitude and ${weakReadiness[0]?.section || 'general readiness'} (${weakReadiness[0]?.percentage || 0}%) in career readiness. ${developingTraits.length > 0 ? `Your ${developingTraits[0].trait} trait is at the "Emerging" level, offering room for growth.` : 'Your personality traits are well-balanced.'} Focused practice in these areas will significantly strengthen your overall profile.`,
+            riasecAnalysis: `Your Holland Code ${riasecCode} (${topCodes.join('-')}) reveals you are most fulfilled in environments that emphasize ${topCodeDesc[0]} and ${topCodeDesc[1]}. Your top RIASEC score is ${topCodes[0]} at ${riasecScores[riasecCode[0] as keyof StudentRiasecScores]}/8, suggesting a clear preference for ${riasecDescriptions[riasecCode[0]]}. This combination is well-suited for careers in ${topSectors.slice(0, 2).join(' and ')}.`,
+            personalityAnalysis: `Your strongest personality trait is ${topTraits[0]?.trait || 'Responsibility'} (${topTraits[0]?.level || 'Strong'}), which indicates ${topTraits[0]?.level === 'Strong' ? 'a high level of maturity and consistency in this quality' : 'developing patterns that can be further strengthened'}. ${topTraits[1]?.trait || 'Your secondary trait'} is also notable at the "${topTraits[1]?.level || 'Moderate'}" level. Together, these traits suggest you work well in ${topTraits[0]?.trait?.includes('Team') ? 'collaborative settings' : topTraits[0]?.trait?.includes('Decision') ? 'structured decision-making roles' : 'disciplined environments'}.`,
+            readinessAnalysis: `Your overall career readiness is ${overallReadiness}%, with your strongest skill being ${topReadiness[0]?.section || 'Communication'} at ${topReadiness[0]?.percentage || 0}%. ${overallReadiness >= 70 ? 'You demonstrate solid preparedness for career-related challenges.' : overallReadiness >= 50 ? 'You have a moderate foundation that can be strengthened with targeted practice.' : 'You are building foundational skills — consistent effort will accelerate your readiness.'} Focus on developing ${weakReadiness[0]?.section || 'adaptability'} to round out your skill profile.`,
             academicStreams: {
                 recommended: streams.slice(0, 3),
-                reasoning: `Based on your strength in ${topStrengths[0]}, these streams align well with your natural abilities and interests.`,
+                reasoning: `Based on your ${riasecCode} Holland Code and strength in ${topApt[0].name}, these streams align with both your natural interests and cognitive abilities.`,
             },
             careerGuidance: {
-                suggestedCareers: this.getSuggestedCareers(topStrengths).map(role => ({
-                    role,
-                    fitReason: `Matches your strength in ${topStrengths[0] || 'general aptitude'}`
-                })),
-                skillsToDevelop: ['Critical Thinking', 'Problem Solving', 'Time Management', 'Communication', 'Digital Literacy'],
+                suggestedCareers,
+                skillsToDevelop: skillsToDevelop.slice(0, 5),
             },
-            studyTips: `Focus on consistent practice in your developing areas while leveraging your strengths. Use visual aids and practical examples to reinforce learning.`,
-            nextSteps: `Discuss these results with your school counselor. Explore extracurricular activities that align with your strengths and consider career orientation programs.`,
+            sectorRecommendations: {
+                topSectors,
+                reasoning: `Your ${riasecCode} interest profile and ${topApt[0].name} aptitude strength point toward these industry sectors as strong fits.`,
+            },
+            studyTips: `Leverage your strength in ${topApt[0].name} by tackling challenging problems in this area to build confidence. For ${weakApt[0].name}, start with fundamentals and practice 15-20 minutes daily using structured exercises. Your ${topTraits[0]?.trait || 'disciplined'} personality trait means you can sustain a consistent study routine — use this to your advantage with techniques like spaced repetition and active recall.`,
+            nextSteps: `1. Discuss these results with your school counselor, focusing on your ${riasecCode} Holland Code and stream recommendations. 2. Explore extracurricular activities in ${topSectors[0] || 'your interest area'}. 3. Work on strengthening ${weakReadiness[0]?.section || 'your developing skills'} through practical projects or workshops. 4. Consider career orientation programs or job shadowing in ${topCodes[0]}-oriented fields.`,
         };
     }
 
     /**
-     * Get suggested careers based on aptitude strengths
+     * Get suggested careers based on RIASEC code + aptitude strengths
      */
-    private getSuggestedCareers(topStrengths: string[]): string[] {
-        const careerMap: Record<string, string[]> = {
-            'Numerical Reasoning': ['Data Scientist', 'Financial Analyst', 'Accountant', 'Actuary'],
-            'Verbal Reasoning': ['Lawyer', 'Journalist', 'Content Writer', 'Public Relations'],
-            'Abstract-Fluid Reasoning': ['Research Scientist', 'Software Developer', 'Strategic Consultant'],
-            'Spatial Ability': ['Architect', 'Industrial Designer', 'Pilot', 'Surgeon'],
-            'Mechanical Reasoning': ['Mechanical Engineer', 'Automobile Engineer', 'Quality Engineer'],
-            'Processing Speed & Accuracy': ['Air Traffic Controller', 'Trader', 'Emergency Responder'],
+    private getSuggestedCareersFromRiasec(
+        riasecCode: string,
+        topAptitudes: string[],
+    ): { role: string; fitReason: string }[] {
+        const riasecCareers: Record<string, { role: string; fit: string }[]> = {
+            R: [
+                { role: 'Mechanical Engineer', fit: 'hands-on problem-solving' },
+                { role: 'Civil Engineer', fit: 'practical, structured work' },
+                { role: 'Agricultural Scientist', fit: 'applied science in real settings' },
+            ],
+            I: [
+                { role: 'Data Scientist', fit: 'analytical and research-oriented' },
+                { role: 'Research Scientist', fit: 'deep investigation and discovery' },
+                { role: 'Software Developer', fit: 'logical problem-solving' },
+            ],
+            A: [
+                { role: 'UX/UI Designer', fit: 'creative visual thinking' },
+                { role: 'Content Creator', fit: 'creative expression' },
+                { role: 'Architect', fit: 'blending creativity with structure' },
+            ],
+            S: [
+                { role: 'Teacher / Professor', fit: 'helping and mentoring others' },
+                { role: 'Psychologist', fit: 'understanding people' },
+                { role: 'Social Worker', fit: 'community impact' },
+            ],
+            E: [
+                { role: 'Business Manager', fit: 'leadership and strategy' },
+                { role: 'Entrepreneur', fit: 'initiative and persuasion' },
+                { role: 'Marketing Manager', fit: 'influence and communication' },
+            ],
+            C: [
+                { role: 'Chartered Accountant', fit: 'systematic, detail-oriented work' },
+                { role: 'Financial Analyst', fit: 'organized data processing' },
+                { role: 'Operations Manager', fit: 'process optimization' },
+            ],
         };
 
-        const careers: string[] = [];
-        for (const strength of topStrengths) {
-            const matches = careerMap[strength] || [];
-            careers.push(...matches.slice(0, 2));
+        const careers: { role: string; fitReason: string }[] = [];
+        const seen = new Set<string>();
+
+        // Add careers from top 3 RIASEC codes
+        for (const code of riasecCode.split('')) {
+            const matches = riasecCareers[code] || [];
+            for (const m of matches.slice(0, 2)) {
+                if (!seen.has(m.role)) {
+                    seen.add(m.role);
+                    careers.push({
+                        role: m.role,
+                        fitReason: `Matches your ${code} interest (${m.fit}) and strength in ${topAptitudes[0] || 'general aptitude'}`,
+                    });
+                }
+            }
         }
 
-        // Add some general careers if not enough
-        if (careers.length < 5) {
-            careers.push('Business Analyst', 'Project Manager', 'Entrepreneur');
-        }
-
-        return [...new Set(careers)].slice(0, 6);
+        return careers.slice(0, 6);
     }
 
     /**
@@ -732,8 +692,12 @@ Respond ONLY in this JSON format:
                     studentPersona: analysis.studentPersona,
                     strengthsAnalysis: analysis.strengthsAnalysis,
                     areasForGrowth: analysis.areasForGrowth,
+                    riasecAnalysis: analysis.riasecAnalysis,
+                    personalityAnalysis: analysis.personalityAnalysis,
+                    readinessAnalysis: analysis.readinessAnalysis,
                     academicStreams: analysis.academicStreams,
                     careerGuidance: analysis.careerGuidance,
+                    sectorRecommendations: analysis.sectorRecommendations,
                     studyTips: analysis.studyTips,
                     nextSteps: analysis.nextSteps,
                 })),

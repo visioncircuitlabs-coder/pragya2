@@ -166,12 +166,12 @@ export default function AssessmentPage() {
 
     // Load assessment on mount
     useEffect(() => {
-        if (!authLoading && isAuthenticated && user?.role === UserRole.JOB_SEEKER) {
+        if (!authLoading && isAuthenticated && (user?.role === UserRole.JOB_SEEKER || user?.role === UserRole.STUDENT)) {
             fetchAssessment();
         } else if (!authLoading && !isAuthenticated) {
             router.push('/login');
-        } else if (!authLoading && user?.role !== UserRole.JOB_SEEKER) {
-            setError('This assessment is only available for Job Seekers.');
+        } else if (!authLoading && user?.role !== UserRole.JOB_SEEKER && user?.role !== UserRole.STUDENT) {
+            setError('This assessment is available for Job Seekers and Students.');
             setLoading(false);
         }
     }, [authLoading, isAuthenticated, user, fetchAssessment, router]);
@@ -255,8 +255,81 @@ export default function AssessmentPage() {
     // Current question
     const currentQuestion = questions[currentQuestionIndex];
 
-    // Get unique sections for progress display
-    // const sections = [...new Set(questions.map((q) => q.section))]; // Removed unused variable
+    // Module grouping for multi-module assessments (student 4-module)
+    const MODULE_SECTION_MAP: Record<string, string> = {
+        // Aptitude sections
+        'Numerical Reasoning': 'Aptitude',
+        'Verbal Reasoning': 'Aptitude',
+        'Abstract-Fluid Reasoning': 'Aptitude',
+        'Spatial Ability': 'Aptitude',
+        'Mechanical Reasoning': 'Aptitude',
+        'Processing Speed & Accuracy': 'Aptitude',
+        // Job seeker aptitude sections
+        'Logical & Analytical Reasoning': 'Aptitude',
+        'Attention & Speed': 'Aptitude',
+        'Work-Style Problem Solving': 'Aptitude',
+        // RIASEC sections
+        'REALISTIC': 'Career Interests',
+        'INVESTIGATIVE': 'Career Interests',
+        'ARTISTIC': 'Career Interests',
+        'SOCIAL': 'Career Interests',
+        'ENTERPRISING': 'Career Interests',
+        'CONVENTIONAL': 'Career Interests',
+        // Personality sections
+        'Responsibility & Discipline': 'Personality',
+        'Stress Tolerance': 'Personality',
+        'Curiosity & Openness': 'Personality',
+        'Social Interaction': 'Personality',
+        'Team vs Independent Style': 'Personality',
+        'Decision-Making Style': 'Personality',
+        // Job seeker personality sections
+        'Work Discipline & Task Reliability': 'Personality',
+        'Stress Tolerance & Emotional Regulation': 'Personality',
+        'Learning & Change Orientation': 'Personality',
+        'Social Engagement & Task Focus': 'Personality',
+        'Team Compatibility & Cooperation': 'Personality',
+        'Integrity & Responsibility': 'Personality',
+        // Readiness sections
+        'Communication & Expression': 'Career Readiness',
+        'Problem-Solving Approach': 'Career Readiness',
+        'Creativity & Idea Generation': 'Career Readiness',
+        'Adaptability': 'Career Readiness',
+        'Time Management & Responsibility': 'Career Readiness',
+        'Digital Awareness': 'Career Readiness',
+        // Job seeker employability sections
+        'Core Skills': 'Employability',
+        'Functional Skills': 'Employability',
+        'Behavioral Skills': 'Employability',
+    };
+
+    // Derive ordered modules from the actual questions
+    const modules = (() => {
+        const seen = new Set<string>();
+        const result: { name: string; startIdx: number; endIdx: number; questionCount: number }[] = [];
+        let currentModule = '';
+        let startIdx = 0;
+
+        questions.forEach((q, idx) => {
+            const mod = MODULE_SECTION_MAP[q.section] || q.section;
+            if (mod !== currentModule) {
+                if (currentModule && !seen.has(currentModule)) {
+                    seen.add(currentModule);
+                    result.push({ name: currentModule, startIdx, endIdx: idx - 1, questionCount: idx - startIdx });
+                }
+                currentModule = mod;
+                startIdx = idx;
+            }
+        });
+        // Push last module
+        if (currentModule && !seen.has(currentModule)) {
+            result.push({ name: currentModule, startIdx, endIdx: questions.length - 1, questionCount: questions.length - startIdx });
+        }
+        return result;
+    })();
+
+    const currentModuleName = currentQuestion ? (MODULE_SECTION_MAP[currentQuestion.section] || currentQuestion.section) : '';
+    const currentModuleIndex = modules.findIndex(m => m.name === currentModuleName);
+    const isMultiModule = modules.length > 1;
 
     // Loading state
     if (authLoading || loading) {
@@ -382,6 +455,45 @@ export default function AssessmentPage() {
                         style={{ width: `${progress}%` }}
                     />
                 </div>
+
+                {/* Module Stepper - for multi-module assessments */}
+                {isMultiModule && (
+                    <div className="bg-gray-50 border-t border-gray-100 px-4 py-2">
+                        <div className="max-w-5xl mx-auto flex items-center gap-2 overflow-x-auto">
+                            {modules.map((mod, idx) => {
+                                const isActive = idx === currentModuleIndex;
+                                const isCompleted = idx < currentModuleIndex;
+                                // Count answered questions in this module
+                                const moduleQuestions = questions.slice(mod.startIdx, mod.endIdx + 1);
+                                const moduleAnswered = moduleQuestions.filter(q => answers[q.id]).length;
+                                const moduleComplete = moduleAnswered === moduleQuestions.length;
+                                return (
+                                    <React.Fragment key={mod.name}>
+                                        {idx > 0 && (
+                                            <div className={`flex-shrink-0 w-6 h-0.5 ${isCompleted || isActive ? 'bg-[#0e6957]' : 'bg-gray-300'}`} />
+                                        )}
+                                        <button
+                                            onClick={() => goToQuestion(mod.startIdx)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                                                isActive
+                                                    ? 'bg-[#0e6957] text-white'
+                                                    : moduleComplete || isCompleted
+                                                        ? 'bg-emerald-100 text-emerald-700'
+                                                        : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
+                                            }`}
+                                        >
+                                            {(moduleComplete || isCompleted) && !isActive && (
+                                                <CheckCircle2 className="w-3 h-3" />
+                                            )}
+                                            <span>{mod.name}</span>
+                                            <span className="opacity-70">({moduleAnswered}/{moduleQuestions.length})</span>
+                                        </button>
+                                    </React.Fragment>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Main Content */}

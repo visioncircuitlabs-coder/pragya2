@@ -351,14 +351,25 @@ export interface StudentReportData {
     academicReadinessIndex: number;
     topStrengths: string[];
     areasForImprovement: string[];
+    riasecCode?: string;
+    riasecScores?: Record<string, number>;
+    personalityScores?: Record<string, { score: number; maxScore: number; level: string }>;
+    readinessScores?: Record<string, { score: number; maxScore: number; percentage: number }>;
+    careerMatches?: { title: string; matchScore: number }[];
+    sectorMatches?: { name: string; matchScore: number }[];
     aiInsights?: {
+        studentPersona?: { title: string; description: string; superpower: string };
         overallSummary?: string;
         strengthsAnalysis?: string;
         areasForGrowth?: string;
-        academicStreams?: string[];
-        careerGuidance?: string;
-        studyTips?: string[];
-        nextSteps?: string[];
+        riasecAnalysis?: string;
+        personalityAnalysis?: string;
+        readinessAnalysis?: string;
+        academicStreams?: { recommended: string[]; reasoning: string } | string[];
+        careerGuidance?: { suggestedCareers: { role: string; fitReason?: string }[]; skillsToDevelop: string[] } | string;
+        sectorRecommendations?: { topSectors: string[]; reasoning: string };
+        studyTips?: string | string[];
+        nextSteps?: string | string[];
     };
 }
 
@@ -670,124 +681,252 @@ const getPerformanceInfo = (level: string): { color: string; label: string } => 
     }
 };
 
+const RIASEC_FULL_NAMES: Record<string, string> = {
+    R: 'Realistic', I: 'Investigative', A: 'Artistic',
+    S: 'Social', E: 'Enterprising', C: 'Conventional',
+};
+
+// Helper to normalize studyTips/nextSteps which can be string or string[]
+const toStringArray = (val: string | string[] | undefined): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    return val.split(/\n|(?:\d+\.\s)/).map(s => s.trim()).filter(Boolean);
+};
+
+// Helper to get academic streams as string[]
+const getAcademicStreams = (val: { recommended: string[]; reasoning: string } | string[] | undefined): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    return val.recommended || [];
+};
+
 const StudentReport = ({ data }: { data: StudentReportData }) => {
     const performanceInfo = getPerformanceInfo(data.performanceLevel);
+    const ai = data.aiInsights;
 
-    return React.createElement(Document, {},
-        React.createElement(Page, { size: 'A4', style: styles.page },
-            React.createElement(View, { style: styles.header },
-                React.createElement(Text, { style: styles.title }, 'PRAGYA Student Aptitude Report'),
-                React.createElement(Text, { style: styles.subtitle },
-                    `Generated on ${data.assessmentDate.toLocaleDateString('en-IN', {
-                        day: 'numeric', month: 'long', year: 'numeric'
-                    })}`
-                )
+    // Normalize career guidance
+    const suggestedCareers: { role: string; fitReason?: string }[] =
+        ai?.careerGuidance && typeof ai.careerGuidance === 'object' && 'suggestedCareers' in ai.careerGuidance
+            ? ai.careerGuidance.suggestedCareers : [];
+    const skillsToDevelop: string[] =
+        ai?.careerGuidance && typeof ai.careerGuidance === 'object' && 'skillsToDevelop' in ai.careerGuidance
+            ? ai.careerGuidance.skillsToDevelop : [];
+    const careerGuidanceText = typeof ai?.careerGuidance === 'string' ? ai.careerGuidance : '';
+
+    const academicStreams = getAcademicStreams(ai?.academicStreams);
+    const studyTips = toStringArray(ai?.studyTips);
+    const nextSteps = toStringArray(ai?.nextSteps);
+
+    const label = { fontSize: 10, fontWeight: 'bold' as const, color: '#0a4f41', marginBottom: 4 };
+    const body = styles.sectionContent;
+    const bullet = styles.careerItem;
+
+    // Page 1: Profile + Overall + Aptitude
+    const page1 = React.createElement(Page, { size: 'A4', style: styles.page },
+        React.createElement(View, { style: styles.header },
+            React.createElement(Text, { style: styles.title }, 'PRAGYA 360° Student Career Report'),
+            React.createElement(Text, { style: styles.subtitle },
+                `Generated on ${data.assessmentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
+            )
+        ),
+        // Student Persona
+        ai?.studentPersona && React.createElement(View, { style: { ...styles.section, backgroundColor: '#f0fdf9', padding: 10, borderRadius: 4 } },
+            React.createElement(Text, { style: { fontSize: 14, fontWeight: 'bold', color: '#0e6957', marginBottom: 4 } }, ai.studentPersona.title),
+            React.createElement(Text, { style: { fontSize: 10, color: '#2d4a44', marginBottom: 2 } }, ai.studentPersona.description),
+            React.createElement(Text, { style: { fontSize: 10, color: '#0e6957', fontWeight: 'bold' } }, `Superpower: ${ai.studentPersona.superpower}`)
+        ),
+        // Profile
+        React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '1. Student Profile'),
+            React.createElement(View, { style: styles.profileRow },
+                React.createElement(Text, { style: styles.profileLabel }, 'Name:'),
+                React.createElement(Text, { style: styles.profileValue }, data.studentName)
             ),
-            React.createElement(View, { style: styles.section },
-                React.createElement(Text, { style: styles.sectionTitle }, '1. Student Profile'),
-                React.createElement(View, { style: styles.profileRow },
-                    React.createElement(Text, { style: styles.profileLabel }, 'Name:'),
-                    React.createElement(Text, { style: styles.profileValue }, data.studentName)
-                ),
-                data.grade && React.createElement(View, { style: styles.profileRow },
-                    React.createElement(Text, { style: styles.profileLabel }, 'Grade:'),
-                    React.createElement(Text, { style: styles.profileValue }, data.grade)
-                ),
-                data.schoolName && React.createElement(View, { style: styles.profileRow },
-                    React.createElement(Text, { style: styles.profileLabel }, 'School:'),
-                    React.createElement(Text, { style: styles.profileValue }, data.schoolName)
-                )
+            data.grade && React.createElement(View, { style: styles.profileRow },
+                React.createElement(Text, { style: styles.profileLabel }, 'Grade:'),
+                React.createElement(Text, { style: styles.profileValue }, data.grade)
             ),
-            React.createElement(View, { style: styles.section },
-                React.createElement(Text, { style: styles.sectionTitle }, '2. Overall Performance'),
-                React.createElement(View, { style: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 } },
-                    React.createElement(View, { style: { alignItems: 'center' } },
-                        React.createElement(View, { style: { ...styles.clarityBadge, backgroundColor: performanceInfo.color } },
-                            React.createElement(Text, { style: styles.clarityText }, `${data.weightedScore}%`)
-                        ),
-                        React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', marginTop: 4 } }, 'Overall Score')
+            data.schoolName && React.createElement(View, { style: styles.profileRow },
+                React.createElement(Text, { style: styles.profileLabel }, 'School:'),
+                React.createElement(Text, { style: styles.profileValue }, data.schoolName)
+            ),
+            data.riasecCode && React.createElement(View, { style: styles.profileRow },
+                React.createElement(Text, { style: styles.profileLabel }, 'Holland Code:'),
+                React.createElement(Text, { style: styles.profileValue },
+                    `${data.riasecCode} (${data.riasecCode.split('').map(c => RIASEC_FULL_NAMES[c] || c).join('-')})`
+                )
+            )
+        ),
+        // Overall Performance
+        React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '2. Overall Performance'),
+            React.createElement(View, { style: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 } },
+                React.createElement(View, { style: { alignItems: 'center' } },
+                    React.createElement(View, { style: { ...styles.clarityBadge, backgroundColor: performanceInfo.color } },
+                        React.createElement(Text, { style: styles.clarityText }, `${data.weightedScore}%`)
                     ),
-                    React.createElement(View, { style: { alignItems: 'center' } },
-                        React.createElement(View, { style: { ...styles.clarityBadge, backgroundColor: performanceInfo.color } },
-                            React.createElement(Text, { style: styles.clarityText }, performanceInfo.label)
-                        ),
-                        React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', marginTop: 4 } }, 'Performance Level')
+                    React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', marginTop: 4 } }, 'Overall Score')
+                ),
+                React.createElement(View, { style: { alignItems: 'center' } },
+                    React.createElement(View, { style: { ...styles.clarityBadge, backgroundColor: performanceInfo.color } },
+                        React.createElement(Text, { style: styles.clarityText }, performanceInfo.label)
                     ),
-                    React.createElement(View, { style: { alignItems: 'center' } },
-                        React.createElement(View, { style: styles.clarityBadge },
-                            React.createElement(Text, { style: styles.clarityText }, `${data.academicReadinessIndex}/100`)
-                        ),
-                        React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', marginTop: 4 } }, 'Academic Readiness')
-                    )
+                    React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', marginTop: 4 } }, 'Performance Level')
+                ),
+                React.createElement(View, { style: { alignItems: 'center' } },
+                    React.createElement(View, { style: styles.clarityBadge },
+                        React.createElement(Text, { style: styles.clarityText }, `${data.academicReadinessIndex}/100`)
+                    ),
+                    React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', marginTop: 4 } }, 'Academic Readiness')
                 )
             ),
-            React.createElement(View, { style: styles.section },
-                React.createElement(Text, { style: styles.sectionTitle }, '3. Aptitude Scores'),
-                React.createElement(View, { style: styles.scoreGrid },
-                    ...Object.entries(data.aptitudeScores)
-                        .filter(([key]) => key !== 'overall')
-                        .map(([name, score]) =>
-                            React.createElement(View, { style: styles.scoreItem, key: name },
-                                React.createElement(Text, { style: styles.scoreName }, name),
-                                React.createElement(Text, { style: styles.scoreValue },
-                                    `${score.correct}/${score.total} (${Math.round(score.percentage)}%)`
-                                )
+            ai?.overallSummary && React.createElement(Text, { style: { ...body, marginTop: 8 } }, ai.overallSummary)
+        ),
+        // Aptitude Scores
+        React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '3. Aptitude Test Results'),
+            React.createElement(View, { style: styles.scoreGrid },
+                ...Object.entries(data.aptitudeScores)
+                    .filter(([key]) => key !== 'overall')
+                    .map(([name, score]) =>
+                        React.createElement(View, { style: styles.scoreItem, key: name },
+                            React.createElement(Text, { style: styles.scoreName }, name),
+                            React.createElement(Text, { style: styles.scoreValue },
+                                `${score.correct}/${score.total} (${Math.round(score.percentage)}%)`
                             )
                         )
-                )
-            ),
-            React.createElement(View, { style: styles.section },
-                React.createElement(Text, { style: styles.sectionTitle }, '4. Strengths & Growth Areas'),
-                data.topStrengths.length > 0 && React.createElement(View, { style: { marginBottom: 8 } },
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#0e6957', marginBottom: 4 } }, 'Top Strengths:'),
-                    ...data.topStrengths.map((strength, i) =>
-                        React.createElement(Text, { style: { fontSize: 10, color: '#2d4a44', paddingLeft: 10 }, key: `s-${i}` }, `• ${strength}`)
                     )
-                ),
-                data.areasForImprovement.length > 0 && React.createElement(View, {},
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#d97706', marginBottom: 4 } }, 'Areas to Develop:'),
-                    ...data.areasForImprovement.map((area, i) =>
-                        React.createElement(Text, { style: { fontSize: 10, color: '#2d4a44', paddingLeft: 10 }, key: `a-${i}` }, `• ${area}`)
-                    )
-                )
-            ),
-            data.aiInsights && React.createElement(View, { style: styles.section },
-                React.createElement(Text, { style: styles.sectionTitle }, '5. AI-Powered Insights'),
-                data.aiInsights.overallSummary && React.createElement(View, { style: { marginBottom: 8 } },
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#0a4f41', marginBottom: 4 } }, 'Summary:'),
-                    React.createElement(Text, { style: styles.sectionContent }, data.aiInsights.overallSummary)
-                ),
-                data.aiInsights.academicStreams && data.aiInsights.academicStreams.length > 0 &&
-                React.createElement(View, { style: { marginBottom: 8 } },
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#0a4f41', marginBottom: 4 } }, 'Recommended Academic Streams:'),
-                    ...data.aiInsights.academicStreams.map((stream, i) =>
-                        React.createElement(Text, { style: styles.careerItem, key: `stream-${i}` }, `• ${stream}`)
-                    )
-                ),
-                data.aiInsights.careerGuidance && React.createElement(View, { style: { marginBottom: 8 } },
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#0a4f41', marginBottom: 4 } }, 'Career Guidance:'),
-                    React.createElement(Text, { style: styles.sectionContent }, data.aiInsights.careerGuidance)
-                ),
-                data.aiInsights.studyTips && data.aiInsights.studyTips.length > 0 &&
-                React.createElement(View, { style: { marginBottom: 8 } },
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#0a4f41', marginBottom: 4 } }, 'Study Tips:'),
-                    ...data.aiInsights.studyTips.map((tip, i) =>
-                        React.createElement(Text, { style: styles.careerItem, key: `tip-${i}` }, `• ${tip}`)
-                    )
-                ),
-                data.aiInsights.nextSteps && data.aiInsights.nextSteps.length > 0 &&
-                React.createElement(View, {},
-                    React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#0a4f41', marginBottom: 4 } }, 'Recommended Next Steps:'),
-                    ...data.aiInsights.nextSteps.map((step, i) =>
-                        React.createElement(Text, { style: styles.careerItem, key: `step-${i}` }, `${i + 1}. ${step}`)
-                    )
-                )
-            ),
-            React.createElement(View, { style: styles.footer, fixed: true },
-                React.createElement(Text, { style: styles.footerText }, 'PRAGYA Student Aptitude Report | Vision Circuit Labs | Confidential')
             )
+        ),
+        React.createElement(View, { style: styles.footer, fixed: true },
+            React.createElement(Text, { style: styles.footerText }, 'PRAGYA 360° Student Career Report | Page 1 | Confidential')
         )
     );
+
+    // Page 2: RIASEC + Personality + Readiness
+    const page2 = React.createElement(Page, { size: 'A4', style: styles.page },
+        // RIASEC Scores
+        data.riasecScores && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '4. Career Interest Inventory (RIASEC)'),
+            React.createElement(View, { style: styles.scoreGrid },
+                ...Object.entries(data.riasecScores).map(([code, score]) =>
+                    React.createElement(View, { style: styles.scoreItem, key: code },
+                        React.createElement(Text, { style: styles.scoreName }, `${RIASEC_FULL_NAMES[code] || code} (${code})`),
+                        React.createElement(Text, { style: styles.scoreValue }, `${score}/8`)
+                    )
+                )
+            ),
+            ai?.riasecAnalysis && React.createElement(Text, { style: { ...body, marginTop: 6 } }, ai.riasecAnalysis)
+        ),
+        // Personality Traits
+        data.personalityScores && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '5. Personality Traits'),
+            React.createElement(View, { style: styles.scoreGrid },
+                ...Object.entries(data.personalityScores).map(([trait, info]) =>
+                    React.createElement(View, { style: styles.scoreItem, key: trait },
+                        React.createElement(Text, { style: styles.scoreName }, trait),
+                        React.createElement(Text, { style: styles.scoreValue }, `${info.score}/${info.maxScore} — ${info.level}`)
+                    )
+                )
+            ),
+            ai?.personalityAnalysis && React.createElement(Text, { style: { ...body, marginTop: 6 } }, ai.personalityAnalysis)
+        ),
+        // Readiness Scores
+        data.readinessScores && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '6. Skill & Career Readiness'),
+            React.createElement(View, { style: styles.scoreGrid },
+                ...Object.entries(data.readinessScores)
+                    .filter(([key]) => key !== 'overall')
+                    .map(([section, info]) =>
+                        React.createElement(View, { style: styles.scoreItem, key: section },
+                            React.createElement(Text, { style: styles.scoreName }, section),
+                            React.createElement(Text, { style: styles.scoreValue }, `${info.score}/${info.maxScore} (${Math.round(info.percentage)}%)`)
+                        )
+                    )
+            ),
+            ai?.readinessAnalysis && React.createElement(Text, { style: { ...body, marginTop: 6 } }, ai.readinessAnalysis)
+        ),
+        // Strengths & Growth
+        React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '7. Strengths & Growth Areas'),
+            data.topStrengths.length > 0 && React.createElement(View, { style: { marginBottom: 8 } },
+                React.createElement(Text, { style: { ...label, color: '#0e6957' } }, 'Top Strengths:'),
+                ...data.topStrengths.map((s, i) =>
+                    React.createElement(Text, { style: { fontSize: 10, color: '#2d4a44', paddingLeft: 10 }, key: `s-${i}` }, `• ${s}`)
+                )
+            ),
+            data.areasForImprovement.length > 0 && React.createElement(View, {},
+                React.createElement(Text, { style: { ...label, color: '#d97706' } }, 'Areas to Develop:'),
+                ...data.areasForImprovement.map((a, i) =>
+                    React.createElement(Text, { style: { fontSize: 10, color: '#2d4a44', paddingLeft: 10 }, key: `a-${i}` }, `• ${a}`)
+                )
+            )
+        ),
+        React.createElement(View, { style: styles.footer, fixed: true },
+            React.createElement(Text, { style: styles.footerText }, 'PRAGYA 360° Student Career Report | Page 2 | Confidential')
+        )
+    );
+
+    // Page 3: Career Guidance + Sectors + Study Tips + Next Steps
+    const page3 = React.createElement(Page, { size: 'A4', style: styles.page },
+        // Academic Streams
+        academicStreams.length > 0 && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '8. Recommended Academic Streams'),
+            ...academicStreams.map((stream, i) =>
+                React.createElement(Text, { style: bullet, key: `stream-${i}` }, `• ${stream}`)
+            ),
+            ai?.academicStreams && typeof ai.academicStreams === 'object' && 'reasoning' in ai.academicStreams && ai.academicStreams.reasoning &&
+                React.createElement(Text, { style: { ...body, marginTop: 4 } }, ai.academicStreams.reasoning)
+        ),
+        // Career Guidance
+        (suggestedCareers.length > 0 || careerGuidanceText) && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '9. Career Guidance'),
+            careerGuidanceText && React.createElement(Text, { style: body }, careerGuidanceText),
+            suggestedCareers.length > 0 && React.createElement(View, { style: { marginBottom: 8 } },
+                React.createElement(Text, { style: label }, 'Suggested Careers:'),
+                ...suggestedCareers.map((c, i) =>
+                    React.createElement(View, { style: { marginBottom: 4, paddingLeft: 10 }, key: `c-${i}` },
+                        React.createElement(Text, { style: { fontSize: 10, fontWeight: 'bold', color: '#2d4a44' } }, `• ${c.role}`),
+                        c.fitReason && React.createElement(Text, { style: { fontSize: 9, color: '#4a7c72', paddingLeft: 12 } }, c.fitReason)
+                    )
+                )
+            ),
+            skillsToDevelop.length > 0 && React.createElement(View, {},
+                React.createElement(Text, { style: label }, 'Skills to Develop:'),
+                ...skillsToDevelop.map((s, i) =>
+                    React.createElement(Text, { style: bullet, key: `sk-${i}` }, `• ${s}`)
+                )
+            )
+        ),
+        // Sector Recommendations
+        ai?.sectorRecommendations?.topSectors && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '10. Sector Recommendations'),
+            ...ai.sectorRecommendations.topSectors.map((s, i) =>
+                React.createElement(Text, { style: bullet, key: `sec-${i}` }, `• ${s}`)
+            ),
+            ai.sectorRecommendations.reasoning &&
+                React.createElement(Text, { style: { ...body, marginTop: 4 } }, ai.sectorRecommendations.reasoning)
+        ),
+        // Study Tips
+        studyTips.length > 0 && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '11. Study Tips'),
+            ...studyTips.map((tip, i) =>
+                React.createElement(Text, { style: bullet, key: `tip-${i}` }, `• ${tip}`)
+            )
+        ),
+        // Next Steps
+        nextSteps.length > 0 && React.createElement(View, { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, '12. Recommended Next Steps'),
+            ...nextSteps.map((step, i) =>
+                React.createElement(Text, { style: bullet, key: `step-${i}` }, `${i + 1}. ${step}`)
+            )
+        ),
+        React.createElement(View, { style: styles.footer, fixed: true },
+            React.createElement(Text, { style: styles.footerText }, 'PRAGYA 360° Student Career Report | Page 3 | Confidential')
+        )
+    );
+
+    return React.createElement(Document, {}, page1, page2, page3);
 };
 
 @Injectable()
@@ -831,13 +970,16 @@ export class ReportsService {
 
         // Re-generate AI insights if they are stale (missing new comprehensive fields)
         const aiInsights = assessmentData.aiInsights as any;
-        const isStaleAI = !isStudentAssessment && aiInsights && (
+        const isStaleJobSeekerAI = !isStudentAssessment && aiInsights && (
             !aiInsights.detailedTraitInterpretation ||
             !aiInsights.developmentRoadmap ||
             !aiInsights.employabilitySummary ||
             (aiInsights.employabilitySummary && aiInsights.employabilitySummary.length < 100)
         );
-        if (isStaleAI) {
+        // Student insights are stale if they lack sectorRecommendations (fallback-generated before Gemini fix)
+        const isStaleStudentAI = isStudentAssessment && aiInsights && !aiInsights.sectorRecommendations;
+
+        if (isStaleJobSeekerAI) {
             this.logger.log(`Detected stale AI insights for ${userAssessmentId}, regenerating comprehensive text...`);
             try {
                 const scores = {
@@ -850,12 +992,38 @@ export class ReportsService {
                 };
                 const careers = (assessmentData.careerMatches || []) as { title: string; matchScore: number }[];
                 const freshAI = this.aiAnalysisService.getFallbackAnalysis(scores as any, careers as any);
-                // Save to DB and update local data
                 await this.aiAnalysisService.saveAnalysis(userAssessmentId, freshAI);
                 assessmentData = { ...assessmentData, aiInsights: freshAI };
                 this.logger.log(`AI insights regenerated successfully for ${userAssessmentId}`);
             } catch (err) {
                 this.logger.warn(`Failed to regenerate AI insights: ${err instanceof Error ? err.stack : err}`);
+            }
+        }
+
+        if (isStaleStudentAI) {
+            this.logger.log(`Detected stale student AI insights for ${userAssessmentId}, regenerating with Gemini...`);
+            try {
+                const studentProfile = assessment.user.studentProfile;
+                const freshAI = await this.aiAnalysisService.generateStudentAnalysis(
+                    {
+                        fullName: studentProfile?.fullName || 'Student',
+                        grade: studentProfile?.grade || undefined,
+                        schoolName: studentProfile?.schoolName || undefined,
+                        location: studentProfile?.location || undefined,
+                    },
+                    assessmentData.aptitudeScores || {},
+                    assessmentData.riasecScores || {},
+                    assessmentData.riasecCode || 'RIA',
+                    assessmentData.personalityScores || {},
+                    assessmentData.employabilityScores || {}, // readiness stored in employabilityScores
+                );
+                if (freshAI) {
+                    await this.aiAnalysisService.saveStudentAnalysis(userAssessmentId, freshAI);
+                    assessmentData = { ...assessmentData, aiInsights: freshAI };
+                    this.logger.log(`Student AI insights regenerated successfully for ${userAssessmentId}`);
+                }
+            } catch (err) {
+                this.logger.warn(`Failed to regenerate student AI insights: ${err instanceof Error ? err.stack : err}`);
             }
         }
 
@@ -877,6 +1045,12 @@ export class ReportsService {
                 academicReadinessIndex: assessmentData.academicReadinessIndex || 50,
                 topStrengths: assessmentData.topStrengths || [],
                 areasForImprovement: assessmentData.areasForImprovement || [],
+                riasecCode: assessmentData.riasecCode || undefined,
+                riasecScores: (assessmentData.riasecScores as Record<string, number>) || undefined,
+                personalityScores: (assessmentData.personalityScores as Record<string, { score: number; maxScore: number; level: string }>) || undefined,
+                readinessScores: (assessmentData.employabilityScores as Record<string, { score: number; maxScore: number; percentage: number }>) || undefined,
+                careerMatches: (assessmentData.careerMatches as { title: string; matchScore: number }[]) || undefined,
+                sectorMatches: (assessmentData.sectorMatches as { name: string; matchScore: number }[]) || undefined,
                 aiInsights: assessmentData.aiInsights as any,
             };
 

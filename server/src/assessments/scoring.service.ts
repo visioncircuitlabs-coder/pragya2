@@ -68,6 +68,26 @@ const PERSONALITY_SECTIONS = [
     'Integrity & Responsibility',
 ];
 
+// Student personality trait sections (3-point scale)
+const STUDENT_PERSONALITY_SECTIONS = [
+    'Responsibility & Discipline',
+    'Stress Tolerance',
+    'Curiosity & Openness',
+    'Social Interaction',
+    'Team vs Independent Style',
+    'Decision-Making Style',
+];
+
+// Student readiness sections (4-point scale)
+const STUDENT_READINESS_SECTIONS = [
+    'Communication & Expression',
+    'Problem-Solving Approach',
+    'Creativity & Idea Generation',
+    'Adaptability',
+    'Time Management & Responsibility',
+    'Digital Awareness',
+];
+
 export interface AptitudeScores {
     [section: string]: {
         correct: number;
@@ -120,12 +140,50 @@ export interface ComprehensiveScores {
     clarityIndex: number; // 0-100 career direction clarity
 }
 
-// Student-specific scores (aptitude-only assessments)
+// Student RIASEC scores (binary forced-choice, max 8 per type)
+export interface StudentRiasecScores {
+    R: number;
+    I: number;
+    A: number;
+    S: number;
+    E: number;
+    C: number;
+}
+
+// Student Personality scores (3-point scale, 6 questions per trait)
+export interface StudentPersonalityScores {
+    [trait: string]: {
+        score: number;
+        maxScore: number; // 18 per trait (6 questions × 3 max)
+        level: 'Emerging' | 'Moderate' | 'Strong';
+    };
+}
+
+// Student Readiness scores (4-point scale, 6 questions per section)
+export interface StudentReadinessScores {
+    [section: string]: {
+        score: number;
+        maxScore: number; // 24 per section (6 questions × 4 max)
+        percentage: number;
+    };
+    overall: {
+        score: number;
+        maxScore: number;
+        percentage: number;
+    };
+}
+
+// Student-specific scores (comprehensive 4-module assessment)
 export interface StudentScores {
     aptitude: AptitudeScores;
+    riasec: StudentRiasecScores;
+    riasecCode: string; // Holland Code (top 3)
+    personality: StudentPersonalityScores;
+    readiness: StudentReadinessScores;
     weightedScore: number; // Weighted composite score (0-100)
     performanceLevel: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT';
-    academicReadinessIndex: number; // 0-100, similar to clarityIndex for job seekers
+    academicReadinessIndex: number; // 0-100
+    clarityIndex: number; // 0-100 career direction clarity
     topStrengths: string[]; // Top 2 performing sections
     areasForImprovement: string[]; // Bottom 2 performing sections
 }
@@ -363,11 +421,9 @@ export class ScoringService {
     }
 
     /**
-     * Calculate scores specifically for student assessments (aptitude-only)
-     * Uses weighted scoring and calculates academic readiness index
+     * Calculate comprehensive scores for student assessments (4 modules)
      */
     async calculateStudentScores(userAssessmentId: string): Promise<StudentScores> {
-        // Get all user responses with question and option details
         const responses = await this.prisma.userResponse.findMany({
             where: { userAssessmentId },
             include: {
@@ -386,51 +442,210 @@ export class ScoringService {
             responsesBySection.get(section)!.push(response);
         }
 
-        // Calculate aptitude scores
+        // Module 1: Aptitude
         const aptitude = this.calculateAptitudeScores(responsesBySection);
 
-        // Calculate weighted composite score
-        const weightedScore = this.calculateWeightedStudentScore(aptitude);
+        // Module 2: RIASEC (binary scoring)
+        const { scores: riasec, hollandCode: riasecCode } = this.calculateStudentRiasecScores(responsesBySection);
 
-        // Determine performance level
+        // Module 3: Personality (3-point scale)
+        const personality = this.calculateStudentPersonalityScores(responsesBySection);
+
+        // Module 4: Readiness (4-point scale)
+        const readiness = this.calculateStudentReadinessScores(responsesBySection);
+
+        // Composite metrics
+        const weightedScore = this.calculateWeightedStudentScore(aptitude, readiness, personality, riasec);
         const performanceLevel = this.getPerformanceLevel(weightedScore);
-
-        // Calculate academic readiness index
-        const academicReadinessIndex = this.calculateAcademicReadinessIndex(aptitude);
-
-        // Find top strengths and areas for improvement
-        const { topStrengths, areasForImprovement } = this.getStrengthsAndWeaknesses(aptitude);
+        const academicReadinessIndex = this.calculateAcademicReadinessIndex(aptitude, readiness);
+        const clarityIndex = this.calculateStudentClarityIndex(riasec, personality);
+        const { topStrengths, areasForImprovement } = this.getStudentStrengthsAndWeaknesses(aptitude, personality, readiness);
 
         return {
             aptitude,
+            riasec,
+            riasecCode,
+            personality,
+            readiness,
             weightedScore,
             performanceLevel,
             academicReadinessIndex,
+            clarityIndex,
             topStrengths,
             areasForImprovement,
         };
     }
 
     /**
-     * Calculate weighted composite score for students (0-100)
+     * Student RIASEC: Binary forced-choice (scoreValue 0 or 1), sum per type
      */
-    private calculateWeightedStudentScore(aptitude: AptitudeScores): number {
-        let weightedSum = 0;
-        let totalWeight = 0;
+    private calculateStudentRiasecScores(
+        responsesBySection: Map<string, any[]>,
+    ): { scores: StudentRiasecScores; hollandCode: string } {
+        const scores: StudentRiasecScores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
 
+        const sectionToCode: Record<string, keyof StudentRiasecScores> = {
+            REALISTIC: 'R',
+            INVESTIGATIVE: 'I',
+            ARTISTIC: 'A',
+            SOCIAL: 'S',
+            ENTERPRISING: 'E',
+            CONVENTIONAL: 'C',
+        };
+
+        for (const section of RIASEC_SECTIONS) {
+            const responses = responsesBySection.get(section) || [];
+            const code = sectionToCode[section];
+            scores[code] = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
+        }
+
+        const sortedCodes = (Object.entries(scores) as [keyof StudentRiasecScores, number][])
+            .sort((a, b) => b[1] - a[1])
+            .map(([code]) => code);
+        const hollandCode = sortedCodes.slice(0, 3).join('');
+
+        return { scores, hollandCode };
+    }
+
+    /**
+     * Student Personality: 3-point scale (A=1, B=2, C=3), 6 questions per trait
+     */
+    private calculateStudentPersonalityScores(
+        responsesBySection: Map<string, any[]>,
+    ): StudentPersonalityScores {
+        const scores: StudentPersonalityScores = {};
+
+        for (const trait of STUDENT_PERSONALITY_SECTIONS) {
+            const responses = responsesBySection.get(trait) || [];
+            if (responses.length === 0) continue;
+
+            const score = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
+            const maxScore = responses.length * 3; // 3-point scale
+
+            let level: 'Emerging' | 'Moderate' | 'Strong';
+            if (score <= 10) level = 'Emerging';
+            else if (score <= 15) level = 'Moderate';
+            else level = 'Strong';
+
+            scores[trait] = { score, maxScore, level };
+        }
+
+        return scores;
+    }
+
+    /**
+     * Student Readiness: 4-point scale (A=4, B=3, C=2, D=1), 6 questions per section
+     */
+    private calculateStudentReadinessScores(
+        responsesBySection: Map<string, any[]>,
+    ): StudentReadinessScores {
+        const scores: StudentReadinessScores = {
+            overall: { score: 0, maxScore: 0, percentage: 0 },
+        };
+
+        for (const section of STUDENT_READINESS_SECTIONS) {
+            const responses = responsesBySection.get(section) || [];
+            if (responses.length === 0) continue;
+
+            const score = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
+            const maxScore = responses.length * 4; // 4-point scale
+            const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+
+            scores[section] = { score, maxScore, percentage };
+            scores.overall.score += score;
+            scores.overall.maxScore += maxScore;
+        }
+
+        scores.overall.percentage =
+            scores.overall.maxScore > 0
+                ? Math.round((scores.overall.score / scores.overall.maxScore) * 100)
+                : 0;
+
+        return scores;
+    }
+
+    /**
+     * Student Clarity Index (0-100)
+     * Based on RIASEC focus + personality consistency
+     */
+    private calculateStudentClarityIndex(
+        riasec: StudentRiasecScores,
+        personality: StudentPersonalityScores,
+    ): number {
+        // RIASEC Focus (0-50): Higher std dev = more focused interests
+        const riasecValues = Object.values(riasec);
+        const riasecMean = riasecValues.reduce((a, b) => a + b, 0) / riasecValues.length;
+        const riasecVariance = riasecValues.reduce((sum, val) => sum + Math.pow(val - riasecMean, 2), 0) / riasecValues.length;
+        const riasecStdDev = Math.sqrt(riasecVariance);
+        // Max std dev for binary (0/1) scoring with 8 questions per type ≈ 3.3
+        const maxStdDev = 3.3;
+        const riasecFocus = Math.min(50, Math.round((riasecStdDev / maxStdDev) * 50));
+
+        // Personality Consistency (0-50): Higher average across traits = clearer direction
+        const traitScores = Object.values(personality).map(p => p.score / p.maxScore);
+        const avgTrait = traitScores.length > 0
+            ? traitScores.reduce((a, b) => a + b, 0) / traitScores.length
+            : 0;
+        const personalityScore = Math.round(avgTrait * 50);
+
+        return Math.min(100, riasecFocus + personalityScore);
+    }
+
+    /**
+     * Calculate weighted composite score for students (0-100)
+     * Incorporates all 4 modules: Aptitude (40%), Readiness (30%), Personality (20%), RIASEC focus (10%)
+     */
+    private calculateWeightedStudentScore(
+        aptitude: AptitudeScores,
+        readiness?: StudentReadinessScores,
+        personality?: StudentPersonalityScores,
+        riasec?: StudentRiasecScores,
+    ): number {
+        // Module 1: Aptitude (40%) — weighted average of section percentages
+        let aptitudeScore = 0;
+        let aptitudeWeight = 0;
         for (const [section, weight] of Object.entries(STUDENT_SECTION_WEIGHTS)) {
             if (aptitude[section]) {
-                weightedSum += aptitude[section].percentage * weight;
-                totalWeight += weight;
+                aptitudeScore += aptitude[section].percentage * weight;
+                aptitudeWeight += weight;
+            }
+        }
+        if (aptitudeWeight > 0 && aptitudeWeight < 1) {
+            aptitudeScore = aptitudeScore / aptitudeWeight;
+        }
+
+        // Module 2: Readiness (30%) — overall readiness percentage
+        const readinessScore = readiness?.overall?.percentage || 0;
+
+        // Module 3: Personality (20%) — average trait score as percentage
+        let personalityScore = 0;
+        if (personality) {
+            const traits = Object.values(personality);
+            if (traits.length > 0) {
+                personalityScore = traits.reduce((sum, t) => sum + (t.score / t.maxScore) * 100, 0) / traits.length;
             }
         }
 
-        // Normalize if not all sections were answered
-        if (totalWeight > 0 && totalWeight < 1) {
-            weightedSum = weightedSum / totalWeight;
+        // Module 4: RIASEC focus (10%) — differentiation, not raw score
+        // Higher std dev = clearer career direction = better
+        let riasecFocusScore = 0;
+        if (riasec) {
+            const values = Object.values(riasec);
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+            const stdDev = Math.sqrt(variance);
+            // Max meaningful std dev ≈ 3.3 for binary 8-question scoring
+            riasecFocusScore = Math.min(100, Math.round((stdDev / 3.3) * 100));
         }
 
-        return Math.round(weightedSum);
+        const composite = Math.round(
+            aptitudeScore * 0.40 +
+            readinessScore * 0.30 +
+            personalityScore * 0.20 +
+            riasecFocusScore * 0.10
+        );
+
+        return Math.min(100, composite);
     }
 
     /**
@@ -446,33 +661,36 @@ export class ScoringService {
     /**
      * Calculate Academic Readiness Index (0-100) for students
      * Based on:
-     * 1. Overall performance (50 points)
-     * 2. Balance across sections - consistent performance (50 points)
+     * 1. Aptitude performance (40 points)
+     * 2. Skill readiness (40 points)
+     * 3. Consistency across aptitude sections (20 points)
      */
-    private calculateAcademicReadinessIndex(aptitude: AptitudeScores): number {
+    private calculateAcademicReadinessIndex(aptitude: AptitudeScores, readiness?: StudentReadinessScores): number {
         const sections = Object.entries(aptitude)
             .filter(([key]) => key !== 'overall' && STUDENT_SECTION_WEIGHTS[key])
             .map(([, data]) => data.percentage);
 
         if (sections.length === 0) return 0;
 
-        // 1. Performance Score (0-50): Based on overall average
-        const avgPerformance = sections.reduce((a, b) => a + b, 0) / sections.length;
-        const performanceScore = Math.round((avgPerformance / 100) * 50);
+        // 1. Aptitude Score (0-40)
+        const avgAptitude = sections.reduce((a, b) => a + b, 0) / sections.length;
+        const aptitudePoints = Math.round((avgAptitude / 100) * 40);
 
-        // 2. Consistency Score (0-50): Low variance = high consistency
-        const mean = avgPerformance;
+        // 2. Readiness Score (0-40)
+        const readinessPercentage = readiness?.overall?.percentage || 0;
+        const readinessPoints = Math.round((readinessPercentage / 100) * 40);
+
+        // 3. Consistency Score (0-20): Low variance in aptitude = high consistency
+        const mean = avgAptitude;
         const variance = sections.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / sections.length;
         const stdDev = Math.sqrt(variance);
-        // Max std dev is around 50 for extreme cases (0 and 100 scores)
-        // Low std dev (< 10) = high consistency
-        const consistencyScore = Math.round(Math.max(0, 50 - stdDev));
+        const consistencyPoints = Math.round(Math.max(0, 20 - (stdDev * 0.4)));
 
-        return Math.min(100, performanceScore + consistencyScore);
+        return Math.min(100, aptitudePoints + readinessPoints + consistencyPoints);
     }
 
     /**
-     * Get top 2 strengths and bottom 2 areas for improvement
+     * Get top 2 strengths and bottom 2 areas for improvement (aptitude only, for job seekers)
      */
     private getStrengthsAndWeaknesses(aptitude: AptitudeScores): {
         topStrengths: string[];
@@ -484,6 +702,45 @@ export class ScoringService {
 
         const topStrengths = sections.slice(0, 2).map(([name]) => name);
         const areasForImprovement = sections.slice(-2).map(([name]) => name);
+
+        return { topStrengths, areasForImprovement };
+    }
+
+    /**
+     * Get student strengths and growth areas across all 4 modules
+     */
+    private getStudentStrengthsAndWeaknesses(
+        aptitude: AptitudeScores,
+        personality: StudentPersonalityScores,
+        readiness: StudentReadinessScores,
+    ): { topStrengths: string[]; areasForImprovement: string[] } {
+        // Collect all scoreable items as { name, percentage }
+        const allItems: { name: string; percentage: number }[] = [];
+
+        // Aptitude sections
+        for (const [name, data] of Object.entries(aptitude)) {
+            if (name !== 'overall' && STUDENT_SECTION_WEIGHTS[name]) {
+                allItems.push({ name: `${name} (Aptitude)`, percentage: data.percentage });
+            }
+        }
+
+        // Personality traits
+        for (const [trait, data] of Object.entries(personality)) {
+            allItems.push({ name: `${trait} (Personality)`, percentage: Math.round((data.score / data.maxScore) * 100) });
+        }
+
+        // Readiness sections
+        for (const [section, data] of Object.entries(readiness)) {
+            if (section !== 'overall') {
+                allItems.push({ name: `${section} (Readiness)`, percentage: data.percentage });
+            }
+        }
+
+        // Sort by percentage
+        allItems.sort((a, b) => b.percentage - a.percentage);
+
+        const topStrengths = allItems.slice(0, 3).map(i => i.name);
+        const areasForImprovement = allItems.slice(-3).map(i => i.name);
 
         return { topStrengths, areasForImprovement };
     }

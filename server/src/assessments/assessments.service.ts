@@ -307,7 +307,7 @@ export class AssessmentsService {
     }
 
     /**
-     * Process student assessment (aptitude-only)
+     * Process student assessment (comprehensive 4-module)
      */
     private async processStudentAssessment(userAssessmentId: string, userId: string) {
         const studentScores = await this.scoringService.calculateStudentScores(userAssessmentId);
@@ -318,7 +318,51 @@ export class AssessmentsService {
             include: { studentProfile: true },
         });
 
-        // Generate AI analysis
+        // Get career matches using RIASEC data
+        let careerMatches = null;
+        let sectorMatches = null;
+        if (studentScores.riasecCode) {
+            careerMatches = await this.careersService.findMatchingCareers(
+                studentScores.riasecCode,
+                studentScores.riasec as any,
+                studentScores.aptitude,
+            );
+            // Convert student personality (3-point scale) to job-seeker format (5-point scale)
+            // so sector matching can compute meaningful personalityFit scores
+            const studentToJobSeekerTraitMap: Record<string, string> = {
+                'Responsibility & Discipline': 'Work Discipline & Task Reliability',
+                'Stress Tolerance': 'Stress Tolerance & Emotional Regulation',
+                'Curiosity & Openness': 'Learning & Change Orientation',
+                'Social Interaction': 'Social Engagement & Task Focus',
+                'Team vs Independent Style': 'Team Compatibility & Cooperation',
+                'Decision-Making Style': 'Integrity & Responsibility',
+            };
+            const convertedPersonality: Record<string, { score: number; maxScore: number; average: number }> = {};
+            for (const [studentTrait, jobSeekerTrait] of Object.entries(studentToJobSeekerTraitMap)) {
+                const traitData = studentScores.personality[studentTrait];
+                if (traitData) {
+                    // Student: 6 questions × 3-point scale (score range 6-18, avg 1-3)
+                    // Sector ideal: 1-5 scale. Map 1-3 → 1-5: mapped = 1 + (avg - 1) * 2
+                    const avgPerQuestion = traitData.score / 6;
+                    const mappedAverage = 1 + (avgPerQuestion - 1) * 2;
+                    convertedPersonality[jobSeekerTrait] = {
+                        score: traitData.score,
+                        maxScore: traitData.maxScore,
+                        average: Math.round(mappedAverage * 100) / 100,
+                    };
+                }
+            }
+
+            sectorMatches = this.sectorMatchingService.findMatchingSectors(
+                studentScores.riasec as any,
+                studentScores.riasecCode,
+                studentScores.aptitude,
+                convertedPersonality as any,
+                studentScores.readiness as any,
+            );
+        }
+
+        // Generate AI analysis with all 4 modules
         let aiAnalysis = null;
         if (user?.studentProfile) {
             aiAnalysis = await this.aiAnalysisService.generateStudentAnalysis(
@@ -329,6 +373,10 @@ export class AssessmentsService {
                     location: user.studentProfile.location || undefined,
                 },
                 studentScores.aptitude,
+                studentScores.riasec,
+                studentScores.riasecCode,
+                studentScores.personality,
+                studentScores.readiness,
             );
 
             if (aiAnalysis) {
@@ -336,7 +384,26 @@ export class AssessmentsService {
             }
         }
 
-        // Update user assessment with scores
+        // Serialize sector matches for storage
+        const sectorMatchesForStorage = sectorMatches?.topSectors?.slice(0, 6).map((sm: any) => ({
+            id: sm.sector.id,
+            name: sm.sector.name,
+            nameMl: sm.sector.nameMl,
+            icon: sm.sector.icon,
+            description: sm.sector.description,
+            matchScore: sm.matchScore,
+            riasecFit: sm.riasecFit,
+            aptitudeFit: sm.aptitudeFit,
+            personalityFit: sm.personalityFit,
+            employabilityFit: sm.employabilityFit,
+            matchReasons: sm.matchReasons,
+            readinessLevel: sm.readinessLevel,
+            exampleRoles: sm.sector.exampleRoles,
+            growthOutlook: sm.sector.growthOutlook,
+            avgSalaryRange: sm.sector.avgSalaryRange,
+        })) || [];
+
+        // Update user assessment with all scores
         await this.prisma.userAssessment.update({
             where: { id: userAssessmentId },
             data: {
@@ -344,6 +411,13 @@ export class AssessmentsService {
                 completedAt: new Date(),
                 totalScore: studentScores.weightedScore,
                 aptitudeScores: studentScores.aptitude as any,
+                riasecScores: studentScores.riasec as any,
+                riasecCode: studentScores.riasecCode,
+                personalityScores: studentScores.personality as any,
+                employabilityScores: studentScores.readiness as any, // Reuse field for readiness
+                clarityIndex: studentScores.clarityIndex,
+                careerMatches: careerMatches?.topMatches as any || null,
+                sectorMatches: sectorMatchesForStorage as any,
                 academicReadinessIndex: studentScores.academicReadinessIndex,
                 performanceLevel: studentScores.performanceLevel,
                 topStrengths: studentScores.topStrengths,
@@ -356,11 +430,14 @@ export class AssessmentsService {
             userAssessmentId,
             type: 'STUDENT',
             score: studentScores.weightedScore,
+            riasecCode: studentScores.riasecCode,
         });
 
         return {
             status: 'COMPLETED',
             scores: studentScores,
+            careerMatches: careerMatches?.topMatches || [],
+            sectorMatches: sectorMatchesForStorage,
             aiAnalysis,
         };
     }

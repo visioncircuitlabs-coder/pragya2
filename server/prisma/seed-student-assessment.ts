@@ -1,19 +1,29 @@
 import { PrismaClient, AssessmentType, UserRole } from '@prisma/client';
 import { studentAptitudeQuestions } from './seed-data/student-aptitude-questions';
+import { studentRiasecQuestions } from './seed-data/student-riasec-questions';
+import { studentPersonalityQuestions } from './seed-data/student-personality-questions';
+import { studentReadinessQuestions } from './seed-data/student-readiness-questions';
 
 const prisma = new PrismaClient();
 
 /**
  * PRAGYA 360° CAREER ASSESSMENT (For School Students)
- * 
- * Total: 60 questions across 6 aptitude sections
- * - Numerical Reasoning: 10 questions
- * - Verbal Reasoning: 10 questions  
- * - Abstract/Fluid Reasoning: 10 questions
- * - Spatial Ability: 10 questions
- * - Mechanical Reasoning: 10 questions
- * - Processing Speed & Accuracy: 10 questions
- * 
+ *
+ * Total: 180 questions across 4 modules:
+ *
+ * MODULE 1: Aptitude (60 questions)
+ *   - Numerical Reasoning, Verbal Reasoning, Abstract-Fluid Reasoning
+ *   - Spatial Ability, Mechanical Reasoning, Processing Speed & Accuracy
+ *
+ * MODULE 2: Career Interest Inventory / RIASEC (48 questions)
+ *   - 8 binary forced-choice questions per RIASEC type
+ *
+ * MODULE 3: Personality Traits (36 questions)
+ *   - 6 traits × 6 questions, 3-point scale
+ *
+ * MODULE 4: Skill & Career Readiness (36 questions)
+ *   - 6 sections × 6 questions, 4-point scale
+ *
  * Features:
  * - NO time limit
  * - Pause/Continue support (user can leave and resume)
@@ -75,37 +85,19 @@ async function seedStudentAssessment() {
     const assessment = await prisma.assessment.create({
         data: {
             title: 'Pragya 360° Career Assessment',
-            description: `Comprehensive aptitude assessment for school students covering 6 key areas:
+            description: `Comprehensive 360° career assessment for school students with 4 modules:
 
-1. **Numerical Reasoning** (10 questions)
-   - Problem solving with numbers
-   - Pattern recognition
-   - Mathematical logic
+**Module 1: Aptitude** (60 questions)
+Numerical, Verbal, Abstract, Spatial, Mechanical, and Processing Speed.
 
-2. **Verbal Reasoning** (10 questions)
-   - Logical deduction
-   - Verbal analogies
-   - Critical analysis
+**Module 2: Career Interest Inventory (RIASEC)** (48 questions)
+Discover your Holland Code — Realistic, Investigative, Artistic, Social, Enterprising, Conventional.
 
-3. **Abstract/Fluid Reasoning** (10 questions)
-   - Pattern completion
-   - Logical sequences
-   - Non-verbal reasoning
+**Module 3: Personality Traits** (36 questions)
+Responsibility, Stress Tolerance, Curiosity, Social Interaction, Teamwork, Decision-Making.
 
-4. **Spatial Ability** (10 questions)
-   - 3D visualization
-   - Mental rotation
-   - Spatial relationships
-
-5. **Mechanical Reasoning** (10 questions)
-   - Physical principles
-   - Cause and effect
-   - Mechanical concepts
-
-6. **Processing Speed & Accuracy** (10 questions)
-   - Quick recognition
-   - Symbol matching
-   - Attention to detail
+**Module 4: Skill & Career Readiness** (36 questions)
+Communication, Problem-Solving, Creativity, Adaptability, Time Management, Digital Awareness.
 
 **Note:** No time limit. You can pause and continue anytime.
 Available in English and Malayalam.`,
@@ -118,13 +110,26 @@ Available in English and Malayalam.`,
     });
     console.log(`✅ Created assessment: ${assessment.title} (ID: ${assessment.id})\n`);
 
-    // Seed all questions
-    console.log('🔄 Seeding questions...');
+    // Combine all 4 modules into one question list
+    const allQuestions = [
+        ...studentAptitudeQuestions,
+        ...studentRiasecQuestions,
+        ...studentPersonalityQuestions,
+        ...studentReadinessQuestions,
+    ];
+    const totalQuestions = allQuestions.length;
+
+    console.log(`🔄 Seeding ${totalQuestions} questions across 4 modules...`);
+    console.log(`   • Aptitude: ${studentAptitudeQuestions.length}`);
+    console.log(`   • RIASEC: ${studentRiasecQuestions.length}`);
+    console.log(`   • Personality: ${studentPersonalityQuestions.length}`);
+    console.log(`   • Readiness: ${studentReadinessQuestions.length}\n`);
+
     let orderIndex = 1;
     let createdCount = 0;
 
-    for (const q of studentAptitudeQuestions) {
-        const questionData = q as any; // Cast to handle optional fields
+    for (const q of allQuestions) {
+        const questionData = q as any;
         await prisma.question.create({
             data: {
                 assessmentId: assessment.id,
@@ -145,9 +150,8 @@ Available in English and Malayalam.`,
         });
         createdCount++;
 
-        // Progress indicator every 10 questions
-        if (createdCount % 10 === 0) {
-            console.log(`   ✅ ${createdCount}/${studentAptitudeQuestions.length} questions created...`);
+        if (createdCount % 20 === 0) {
+            console.log(`   ✅ ${createdCount}/${totalQuestions} questions created...`);
         }
     }
 
