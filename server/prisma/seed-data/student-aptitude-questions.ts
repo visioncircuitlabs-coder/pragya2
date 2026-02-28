@@ -108,7 +108,7 @@ export const studentAptitudeQuestions = [
         ]
     },
     {
-        "section": "Numerical Reasoning",
+        "section": "Abstract-Fluid Reasoning",
         "text": "If all Zogs are Tals and some Tals are Rims, which is true?",
         "textMl": "എല്ലാ 'ജോഗുകളും' (Zogs) 'ടാലുകൾ' (Tals) ആണെന്നും, ചില 'ടാലുകൾ' 'റിമ്മുകൾ' (Rims) ആണെന്നും കരുതുക. എങ്കിൽ താഴെ പറയുന്നതിൽ ഏതാണ് ശരി?",
         "options": [
@@ -209,7 +209,7 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
-                "text": "C < A",
+                "text": "D = B",
                 "textMl": "",
                 "isCorrect": false
             }
@@ -622,13 +622,18 @@ export const studentAptitudeQuestions = [
     },
     {
         "section": "Abstract-Fluid Reasoning",
-        "text": "If A → C, B → D, C → F, then D → ?",
-        "textMl": "A എന്നത് C- യായും, B എന്നത് D- യായും, C എന്നത് F- ആയും മാറുകയാണെങ്കിൽ, D എന്തായി മാറും?",
+        "text": "If A → C, B → D, C → E, then D → ?",
+        "textMl": "A എന്നത് C- യായും, B എന്നത് D- യായും, C എന്നത് E- ആയും മാറുകയാണെങ്കിൽ, D എന്തായി മാറും?",
         "options": [
+            {
+                "text": "F",
+                "textMl": "",
+                "isCorrect": true
+            },
             {
                 "text": "G",
                 "textMl": "",
-                "isCorrect": true
+                "isCorrect": false
             },
             {
                 "text": "H",
@@ -636,12 +641,7 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
-                "text": "I",
-                "textMl": "",
-                "isCorrect": false
-            },
-            {
-                "text": "J",
+                "text": "E",
                 "textMl": "",
                 "isCorrect": false
             }
@@ -783,7 +783,7 @@ export const studentAptitudeQuestions = [
         ]
     },
     {
-        "section": "Abstract-Fluid Reasoning",
+        "section": "Numerical Reasoning",
         "text": "If ★ = 3 and ◆ = 5, what is ★ + ◆ + ★?",
         "textMl": "★ = 3 ഉം ◆ = 5 ഉം ആണെങ്കിൽ, ★ + ◆ + ★ = ?",
         "options": [
@@ -1351,16 +1351,16 @@ export const studentAptitudeQuestions = [
     },
     {
         "section": "Processing Speed & Accuracy",
-        "text": "Identify the matching pair quickly: AB | BA | AC | CA",
-        "textMl": "താഴെ പറയുന്നവയിൽ ജോഡികളായി വരുന്നത് വേഗത്തിൽ കണ്ടെത്തുക: AB | BA | AC | CA",
+        "text": "Which pair contains identical codes? AB | AB | AC | CB",
+        "textMl": "ഇതിൽ ഏത് ജോഡി ഒരേ കോഡാണ്? AB | AB | AC | CB",
         "options": [
             {
-                "text": "AB–BA",
+                "text": "AB–AB",
                 "textMl": "",
                 "isCorrect": true
             },
             {
-                "text": "AC–CA",
+                "text": "AC–CB",
                 "textMl": "",
                 "isCorrect": false
             },
@@ -1370,7 +1370,7 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
-                "text": "BA–CA",
+                "text": "AB–CB",
                 "textMl": "",
                 "isCorrect": false
             }
@@ -1500,14 +1500,14 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
+                "text": "3G7",
+                "textMl": "",
+                "isCorrect": true
+            },
+            {
                 "text": "F37",
                 "textMl": "",
                 "isCorrect": false
-            },
-            {
-                "text": "37F",
-                "textMl": "",
-                "isCorrect": true
             }
         ]
     },

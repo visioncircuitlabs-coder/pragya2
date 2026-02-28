@@ -17,7 +17,8 @@ export function buildJobSeekerPrompt(
   const avgPersonality = personalityAverages.length > 0
     ? personalityAverages.reduce((a: number, b: number) => a + b, 0) / personalityAverages.length
     : 0;
-  const personalityPct = Math.round((avgPersonality / 5) * 100);
+  // Normalized: 1.0 → 0%, 5.0 → 100% (removes Likert floor)
+  const personalityPct = Math.round(((avgPersonality - 1) / 4) * 100);
   const compositeScore = Math.round(
     scores.aptitude.overall.percentage * 0.35 +
     scores.employability.overall.percentage * 0.35 +
@@ -76,7 +77,7 @@ ${Object.entries(scores.employability)
 
 ### PERSONALITY TRAITS (1-5 scale, higher = stronger)
 ${Object.entries(scores.personality)
-      .map(([trait, data]: [string, any]) => `- ${trait}: ${data.average}/5.0`)
+      .map(([trait, data]: [string, any]) => `- ${trait}: ${data.average}/5.0 (${data.level})`)
       .join('\n')}
 
 ### SECTOR MATCH RESULTS (Algorithm-Calculated)

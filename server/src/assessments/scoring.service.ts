@@ -128,6 +128,7 @@ export interface PersonalityScores {
         score: number;
         maxScore: number;
         average: number; // 1-5 scale
+        level: 'Emerging' | 'Moderate' | 'Strong';
     };
 }
 
@@ -345,7 +346,14 @@ export class ScoringService {
             const maxScore = responses.length * 5; // 5-point Likert scale
             const average = responses.length > 0 ? Math.round((score / responses.length) * 10) / 10 : 0;
 
-            scores[trait] = { score, maxScore, average };
+            // Normalized percentage: 1.0 → 0%, 5.0 → 100% (removes floor)
+            const percentage = ((average - 1) / 4) * 100;
+            let level: 'Emerging' | 'Moderate' | 'Strong';
+            if (percentage < 40) level = 'Emerging';
+            else if (percentage < 75) level = 'Moderate';
+            else level = 'Strong';
+
+            scores[trait] = { score, maxScore, average, level };
         }
 
         return scores;
@@ -353,37 +361,39 @@ export class ScoringService {
 
     /**
      * Career Direction Clarity Index (0-100)
-     * 
-     * Measures how focused the candidate's interests and traits are:
-     * - High clarity = strong preferences in 1-2 RIASEC types + consistent personality
-     * - Low clarity = scattered interests across many types
+     *
+     * Measures how focused the candidate's career interests are (purely from RIASEC):
+     * Part 1 (0-60): RIASEC std dev — how differentiated interests are
+     * Part 2 (0-40): Top-3 Dominance — how much top 3 dominate over bottom 3
      */
     private calculateClarityIndex(
         riasec: RiasecScores,
-        personality: PersonalityScores,
+        _personality: PersonalityScores,
     ): number {
-        // 1. RIASEC Focus Score (0-50)
-        // Use standard deviation to measure how focused interests are
-        // Higher std dev = more differentiated/focused interests = clearer direction
         const riasecValues = Object.values(riasec);
-        const riasecMean = riasecValues.reduce((a, b) => a + b, 0) / riasecValues.length;
+        const totalRiasec = riasecValues.reduce((a, b) => a + b, 0);
+
+        // Part 1 (0-60): RIASEC Focus — std dev of 6 scores
+        const riasecMean = totalRiasec / riasecValues.length;
         const riasecVariance = riasecValues.reduce((sum, val) => sum + Math.pow(val - riasecMean, 2), 0) / riasecValues.length;
         const riasecStdDev = Math.sqrt(riasecVariance);
-        // Max possible std dev with 6 RIASEC types, 8 questions, 4-point scale (max=32 per type)
-        // Theoretical max std dev ≈ 13 (all points in one category)
-        const maxPossibleStdDev = 13;
-        const riasecFocus = Math.min(50, Math.round((riasecStdDev / maxPossibleStdDev) * 50));
+        // Max practical std dev for 4-point Likert with 8 questions per type (max=32)
+        // Theoretical max ≈ 12 (3/3 split), calibrated to 10 so focused profiles score meaningfully
+        const maxStdDev = 10;
+        const riasecFocus = Math.min(60, Math.round((riasecStdDev / maxStdDev) * 60));
 
+        // Part 2 (0-40): Top-3 Dominance — ratio of top 3 scores to total
+        let top3Dominance = 0;
+        if (totalRiasec > 0) {
+            const sorted = [...riasecValues].sort((a, b) => b - a);
+            const top3Sum = sorted[0] + sorted[1] + sorted[2];
+            // Ratio ranges from 0.5 (equal) to 1.0 (all in top 3)
+            // Normalize: 0.5 → 0 points, 1.0 → 40 points
+            const ratio = top3Sum / totalRiasec;
+            top3Dominance = Math.min(40, Math.round(Math.max(0, (ratio - 0.5) / 0.5) * 40));
+        }
 
-        // 2. Personality Consistency Score (0-50)
-        // Higher average across all traits = more work-ready
-        const personalityAverages = Object.values(personality).map(p => p.average);
-        const avgPersonality = personalityAverages.length > 0
-            ? personalityAverages.reduce((a, b) => a + b, 0) / personalityAverages.length
-            : 0;
-        const personalityScore = Math.round((avgPersonality / 5) * 50);
-
-        return Math.min(100, riasecFocus + personalityScore);
+        return Math.min(100, riasecFocus + top3Dominance);
     }
 
     /**
@@ -556,22 +566,29 @@ export class ScoringService {
             overall: { score: 0, maxScore: 0, percentage: 0 },
         };
 
+        let totalMinScore = 0;
+
         for (const section of STUDENT_READINESS_SECTIONS) {
             const responses = responsesBySection.get(section) || [];
             if (responses.length === 0) continue;
 
             const score = responses.reduce((sum, r) => sum + (r.selectedOption.scoreValue || 0), 0);
             const maxScore = responses.length * 4; // 4-point scale
-            const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+            const minScore = responses.length; // All 1s = minimum possible
+            // Normalized: 0% = all 1s, 100% = all 4s (removes floor)
+            const percentage = (maxScore - minScore) > 0
+                ? Math.round(((score - minScore) / (maxScore - minScore)) * 100)
+                : 0;
 
             scores[section] = { score, maxScore, percentage };
             scores.overall.score += score;
             scores.overall.maxScore += maxScore;
+            totalMinScore += minScore;
         }
 
         scores.overall.percentage =
-            scores.overall.maxScore > 0
-                ? Math.round((scores.overall.score / scores.overall.maxScore) * 100)
+            (scores.overall.maxScore - totalMinScore) > 0
+                ? Math.round(((scores.overall.score - totalMinScore) / (scores.overall.maxScore - totalMinScore)) * 100)
                 : 0;
 
         return scores;
@@ -771,11 +788,13 @@ export class ScoringService {
         const aptitudeOverall = scores.aptitude.overall.percentage;
         const employabilityOverall = scores.employability.overall.percentage;
 
+        // Normalize personality: min possible avg = 1 (all 1s), max = 5 (all 5s)
+        // (avg - 1) / (5 - 1) maps [1,5] → [0,1], removing the 20% floor
         const personalityAverages = Object.values(scores.personality).map(p => p.average);
         const avgPersonality = personalityAverages.length > 0
             ? personalityAverages.reduce((a, b) => a + b, 0) / personalityAverages.length
             : 0;
-        const personalityPct = (avgPersonality / 5) * 100;
+        const personalityPct = ((avgPersonality - 1) / 4) * 100;
 
         const compositeScore = Math.round(
             aptitudeOverall * 0.35 + employabilityOverall * 0.35 + personalityPct * 0.30
@@ -783,12 +802,33 @@ export class ScoringService {
 
         const performanceLevel = this.getPerformanceLevel(compositeScore);
 
-        const aptitudeSections = Object.entries(scores.aptitude)
-            .filter(([key]) => key !== 'overall')
-            .sort((a, b) => b[1].percentage - a[1].percentage);
+        // Strengths/weaknesses across ALL modules (not just aptitude)
+        const allItems: { name: string; percentage: number }[] = [];
 
-        const topStrengths = aptitudeSections.slice(0, 3).map(([name]) => name);
-        const areasForImprovement = aptitudeSections.slice(-2).map(([name]) => name);
+        // Aptitude sections
+        for (const [name, data] of Object.entries(scores.aptitude)) {
+            if (name !== 'overall') {
+                allItems.push({ name: `${name} (Aptitude)`, percentage: (data as any).percentage });
+            }
+        }
+
+        // Personality traits (normalized: 1-5 → 0-100%)
+        for (const [trait, data] of Object.entries(scores.personality)) {
+            const normalizedPct = Math.round(((data.average - 1) / 4) * 100);
+            allItems.push({ name: `${trait} (Personality)`, percentage: normalizedPct });
+        }
+
+        // Employability sections
+        for (const [section, data] of Object.entries(scores.employability)) {
+            if (section !== 'overall') {
+                allItems.push({ name: `${section} (Employability)`, percentage: (data as any).percentage });
+            }
+        }
+
+        allItems.sort((a, b) => b.percentage - a.percentage);
+
+        const topStrengths = allItems.slice(0, 3).map(i => i.name);
+        const areasForImprovement = allItems.slice(-3).map(i => i.name);
 
         return { compositeScore, performanceLevel, topStrengths, areasForImprovement };
     }

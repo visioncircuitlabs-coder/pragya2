@@ -353,12 +353,54 @@ export class AssessmentsService {
                 }
             }
 
+            // Convert student readiness sections to employability format (Core/Functional/Behavioral)
+            // so sector matching can apply sector-specific employability weights
+            const readinessToEmployability: Record<string, string[]> = {
+                'Core Skills': ['Communication & Expression', 'Problem-Solving Approach'],
+                'Functional Skills': ['Creativity & Idea Generation', 'Digital Awareness'],
+                'Behavioral Skills': ['Adaptability', 'Time Management & Responsibility'],
+            };
+            const convertedEmployability: Record<string, { score: number; maxScore: number; percentage: number }> = {};
+            let overallScore = 0;
+            let overallMaxScore = 0;
+            for (const [empSection, readinessSections] of Object.entries(readinessToEmployability)) {
+                let sectionScore = 0;
+                let sectionMaxScore = 0;
+                let sectionMinScore = 0;
+                for (const rs of readinessSections) {
+                    const data = studentScores.readiness[rs];
+                    if (data) {
+                        sectionScore += data.score;
+                        sectionMaxScore += data.maxScore;
+                        sectionMinScore += data.maxScore / 4; // minScore = questions count
+                    }
+                }
+                const normalizedPct = (sectionMaxScore - sectionMinScore) > 0
+                    ? Math.round(((sectionScore - sectionMinScore) / (sectionMaxScore - sectionMinScore)) * 100)
+                    : 0;
+                convertedEmployability[empSection] = {
+                    score: sectionScore,
+                    maxScore: sectionMaxScore,
+                    percentage: normalizedPct,
+                };
+                overallScore += sectionScore;
+                overallMaxScore += sectionMaxScore;
+            }
+            const overallMinScore = overallMaxScore / 4;
+            (convertedEmployability as any).overall = {
+                score: overallScore,
+                maxScore: overallMaxScore,
+                percentage: (overallMaxScore - overallMinScore) > 0
+                    ? Math.round(((overallScore - overallMinScore) / (overallMaxScore - overallMinScore)) * 100)
+                    : 0,
+            };
+
             sectorMatches = this.sectorMatchingService.findMatchingSectors(
                 studentScores.riasec as any,
                 studentScores.riasecCode,
                 studentScores.aptitude,
                 convertedPersonality as any,
-                studentScores.readiness as any,
+                convertedEmployability as any,
             );
         }
 
@@ -517,7 +559,7 @@ export class AssessmentsService {
             data: {
                 status: AssessmentStatus.COMPLETED,
                 completedAt: new Date(),
-                totalScore: scores.aptitude.overall.percentage,
+                totalScore: perfMetrics.compositeScore,
                 sectionScores: this.scoringService.getSectionScoresForStorage(scores),
                 aptitudeScores: scores.aptitude as any,
                 riasecScores: scores.riasec as any,

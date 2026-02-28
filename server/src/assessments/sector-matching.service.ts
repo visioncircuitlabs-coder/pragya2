@@ -11,6 +11,20 @@ import { RiasecScores, AptitudeScores, EmployabilityScores, PersonalityScores } 
  * - Employability readiness (15%)
  */
 
+// ─── Aptitude section name equivalences (job seeker ↔ student) ──────
+// Sector profiles use both naming conventions. This map lets us match
+// a user's actual section name to either convention without fuzzy matching.
+const APTITUDE_NAME_MAP: Record<string, string> = {
+    'Spatial & Visual Reasoning': 'Spatial Ability',
+    'Spatial Ability': 'Spatial & Visual Reasoning',
+    'Logical & Analytical Reasoning': 'Abstract-Fluid Reasoning',
+    'Abstract-Fluid Reasoning': 'Logical & Analytical Reasoning',
+    'Attention & Speed': 'Processing Speed & Accuracy',
+    'Processing Speed & Accuracy': 'Attention & Speed',
+    'Work-Style Problem Solving': 'Mechanical Reasoning',
+    'Mechanical Reasoning': 'Work-Style Problem Solving',
+};
+
 // ─── Sector Definitions ─────────────────────────────────────────────
 
 export interface SectorProfile {
@@ -25,6 +39,8 @@ export interface SectorProfile {
     aptitudeWeights: Record<string, number>;
     // Ideal personality trait averages (1-5 scale expectations)
     idealPersonality: Record<string, number>;
+    // Employability sub-section weights (Core/Functional/Behavioral, sums to 1.0)
+    employabilityWeights: Record<string, number>;
     // Example roles within this sector
     exampleRoles: string[];
     // Growth potential and market info
@@ -62,10 +78,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.20,
             'Numerical Reasoning': 0.25,
-            'Abstract-Fluid Reasoning': 0.10,
             'Logical & Analytical Reasoning': 0.25,
             'Spatial & Visual Reasoning': 0.10,
-            'Spatial Ability': 0.10,
             'Processing Speed & Accuracy': 0.15,
             'Mechanical Reasoning': 0.05,
         },
@@ -77,6 +91,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.0,
             'Integrity & Responsibility': 4.8,
         },
+        employabilityWeights: { 'Core Skills': 0.40, 'Functional Skills': 0.25, 'Behavioral Skills': 0.35 },
         exampleRoles: ['Doctor / Physician', 'Pharmacist', 'Nurse', 'Lab Technician', 'Physiotherapist', 'Medical Research'],
         growthOutlook: 'High',
         avgSalaryRange: '₹3-30 LPA',
@@ -91,10 +106,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.10,
             'Numerical Reasoning': 0.20,
-            'Abstract-Fluid Reasoning': 0.15,
             'Logical & Analytical Reasoning': 0.35,
             'Spatial & Visual Reasoning': 0.05,
-            'Spatial Ability': 0.05,
             'Processing Speed & Accuracy': 0.15,
             'Mechanical Reasoning': 0.05,
         },
@@ -106,6 +119,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 3.5,
             'Integrity & Responsibility': 4.0,
         },
+        employabilityWeights: { 'Core Skills': 0.30, 'Functional Skills': 0.45, 'Behavioral Skills': 0.25 },
         exampleRoles: ['Software Engineer', 'Data Scientist', 'Cybersecurity Analyst', 'Cloud Architect', 'Full-Stack Developer', 'AI/ML Engineer'],
         growthOutlook: 'High',
         avgSalaryRange: '₹4-40 LPA',
@@ -120,10 +134,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.15,
             'Numerical Reasoning': 0.05,
-            'Abstract-Fluid Reasoning': 0.20,
-            'Logical & Analytical Reasoning': 0.05,
-            'Spatial & Visual Reasoning': 0.30,
-            'Spatial Ability': 0.30,
+            'Logical & Analytical Reasoning': 0.10,
+            'Spatial & Visual Reasoning': 0.35,
             'Processing Speed & Accuracy': 0.05,
             'Mechanical Reasoning': 0.00,
         },
@@ -135,6 +147,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 3.5,
             'Integrity & Responsibility': 3.5,
         },
+        employabilityWeights: { 'Core Skills': 0.25, 'Functional Skills': 0.40, 'Behavioral Skills': 0.35 },
         exampleRoles: ['Graphic Designer', 'UI/UX Designer', 'Content Writer', 'Video Editor', 'Animator', 'Photographer'],
         growthOutlook: 'High',
         avgSalaryRange: '₹3-15 LPA',
@@ -149,10 +162,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.35,
             'Numerical Reasoning': 0.10,
-            'Abstract-Fluid Reasoning': 0.10,
-            'Logical & Analytical Reasoning': 0.15,
+            'Logical & Analytical Reasoning': 0.20,
             'Spatial & Visual Reasoning': 0.05,
-            'Spatial Ability': 0.05,
             'Processing Speed & Accuracy': 0.10,
             'Mechanical Reasoning': 0.00,
         },
@@ -164,6 +175,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.5,
             'Integrity & Responsibility': 4.5,
         },
+        employabilityWeights: { 'Core Skills': 0.35, 'Functional Skills': 0.25, 'Behavioral Skills': 0.40 },
         exampleRoles: ['School Teacher', 'College Lecturer', 'Corporate Trainer', 'Educational Counselor', 'Curriculum Designer', 'EdTech Specialist'],
         growthOutlook: 'Steady',
         avgSalaryRange: '₹2.5-10 LPA',
@@ -178,10 +190,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.15,
             'Numerical Reasoning': 0.35,
-            'Abstract-Fluid Reasoning': 0.05,
             'Logical & Analytical Reasoning': 0.25,
             'Spatial & Visual Reasoning': 0.00,
-            'Spatial Ability': 0.00,
             'Processing Speed & Accuracy': 0.20,
             'Mechanical Reasoning': 0.00,
         },
@@ -193,6 +203,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.0,
             'Integrity & Responsibility': 4.8,
         },
+        employabilityWeights: { 'Core Skills': 0.35, 'Functional Skills': 0.40, 'Behavioral Skills': 0.25 },
         exampleRoles: ['Accountant', 'Financial Analyst', 'Bank Manager', 'Investment Advisor', 'Tax Consultant', 'Auditor'],
         growthOutlook: 'Steady',
         avgSalaryRange: '₹3-20 LPA',
@@ -207,10 +218,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.05,
             'Numerical Reasoning': 0.25,
-            'Abstract-Fluid Reasoning': 0.10,
             'Logical & Analytical Reasoning': 0.20,
             'Spatial & Visual Reasoning': 0.15,
-            'Spatial Ability': 0.15,
             'Processing Speed & Accuracy': 0.10,
             'Mechanical Reasoning': 0.30,
         },
@@ -222,6 +231,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.0,
             'Integrity & Responsibility': 4.5,
         },
+        employabilityWeights: { 'Core Skills': 0.30, 'Functional Skills': 0.45, 'Behavioral Skills': 0.25 },
         exampleRoles: ['Mechanical Engineer', 'Civil Engineer', 'Electrical Engineer', 'Automobile Engineer', 'Welder', 'CNC Operator'],
         growthOutlook: 'Medium',
         avgSalaryRange: '₹2.5-15 LPA',
@@ -234,12 +244,10 @@ const SECTORS: SectorProfile[] = [
         icon: '🤝',
         idealRiasec: { R: 5, I: 12, A: 15, S: 30, E: 10, C: 8 },
         aptitudeWeights: {
-            'Verbal Reasoning': 0.30,
+            'Verbal Reasoning': 0.35,
             'Numerical Reasoning': 0.05,
-            'Abstract-Fluid Reasoning': 0.15,
-            'Logical & Analytical Reasoning': 0.15,
+            'Logical & Analytical Reasoning': 0.25,
             'Spatial & Visual Reasoning': 0.00,
-            'Spatial Ability': 0.00,
             'Processing Speed & Accuracy': 0.05,
             'Mechanical Reasoning': 0.00,
         },
@@ -251,6 +259,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.8,
             'Integrity & Responsibility': 4.5,
         },
+        employabilityWeights: { 'Core Skills': 0.30, 'Functional Skills': 0.25, 'Behavioral Skills': 0.45 },
         exampleRoles: ['Psychologist', 'Social Worker', 'Career Counselor', 'NGO Program Manager', 'Community Development Officer', 'HR Specialist'],
         growthOutlook: 'Medium',
         avgSalaryRange: '₹2-10 LPA',
@@ -265,10 +274,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.35,
             'Numerical Reasoning': 0.10,
-            'Abstract-Fluid Reasoning': 0.10,
-            'Logical & Analytical Reasoning': 0.30,
+            'Logical & Analytical Reasoning': 0.35,
             'Spatial & Visual Reasoning': 0.00,
-            'Spatial Ability': 0.00,
             'Processing Speed & Accuracy': 0.15,
             'Mechanical Reasoning': 0.00,
         },
@@ -280,6 +287,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 3.5,
             'Integrity & Responsibility': 5.0,
         },
+        employabilityWeights: { 'Core Skills': 0.40, 'Functional Skills': 0.35, 'Behavioral Skills': 0.25 },
         exampleRoles: ['Lawyer / Advocate', 'Civil Services (IAS/IPS)', 'Legal Advisor', 'Compliance Officer', 'Paralegal', 'Public Policy Analyst'],
         growthOutlook: 'Steady',
         avgSalaryRange: '₹3-25 LPA',
@@ -294,10 +302,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.25,
             'Numerical Reasoning': 0.15,
-            'Abstract-Fluid Reasoning': 0.05,
-            'Logical & Analytical Reasoning': 0.10,
+            'Logical & Analytical Reasoning': 0.15,
             'Spatial & Visual Reasoning': 0.05,
-            'Spatial Ability': 0.05,
             'Processing Speed & Accuracy': 0.15,
             'Mechanical Reasoning': 0.00,
         },
@@ -309,6 +315,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.5,
             'Integrity & Responsibility': 4.0,
         },
+        employabilityWeights: { 'Core Skills': 0.30, 'Functional Skills': 0.30, 'Behavioral Skills': 0.40 },
         exampleRoles: ['Hotel Manager', 'Tour Guide', 'Event Planner', 'Chef / Culinary Expert', 'Travel Consultant', 'F&B Manager'],
         growthOutlook: 'High',
         avgSalaryRange: '₹2-12 LPA',
@@ -323,12 +330,10 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.10,
             'Numerical Reasoning': 0.15,
-            'Abstract-Fluid Reasoning': 0.10,
             'Logical & Analytical Reasoning': 0.15,
             'Spatial & Visual Reasoning': 0.15,
-            'Spatial Ability': 0.15,
             'Processing Speed & Accuracy': 0.05,
-            'Mechanical Reasoning': 0.20,
+            'Mechanical Reasoning': 0.25,
         },
         idealPersonality: {
             'Work Discipline & Task Reliability': 4.0,
@@ -338,6 +343,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 3.5,
             'Integrity & Responsibility': 4.0,
         },
+        employabilityWeights: { 'Core Skills': 0.30, 'Functional Skills': 0.40, 'Behavioral Skills': 0.30 },
         exampleRoles: ['Agricultural Scientist', 'Environmental Engineer', 'Forest Officer', 'Agri-Business Manager', 'Soil Scientist', 'Sustainability Consultant'],
         growthOutlook: 'Medium',
         avgSalaryRange: '₹2-10 LPA',
@@ -352,10 +358,8 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.30,
             'Numerical Reasoning': 0.15,
-            'Abstract-Fluid Reasoning': 0.10,
-            'Logical & Analytical Reasoning': 0.15,
+            'Logical & Analytical Reasoning': 0.20,
             'Spatial & Visual Reasoning': 0.10,
-            'Spatial Ability': 0.10,
             'Processing Speed & Accuracy': 0.10,
             'Mechanical Reasoning': 0.00,
         },
@@ -367,6 +371,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 4.0,
             'Integrity & Responsibility': 3.5,
         },
+        employabilityWeights: { 'Core Skills': 0.30, 'Functional Skills': 0.30, 'Behavioral Skills': 0.40 },
         exampleRoles: ['Marketing Manager', 'Digital Marketing Specialist', 'Brand Strategist', 'Sales Executive', 'Market Research Analyst', 'Public Relations Officer'],
         growthOutlook: 'High',
         avgSalaryRange: '₹3-20 LPA',
@@ -381,12 +386,10 @@ const SECTORS: SectorProfile[] = [
         aptitudeWeights: {
             'Verbal Reasoning': 0.05,
             'Numerical Reasoning': 0.10,
-            'Abstract-Fluid Reasoning': 0.05,
             'Logical & Analytical Reasoning': 0.10,
             'Spatial & Visual Reasoning': 0.20,
-            'Spatial Ability': 0.20,
             'Processing Speed & Accuracy': 0.10,
-            'Mechanical Reasoning': 0.35,
+            'Mechanical Reasoning': 0.40,
         },
         idealPersonality: {
             'Work Discipline & Task Reliability': 4.5,
@@ -396,6 +399,7 @@ const SECTORS: SectorProfile[] = [
             'Team Compatibility & Cooperation': 3.5,
             'Integrity & Responsibility': 4.5,
         },
+        employabilityWeights: { 'Core Skills': 0.25, 'Functional Skills': 0.50, 'Behavioral Skills': 0.25 },
         exampleRoles: ['Electrician', 'Plumber', 'Carpenter', 'Beautician', 'Automobile Mechanic', 'Construction Supervisor'],
         growthOutlook: 'Medium',
         avgSalaryRange: '₹1.5-6 LPA',
@@ -421,7 +425,7 @@ export class SectorMatchingService {
             const riasecFit = this.cosineSimilarity(riasecScores, sector.idealRiasec);
             const aptitudeFit = this.weightedAptitudeMatch(aptitudeScores, sector.aptitudeWeights);
             const personalityFit = this.personalityFitScore(personalityScores, sector.idealPersonality);
-            const employabilityFit = this.employabilityReadiness(employabilityScores);
+            const employabilityFit = this.employabilityReadiness(employabilityScores, sector.employabilityWeights);
 
             // Weighted composite: RIASEC 35%, Aptitude 30%, Personality 20%, Employability 15%
             const matchScore = Math.round(
@@ -470,21 +474,29 @@ export class SectorMatchingService {
 
     /**
      * Cosine similarity between user RIASEC vector and sector ideal vector (0-100)
-     * 
-     * This measures how closely the *shape* of the user's interest profile
-     * matches the sector's ideal, regardless of absolute magnitude.
+     *
+     * Subtracts the Likert floor before computing so that:
+     * - Binary scale (student): floor = 0 per type (scores 0-8)
+     * - 4-point Likert (job seeker): floor = 8 per type (8 × min score 1)
+     * This prevents the baseline from inflating all similarities to 85-95%.
      */
     private cosineSimilarity(user: RiasecScores, ideal: RiasecScores): number {
         const keys: (keyof RiasecScores)[] = ['R', 'I', 'A', 'S', 'E', 'C'];
+
+        // Detect the Likert floor: if all user scores >= 8, it's a Likert scale
+        const minUserScore = Math.min(...keys.map(k => user[k]));
+        const likertFloor = minUserScore >= 8 ? 8 : 0;
 
         let dotProduct = 0;
         let userMag = 0;
         let idealMag = 0;
 
         for (const key of keys) {
-            dotProduct += user[key] * ideal[key];
-            userMag += user[key] * user[key];
-            idealMag += ideal[key] * ideal[key];
+            const u = Math.max(0, user[key] - likertFloor);
+            const i = Math.max(0, ideal[key] - likertFloor);
+            dotProduct += u * i;
+            userMag += u * u;
+            idealMag += i * i;
         }
 
         const magnitude = Math.sqrt(userMag) * Math.sqrt(idealMag);
@@ -506,17 +518,30 @@ export class SectorMatchingService {
         let weightedScore = 0;
         let totalWeight = 0;
 
+        // Build a lookup from the user's actual aptitude section names
+        const userSections = new Map<string, number>();
+        for (const [key, data] of Object.entries(aptitude)) {
+            if (key !== 'overall') {
+                userSections.set(key, (data as any)?.percentage || 0);
+            }
+        }
+
         for (const [section, weight] of Object.entries(weights)) {
             if (weight <= 0) continue;
 
-            // Find matching aptitude section (handle slight naming differences)
-            const userSection = Object.entries(aptitude).find(
-                ([key]) => key !== 'overall' && (key === section || key.includes(section.split(' ')[0]))
-            );
+            // Exact match first
+            let percentage = userSections.get(section);
 
-            if (userSection) {
-                const sectionData = userSection[1] as any;
-                const percentage = sectionData?.percentage || 0;
+            // If no exact match, try the equivalent name mapping
+            // (job seeker sections ↔ student sections)
+            if (percentage === undefined) {
+                const equivalent = APTITUDE_NAME_MAP[section];
+                if (equivalent) {
+                    percentage = userSections.get(equivalent);
+                }
+            }
+
+            if (percentage !== undefined) {
                 weightedScore += percentage * weight;
                 totalWeight += weight;
             }
@@ -555,11 +580,34 @@ export class SectorMatchingService {
     }
 
     /**
-     * Employability readiness — overall job-readiness score based on
-     * employability skills assessment results.
+     * Employability readiness — sector-weighted job-readiness score.
+     * Uses sector-specific weights for Core/Functional/Behavioral sub-scores
+     * so different sectors value different skill areas.
      */
-    private employabilityReadiness(employability: EmployabilityScores): number {
-        return employability?.overall?.percentage || 0;
+    private employabilityReadiness(
+        employability: EmployabilityScores,
+        weights: Record<string, number>,
+    ): number {
+        if (!employability) return 0;
+
+        let weightedScore = 0;
+        let totalWeight = 0;
+
+        for (const [section, weight] of Object.entries(weights)) {
+            if (weight <= 0) continue;
+            const sectionData = employability[section] as any;
+            if (sectionData?.percentage !== undefined) {
+                weightedScore += sectionData.percentage * weight;
+                totalWeight += weight;
+            }
+        }
+
+        // Fall back to overall if no sub-sections matched (e.g., student readiness)
+        if (totalWeight === 0) {
+            return employability?.overall?.percentage || 0;
+        }
+
+        return Math.round(weightedScore / totalWeight);
     }
 
     /**

@@ -7,6 +7,7 @@ import { CareerMatch } from '../assessments/careers.service';
 import { LoggerService } from '../logger/logger.service';
 import { buildJobSeekerPrompt } from './prompts/job-seeker.prompt';
 import { buildStudentPrompt as buildStudentPromptFn } from './prompts/student.prompt';
+import { buildStudentMalayalamPrompt } from './prompts/student-ml.prompt';
 
 /**
  * AI Analysis Service using Google Gemini
@@ -288,8 +289,8 @@ export class AiAnalysisService {
             ? personalityEntries.reduce((sum, t) => sum + t.avg, 0) / personalityEntries.length
             : 0;
 
-        // Composite score
-        const compositeScore = Math.round(aptPct * 0.35 + empPct * 0.35 + (avgPers / 5) * 100 * 0.30);
+        // Composite score (normalize personality: min=1, max=5 → [0,100])
+        const compositeScore = Math.round(aptPct * 0.35 + empPct * 0.35 + ((avgPers - 1) / 4) * 100 * 0.30);
 
         // Dynamic persona title
         const personaTitle = compositeScore >= 75 ? 'The Strategic Achiever'
@@ -317,7 +318,7 @@ export class AiAnalysisService {
                     description: `Your Career Clarity Index of ${scores.clarityIndex}/100 indicates ${clarityLevel.toLowerCase()} clarity in career direction. Your ${topCodes[0]}-${topCodes[1]}-${topCodes[2]} Holland Code pattern ${scores.clarityIndex >= 60 ? 'shows focused career interests' : 'suggests you are still exploring your professional identity, which is perfectly normal'}.`,
                 },
                 interpersonalImpact: {
-                    score: Math.min(10, Math.round((avgPers / 5) * 10)),
+                    score: Math.min(10, Math.round(((avgPers - 1) / 4) * 10)),
                     description: `Your personality assessment shows an average trait score of ${avgPers.toFixed(1)}/5.0, with ${topTraits[0].trait} (${topTraits[0].avg.toFixed(1)}/5) as your standout interpersonal quality. ${avgPers >= 3.5 ? 'This indicates strong social and collaborative skills.' : 'There is good potential to further develop interpersonal effectiveness.'}`,
                 },
                 growthTrajectory: {
@@ -325,7 +326,7 @@ export class AiAnalysisService {
                     description: `Your composite performance score of ${compositeScore}/100 (combining aptitude, employability, and personality) places you in the ${compositeScore >= 70 ? 'high-growth' : compositeScore >= 50 ? 'moderate-growth' : 'developing'} trajectory. Targeted improvement in ${weakAptitude[0].name} and ${weakEmp[0].name} would have the highest impact on your overall profile.`,
                 },
             },
-            employabilitySummary: `Your overall employability profile presents a composite score of ${compositeScore}/100, combining cognitive aptitude (${aptPct}%), employability skills (${empPct}%), and personality fit (${Math.round((avgPers / 5) * 100)}%). Your strongest cognitive ability lies in ${topAptitude[0].name} (${topAptitude[0].pct}%), followed by ${topAptitude[1].name} (${topAptitude[1].pct}%), indicating ${topAptitude[0].pct >= 50 ? 'a strong foundation in these reasoning domains' : 'developing competence with clear pathways for growth'}. On the employability front, ${topEmp[0].name} (${topEmp[0].pct}%) stands out as your most developed professional competency. Your Holland Code of ${scores.riasecCode} (${topCodes.join('-')}) suggests you thrive in environments that emphasize ${topCodeDescriptions[0]} and ${topCodeDescriptions[1]}. To maximize your career potential, prioritizing development in ${weakAptitude[0].name} and ${weakEmp[0].name} would create the most significant improvement in your overall readiness.`,
+            employabilitySummary: `Your overall employability profile presents a composite score of ${compositeScore}/100, combining cognitive aptitude (${aptPct}%), employability skills (${empPct}%), and personality fit (${Math.round(((avgPers - 1) / 4) * 100)}%). Your strongest cognitive ability lies in ${topAptitude[0].name} (${topAptitude[0].pct}%), followed by ${topAptitude[1].name} (${topAptitude[1].pct}%), indicating ${topAptitude[0].pct >= 50 ? 'a strong foundation in these reasoning domains' : 'developing competence with clear pathways for growth'}. On the employability front, ${topEmp[0].name} (${topEmp[0].pct}%) stands out as your most developed professional competency. Your Holland Code of ${scores.riasecCode} (${topCodes.join('-')}) suggests you thrive in environments that emphasize ${topCodeDescriptions[0]} and ${topCodeDescriptions[1]}. To maximize your career potential, prioritizing development in ${weakAptitude[0].name} and ${weakEmp[0].name} would create the most significant improvement in your overall readiness.`,
 
             aptitudeAnalysis: `Your cognitive aptitude assessment reveals a differentiated profile across reasoning domains, with an overall score of ${aptPct}%. Your strongest area is ${topAptitude[0].name} at ${topAptitude[0].pct}%, demonstrating ${topAptitude[0].pct >= 50 ? 'solid capability' : 'emerging competence'} in this domain. ${topAptitude[1].name} follows at ${topAptitude[1].pct}%, rounding out your ${topAptitude[0].pct >= 40 ? 'core cognitive strengths' : 'developing skill set'}. On the other end, ${weakAptitude[0].name} (${weakAptitude[0].pct}%) and ${weakAptitude[1].name} (${weakAptitude[1].pct}%) represent your primary areas for cognitive development. This pattern suggests you may find tasks requiring ${topAptitude[0].name.toLowerCase().replace(/&/g, 'and')} more intuitive, while tasks relying on ${weakAptitude[0].name.toLowerCase().replace(/&/g, 'and')} may require more deliberate effort and practice.`,
 
@@ -678,6 +679,137 @@ export class AiAnalysisService {
     }
 
     /**
+     * Translate AI insight text fields to Malayalam via Gemini.
+     * Collects all translatable string fields, sends a single Gemini call,
+     * returns an object with `_ml` suffixed keys.
+     * On failure: returns empty object (graceful degradation — English shown).
+     */
+    async translateInsightsToMalayalam(
+        aiInsights: Record<string, any>,
+        reportType: 'student' | 'jobseeker',
+    ): Promise<Record<string, string>> {
+        if (!this.apiKey) {
+            this.logger.warn('Malayalam translation skipped — no Gemini API key');
+            return {};
+        }
+
+        // Collect translatable text fields (strings only, skip objects/arrays)
+        const translatableFields: string[] = reportType === 'student'
+            ? [
+                'overallSummary', 'strengthsAnalysis', 'areasForGrowth',
+                'riasecAnalysis', 'personalityAnalysis', 'readinessAnalysis',
+                'studyTips', 'nextSteps',
+            ]
+            : [
+                'employabilitySummary', 'aptitudeAnalysis', 'careerInterestAlignment',
+                'personalitySnapshot', 'skillReadiness', 'developmentRoadmap',
+                'developmentGuidance',
+            ];
+
+        // Also translate nested string fields
+        const nestedFields: { parent: string; child: string }[] = reportType === 'student'
+            ? [{ parent: 'studentPersona', child: 'description' }]
+            : [
+                { parent: 'professionalPersona', child: 'description' },
+                { parent: 'clarityIndex', child: 'justification' },
+            ];
+
+        const sourceDict: Record<string, string> = {};
+        for (const field of translatableFields) {
+            const val = aiInsights[field];
+            if (typeof val === 'string' && val.length > 20) {
+                sourceDict[field] = val;
+            }
+        }
+        for (const { parent, child } of nestedFields) {
+            const parentObj = aiInsights[parent];
+            if (parentObj && typeof parentObj[child] === 'string' && parentObj[child].length > 20) {
+                sourceDict[`${parent}_${child}`] = parentObj[child];
+            }
+        }
+
+        // Also translate detailedTraitInterpretation values (job seeker)
+        if (reportType === 'jobseeker' && aiInsights.detailedTraitInterpretation) {
+            for (const [trait, text] of Object.entries(aiInsights.detailedTraitInterpretation)) {
+                if (typeof text === 'string' && text.length > 20) {
+                    sourceDict[`detailedTraitInterpretation_${trait}`] = text;
+                }
+            }
+        }
+
+        if (Object.keys(sourceDict).length === 0) {
+            return {};
+        }
+
+        const prompt = `You are a professional English-to-Malayalam translator for a career assessment report.
+
+Translate the following JSON dictionary values from English to Malayalam.
+
+RULES:
+- Translate ONLY the descriptive text to Malayalam
+- Keep ALL technical terms, proper nouns, names, numbers, percentages, scores, RIASEC codes, Holland Codes, career titles, sector names, and English abbreviations in English within the Malayalam text
+- Use formal Malayalam suitable for an official career guidance report
+- Return a JSON object with the EXACT SAME KEYS, but with Malayalam translations as values
+- Do NOT add or remove any keys
+
+Input JSON:
+${JSON.stringify(sourceDict, null, 2)}`;
+
+        const startTime = Date.now();
+        try {
+            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.3,
+                        maxOutputTokens: 8192,
+                        responseMimeType: 'application/json',
+                    },
+                }),
+            });
+
+            const duration = Date.now() - startTime;
+
+            if (!response.ok) {
+                const error = await response.text();
+                this.logger.warn(`Malayalam translation Gemini error (${duration}ms): ${error.substring(0, 200)}`);
+                return {};
+            }
+
+            const data = await response.json();
+            const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!generatedText) {
+                this.logger.warn('Empty response from Gemini for Malayalam translation');
+                return {};
+            }
+
+            const translated = JSON.parse(generatedText) as Record<string, string>;
+
+            // Convert to _ml suffixed keys
+            const result: Record<string, string> = {};
+            for (const [key, value] of Object.entries(translated)) {
+                if (typeof value === 'string') {
+                    result[`${key}_ml`] = value;
+                }
+            }
+
+            this.logger.logBusinessEvent('MALAYALAM_TRANSLATION_SUCCESS', {
+                reportType,
+                fieldsTranslated: Object.keys(result).length,
+                duration: `${duration}ms`,
+            });
+
+            return result;
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            this.logger.warn(`Malayalam translation failed (${duration}ms): ${error instanceof Error ? error.message : error}`);
+            return {};
+        }
+    }
+
+    /**
      * Save student AI analysis to database
      */
     async saveStudentAnalysis(
@@ -706,5 +838,262 @@ export class AiAnalysisService {
         });
 
         this.logger.log(`Student AI analysis saved for assessment ${userAssessmentId}`);
+    }
+
+    /**
+     * Generate a native Malayalam career analysis narrative for student reports.
+     * Instead of translating English insights field-by-field, this produces a
+     * comprehensive, conversational Malayalam narrative in a single Gemini call.
+     */
+    async generateStudentMalayalamAnalysis(
+        profile: StudentProfile,
+        aptitudeScores: AptitudeScores,
+        riasecScores: StudentRiasecScores,
+        riasecCode: string,
+        personalityScores: StudentPersonalityScores,
+        readinessScores: StudentReadinessScores,
+        careerMatches?: { title: string; matchScore: number }[],
+        sectorMatches?: { name: string; matchScore: number }[],
+    ): Promise<{ title_ml: string; analysis_ml: string } | null> {
+        if (!this.apiKey) {
+            this.logger.warn('Malayalam analysis skipped — no Gemini API key');
+            return this.getStudentMalayalamFallback(
+                profile, aptitudeScores, riasecScores, riasecCode,
+                personalityScores, readinessScores, careerMatches, sectorMatches,
+            );
+        }
+
+        const startTime = Date.now();
+        const prompt = buildStudentMalayalamPrompt(
+            profile, aptitudeScores, riasecScores, riasecCode,
+            personalityScores, readinessScores, careerMatches, sectorMatches,
+        );
+
+        this.logger.logBusinessEvent('GEMINI_STUDENT_ML_REQUEST', {
+            student: profile.fullName,
+            hollandCode: riasecCode,
+            promptLength: prompt.length,
+        });
+
+        try {
+            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 8192,
+                        responseMimeType: 'application/json',
+                    },
+                }),
+            });
+
+            const duration = Date.now() - startTime;
+
+            if (!response.ok) {
+                const error = await response.text();
+                this.logger.warn(`Malayalam analysis Gemini error (${duration}ms): ${error.substring(0, 200)}`);
+                return this.getStudentMalayalamFallback(
+                    profile, aptitudeScores, riasecScores, riasecCode,
+                    personalityScores, readinessScores, careerMatches, sectorMatches,
+                );
+            }
+
+            const data = await response.json();
+            const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (!generatedText) {
+                this.logger.warn('Empty response from Gemini for Malayalam analysis');
+                return this.getStudentMalayalamFallback(
+                    profile, aptitudeScores, riasecScores, riasecCode,
+                    personalityScores, readinessScores, careerMatches, sectorMatches,
+                );
+            }
+
+            const result = JSON.parse(generatedText) as { title_ml: string; analysis_ml: string };
+
+            if (!result.title_ml || !result.analysis_ml) {
+                this.logger.warn('Incomplete Malayalam analysis from Gemini');
+                return this.getStudentMalayalamFallback(
+                    profile, aptitudeScores, riasecScores, riasecCode,
+                    personalityScores, readinessScores, careerMatches, sectorMatches,
+                );
+            }
+
+            this.logger.logBusinessEvent('GEMINI_STUDENT_ML_SUCCESS', {
+                student: profile.fullName,
+                duration: `${duration}ms`,
+                analysisLength: result.analysis_ml.length,
+            });
+
+            return result;
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            this.logger.warn(`Malayalam analysis failed (${duration}ms): ${error instanceof Error ? error.message : error}`);
+            return this.getStudentMalayalamFallback(
+                profile, aptitudeScores, riasecScores, riasecCode,
+                personalityScores, readinessScores, careerMatches, sectorMatches,
+            );
+        }
+    }
+
+    /**
+     * Template-based Malayalam fallback when Gemini is unavailable.
+     * Generates structured Malayalam text from raw score data.
+     */
+    private getStudentMalayalamFallback(
+        profile: StudentProfile,
+        aptitudeScores: AptitudeScores,
+        riasecScores: StudentRiasecScores,
+        riasecCode: string,
+        personalityScores: StudentPersonalityScores,
+        readinessScores: StudentReadinessScores,
+        careerMatches?: { title: string; matchScore: number }[],
+        sectorMatches?: { name: string; matchScore: number }[],
+    ): { title_ml: string; analysis_ml: string } {
+        const riasecNames: Record<string, string> = {
+            R: 'Realistic', I: 'Investigative', A: 'Artistic',
+            S: 'Social', E: 'Enterprising', C: 'Conventional',
+        };
+        const riasecMl: Record<string, string> = {
+            R: 'പ്രായോഗിക പ്രശ്‌നപരിഹാരം',
+            I: 'വിശകലന ചിന്തയും ഗവേഷണവും',
+            A: 'സർഗ്ഗാത്മക ആവിഷ്‌കാരവും നവീകരണവും',
+            S: 'മറ്റുള്ളവരെ സഹായിക്കലും വ്യക്തിബന്ധങ്ങളും',
+            E: 'നേതൃത്വവും സംരംഭകത്വവും',
+            C: 'സംഘടനയും വ്യവസ്ഥാപിത പ്രക്രിയകളും',
+        };
+
+        // Aptitude analysis
+        const aptSections = Object.entries(aptitudeScores)
+            .filter(([key]) => key !== 'overall')
+            .map(([name, data]) => ({ name, pct: data.percentage }))
+            .sort((a, b) => b.pct - a.pct);
+        const overallApt = aptitudeScores['overall']?.percentage || 0;
+
+        // RIASEC
+        const topCodes = riasecCode.split('');
+        const hollandExpanded = topCodes.map(c => riasecNames[c] || c).join('-');
+
+        // Personality
+        const personalityEntries = Object.entries(personalityScores)
+            .map(([trait, data]) => ({ trait, ...data }))
+            .sort((a, b) => b.score - a.score);
+        const strongTraits = personalityEntries.filter(t => t.level === 'Strong');
+        const emergingTraits = personalityEntries.filter(t => t.level === 'Emerging');
+
+        // Readiness
+        const readinessEntries = Object.entries(readinessScores)
+            .filter(([key]) => key !== 'overall')
+            .map(([section, data]) => ({ section, ...data }))
+            .sort((a, b) => b.percentage - a.percentage);
+        const overallReadiness = readinessScores['overall']?.percentage || 0;
+
+        // Composite for persona
+        const compositeScore = Math.round(overallApt * 0.4 + overallReadiness * 0.3 + (personalityEntries[0]?.score / personalityEntries[0]?.maxScore || 0.5) * 100 * 0.3);
+        const personaTitle = compositeScore >= 75 ? 'The Strategic Achiever'
+            : compositeScore >= 60 ? 'The Emerging Professional'
+                : compositeScore >= 45 ? 'The Aspiring Builder'
+                    : 'The Curious Explorer';
+
+        const sections: string[] = [];
+
+        // Section 1: About you
+        sections.push(
+            `**നിങ്ങളെ കുറിച്ച്**\n\n` +
+            `പ്രിയ ${profile.fullName}, നിങ്ങളുടെ 360° മൂല്യാങ്കനത്തിന്റെ ഫലങ്ങൾ വളരെ രസകരമാണ്. ` +
+            `നിങ്ങളുടെ ഹോളണ്ട് കോഡ് ${riasecCode} (${hollandExpanded}) ആണ്, ` +
+            `ഇത് ${riasecMl[topCodes[0]] || ''} എന്നിവയിലുള്ള നിങ്ങളുടെ താൽപ്പര്യം കാണിക്കുന്നു. ` +
+            `${aptSections[0]?.name || ''} (${Math.round(aptSections[0]?.pct || 0)}%) നിങ്ങളുടെ ഏറ്റവും ശക്തമായ ബൗദ്ധിക മേഖലയാണ്. ` +
+            `നിങ്ങളുടെ മൊത്തം പ്രകടനം ${compositeScore >= 70 ? 'മികച്ചതാണ്' : compositeScore >= 50 ? 'നല്ലതാണ്' : 'വളരുന്ന ഘട്ടത്തിലാണ്'}.`
+        );
+
+        // Section 2: Aptitude
+        const aptitudeDetail = aptSections.map(a =>
+            `${a.name}: ${Math.round(a.pct)}% — ${a.pct >= 70 ? 'ശക്തം' : a.pct >= 40 ? 'ശരാശരി' : 'വളരുന്ന'}`
+        ).join(', ');
+        sections.push(
+            `**ബൗദ്ധിക കഴിവുകൾ**\n\n` +
+            `നിങ്ങളുടെ മൊത്തം ബൗദ്ധിക അഭിരുചി സ്കോർ ${Math.round(overallApt)}% ആണ്. ` +
+            `വിവിധ മേഖലകളിലെ നിങ്ങളുടെ പ്രകടനം: ${aptitudeDetail}. ` +
+            `${aptSections[0]?.name || ''} നിങ്ങളുടെ ഏറ്റവും ശക്തമായ മേഖലയാണ്, ` +
+            `ഇത് ഈ മേഖലയിൽ വിവരങ്ങൾ പ്രോസസ്സ് ചെയ്യാനും പ്രയോഗിക്കാനുമുള്ള നിങ്ങളുടെ സ്വാഭാവിക കഴിവ് പ്രതിഫലിപ്പിക്കുന്നു. ` +
+            `${aptSections.length > 1 ? `${aptSections[aptSections.length - 1].name} (${Math.round(aptSections[aptSections.length - 1].pct)}%) വളർച്ചയ്ക്കുള്ള പ്രധാന അവസരമാണ്.` : ''}`
+        );
+
+        // Section 3: RIASEC
+        const riasecDetail = Object.entries(riasecScores)
+            .sort((a, b) => (b[1] as number) - (a[1] as number))
+            .map(([code, score]) => `${riasecNames[code] || code} (${code}): ${score}/8`)
+            .join(', ');
+        sections.push(
+            `**കരിയർ താൽപ്പര്യങ്ങൾ**\n\n` +
+            `നിങ്ങളുടെ ഹോളണ്ട് കോഡ് ${riasecCode} (${hollandExpanded}) ആണ്. ` +
+            `ഇതിനർത്ഥം നിങ്ങൾ ${riasecMl[topCodes[0]] || ''} ഊന്നൽ നൽകുന്ന തൊഴിൽ ചുറ്റുപാടുകളിൽ ഏറ്റവും സംതൃപ്തരാണ് എന്നാണ്. ` +
+            `നിങ്ങളുടെ RIASEC സ്കോറുകൾ: ${riasecDetail}. ` +
+            `${topCodes[1] ? `${riasecNames[topCodes[1]] || topCodes[1]} താൽപ്പര്യം ഇത് ${riasecMl[topCodes[1]] || ''} ചേർക്കുന്നു.` : ''}`
+        );
+
+        // Section 4: Personality
+        sections.push(
+            `**വ്യക്തിത്വ ഗുണങ്ങൾ**\n\n` +
+            (strongTraits.length > 0
+                ? `നിങ്ങളുടെ ഏറ്റവും ശക്തമായ വ്യക്തിത്വ ഗുണങ്ങൾ ${strongTraits.map(t => `${t.trait} (${t.score}/${t.maxScore})`).join(', ')} ആണ്. ` +
+                  `ഇത് ഈ ഗുണങ്ങളിൽ ഉയർന്ന പക്വതയും സ്ഥിരതയും സൂചിപ്പിക്കുന്നു. `
+                : `നിങ്ങളുടെ വ്യക്തിത്വ ഗുണങ്ങൾ സമതുലിതമായ വികസനം കാണിക്കുന്നു. `) +
+            (emergingTraits.length > 0
+                ? `${emergingTraits.map(t => t.trait).join(', ')} ഇപ്പോഴും വളരുന്ന ഘട്ടത്തിലാണ്, ബോധപൂർവ്വമായ ശ്രമത്തിലൂടെ ഇവ ശക്തിപ്പെടുത്താം. `
+                : '') +
+            `ഈ ഗുണങ്ങൾ നിങ്ങൾ വെല്ലുവിളികളെ എങ്ങനെ നേരിടുന്നു, മറ്റുള്ളവരുമായി എങ്ങനെ ഇടപെടുന്നു എന്നിവ രൂപപ്പെടുത്തുന്നു.`
+        );
+
+        // Section 5: Readiness
+        sections.push(
+            `**കരിയർ സന്നദ്ധത**\n\n` +
+            `നിങ്ങളുടെ മൊത്തം കരിയർ സന്നദ്ധത ${Math.round(overallReadiness)}% ആണ്. ` +
+            (readinessEntries.length > 0
+                ? `ഏറ്റവും ശക്തമായ കഴിവ് ${readinessEntries[0].section} (${Math.round(readinessEntries[0].percentage)}%) ആണ്. ` +
+                  (readinessEntries.length > 1 ? `${readinessEntries[readinessEntries.length - 1].section} (${Math.round(readinessEntries[readinessEntries.length - 1].percentage)}%) നിങ്ങളുടെ പ്രധാന വികസന മേഖലയാണ്. ` : '')
+                : '') +
+            `കരിയർ സന്നദ്ധത കഴിവുകൾ പരിശീലനം, വർക്ക്ഷോപ്പുകൾ, പ്രായോഗിക പദ്ധതികൾ എന്നിവയിലൂടെ വികസിപ്പിക്കാം.`
+        );
+
+        // Section 6: Career recommendations
+        const careerList = (careerMatches || []).slice(0, 6);
+        const sectorList = (sectorMatches || []).slice(0, 4);
+        sections.push(
+            `**ശുപാർശ ചെയ്യുന്ന കരിയറുകൾ**\n\n` +
+            (careerList.length > 0
+                ? `നിങ്ങളുടെ പ്രൊഫൈലുമായി ഏറ്റവും അനുയോജ്യമായ കരിയറുകൾ: ${careerList.map(c => `${c.title} (${c.matchScore}%)`).join(', ')}. `
+                : `നിങ്ങളുടെ ${riasecCode} ഹോളണ്ട് കോഡ് അനുസരിച്ച് ${riasecMl[topCodes[0]] || ''} ഊന്നൽ നൽകുന്ന കരിയറുകൾ നിങ്ങൾക്ക് അനുയോജ്യമാണ്. `) +
+            (sectorList.length > 0
+                ? `ശുപാർശ ചെയ്യുന്ന സെക്ടറുകൾ: ${sectorList.map(s => s.name).join(', ')}. `
+                : '') +
+            `നിങ്ങളുടെ ${aptSections[0]?.name || ''} അഭിരുചി ശക്തിയും ${riasecCode} താൽപ്പര്യ പ്രൊഫൈലും ഈ കരിയറുകളിൽ വിജയത്തിന് സഹായിക്കും.`
+        );
+
+        // Section 7: Growth suggestions
+        sections.push(
+            `**വളർച്ചയ്ക്കുള്ള നിർദ്ദേശങ്ങൾ**\n\n` +
+            `നിങ്ങളുടെ ${aptSections[0]?.name || ''} ശക്തി പ്രയോജനപ്പെടുത്തി വെല്ലുവിളിനിറഞ്ഞ പ്രശ്‌നങ്ങൾ പരിഹരിക്കുക. ` +
+            (aptSections.length > 1 ? `${aptSections[aptSections.length - 1].name} മെച്ചപ്പെടുത്താൻ ദിവസവും 15-20 മിനിറ്റ് ഘടനാപരമായ പരിശീലനം ചെയ്യുക. ` : '') +
+            (readinessEntries.length > 0 ? `${readinessEntries[readinessEntries.length - 1]?.section || ''} കഴിവ് വികസിപ്പിക്കാൻ പ്രായോഗിക പദ്ധതികളിൽ പങ്കെടുക്കുക. ` : '') +
+            `സ്‌പേസ്ഡ് റിപ്പറ്റിഷൻ, ആക്ടീവ് റീകോൾ പോലുള്ള പഠന സാങ്കേതിക വിദ്യകൾ ഉപയോഗിക്കുക.`
+        );
+
+        // Section 8: Next steps
+        sections.push(
+            `**അടുത്ത ഘട്ടങ്ങൾ**\n\n` +
+            `1. ഈ ഫലങ്ങൾ നിങ്ങളുടെ സ്കൂൾ കൗൺസിലറുമായി ചർച്ച ചെയ്യുക, ${riasecCode} ഹോളണ്ട് കോഡ് കേന്ദ്രീകരിച്ച്.\n` +
+            `2. ${topCodes[0] ? `${riasecNames[topCodes[0]] || ''} താൽപ്പര്യങ്ങളുമായി ബന്ധപ്പെട്ട` : ''} പാഠ്യേതര പ്രവർത്തനങ്ങൾ പര്യവേക്ഷണം ചെയ്യുക.\n` +
+            `3. ${readinessEntries.length > 0 ? readinessEntries[readinessEntries.length - 1].section : 'വികസന മേഖലകൾ'} മെച്ചപ്പെടുത്താൻ വർക്ക്ഷോപ്പുകളിൽ പങ്കെടുക്കുക.\n` +
+            `4. കരിയർ ഓറിയന്റേഷൻ പ്രോഗ്രാമുകളിൽ അല്ലെങ്കിൽ ജോബ് ഷാഡോയിംഗിൽ പങ്കെടുക്കുക.`
+        );
+
+        return {
+            title_ml: `${personaTitle} — ${riasecMl[topCodes[0]] || ''} ${aptSections[0]?.name || ''} കഴിവുകൾ ഒത്തുചേരുന്ന നിങ്ങൾ`,
+            analysis_ml: sections.join('\n\n'),
+        };
     }
 }

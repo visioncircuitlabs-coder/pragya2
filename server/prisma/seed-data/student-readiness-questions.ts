@@ -110,8 +110,8 @@ export const studentReadinessQuestions = [
         textMl: 'പഠിച്ചുകൊണ്ടിരിക്കുമ്പോൾ കറന്റ് പോയാൽ:',
         options: [
             { text: 'Change plan and continue', textMl: 'വേറെ വഴി നോക്കി പഠനം തുടരും', isCorrect: false, scoreValue: 4 },
-            { text: 'Wait for power', textMl: 'കറന്റ് വരാൻ കാത്തിരിക്കും', isCorrect: false, scoreValue: 3 },
-            { text: 'Study a little', textMl: 'കുറച്ചു നേരം കൂടി നോക്കും', isCorrect: false, scoreValue: 2 },
+            { text: 'Study a little', textMl: 'കുറച്ചു നേരം കൂടി നോക്കും', isCorrect: false, scoreValue: 3 },
+            { text: 'Wait for power', textMl: 'കറന്റ് വരാൻ കാത്തിരിക്കും', isCorrect: false, scoreValue: 2 },
             { text: 'Stop studying', textMl: 'പഠനം നിർത്തും', isCorrect: false, scoreValue: 1 },
         ],
     },
@@ -362,7 +362,7 @@ export const studentReadinessQuestions = [
             { text: 'Learning + fun', textMl: 'പഠനത്തിനും വിനോദത്തിനും', isCorrect: false, scoreValue: 4 },
             { text: 'Mostly fun', textMl: 'കൂടുതലും വിനോദത്തിന്', isCorrect: false, scoreValue: 3 },
             { text: 'Time pass', textMl: 'സമയം കളയാൻ', isCorrect: false, scoreValue: 2 },
-            { text: 'Rarely', textMl: 'വളരെ കുറച്ചു മാത്രം', isCorrect: false, scoreValue: 1 },
+            { text: 'No specific purpose', textMl: 'പ്രത്യേകിച്ച് ഒരു ഉദ്ദേശ്യവുമില്ല', isCorrect: false, scoreValue: 1 },
         ],
     },
     {
