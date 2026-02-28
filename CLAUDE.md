@@ -10,6 +10,7 @@ Pragya is a full-stack career assessment platform ("India's Pioneer Youth-Develo
 - **Employer feature is HIDDEN** from all user-facing UI (navbar, footer, services, CTA, register page). The backend `EMPLOYER` role + `/employer-portal` page still exist but are not linked anywhere. Re-enable after Razorpay approval and server deployment.
 - **All CTA buttons** (Services, CTASection, Pricing) route to `/register` for a clean payment workflow: Register → Pay via Razorpay → Take Assessment → Get Report.
 - **"360°" branding removed** — product is now just "Career Assessment" / "Employability Assessment" / "PRAGYA" everywhere.
+- **Email verification is DISABLED** — new users are auto-verified on registration. The full OTP flow (6-digit code, 10-min expiry, brute-force protection, `/verify-email` page) is still in the codebase but bypassed. Re-enable by: (1) uncommenting OTP generation in `auth.service.ts` register method, (2) removing the auto-verify `prisma.user.update`, (3) changing register redirect back to `/verify-email`, (4) restoring the unverified-user redirect in dashboard, (5) re-adding `EmailVerifiedGuard` to `users.controller.ts`.
 
 ## Commands
 

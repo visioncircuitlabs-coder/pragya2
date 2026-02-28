@@ -63,12 +63,6 @@ export default function DashboardPage() {
         }
     }, [isLoading, isAuthenticated, router]);
 
-    // Redirect unverified users to OTP page
-    useEffect(() => {
-        if (!isLoading && isAuthenticated && user && !user.emailVerified) {
-            router.push('/verify-email');
-        }
-    }, [isLoading, isAuthenticated, user, router]);
 
     if (isLoading) {
         return (

@@ -1,6 +1,7 @@
 import { Controller, Get, Patch, Body, UseGuards, Query, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard, RolesGuard, EmailVerifiedGuard } from '../auth/guards';
+// TODO: Re-enable EmailVerifiedGuard once email verification is active
+import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -16,7 +17,6 @@ export class UsersController {
     }
 
     @Patch('profile/student')
-    @UseGuards(EmailVerifiedGuard)
     @Roles(UserRole.STUDENT)
     @UseGuards(RolesGuard)
     async updateStudentProfile(
@@ -27,7 +27,6 @@ export class UsersController {
     }
 
     @Patch('profile/job-seeker')
-    @UseGuards(EmailVerifiedGuard)
     @Roles(UserRole.JOB_SEEKER)
     @UseGuards(RolesGuard)
     async updateJobSeekerProfile(
@@ -38,7 +37,6 @@ export class UsersController {
     }
 
     @Patch('profile/employer')
-    @UseGuards(EmailVerifiedGuard)
     @Roles(UserRole.EMPLOYER)
     @UseGuards(RolesGuard)
     async updateEmployerProfile(

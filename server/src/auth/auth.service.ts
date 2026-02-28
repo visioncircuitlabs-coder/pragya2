@@ -52,11 +52,15 @@ export class AuthService {
         // Create profile based on role
         await this.createProfile(user.id, dto);
 
-        // Generate email verification token
-        const verificationToken = await this.createEmailVerificationToken(user.id);
+        // TODO: Re-enable email verification once SMTP is configured for production
+        // const verificationToken = await this.createEmailVerificationToken(user.id);
+        // this.emailService.sendOtpEmail(user.email, verificationToken).catch(console.error);
 
-        // Send OTP email (non-blocking)
-        this.emailService.sendOtpEmail(user.email, verificationToken).catch(console.error);
+        // Auto-verify users for now (skip email verification)
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { emailVerified: true },
+        });
 
         // Generate tokens
         const tokens = await this.generateTokens(user.id, user.email, user.role);
