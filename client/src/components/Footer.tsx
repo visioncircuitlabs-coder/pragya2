@@ -11,14 +11,13 @@ export default function Footer() {
     platform: [
       { name: "Career Library", href: "/career-library" },
       { name: "Job Seekers", href: "/job-seekers" },
-      { name: "Employer Portal", href: "/employer-portal" },
+      { name: "Students", href: "/students" },
       { name: "Career", href: "/career" },
       { name: "Pricing", href: "/pricing" },
     ],
     company: [
       { name: "About Us", href: "/about" },
       { name: "Success Stories", href: "#" },
-      { name: "For Employers", href: "/employer-portal" },
       { name: "Contact", href: "/contact" },
     ],
     legal: [

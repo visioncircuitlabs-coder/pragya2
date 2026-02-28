@@ -88,11 +88,10 @@ export default function Register() {
                         {/* Role Selection */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-3">I am a...</label>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 {[
                                     { id: UserRole.STUDENT, label: 'Student', icon: UserIcon },
                                     { id: UserRole.JOB_SEEKER, label: 'Job Seeker', icon: Briefcase },
-                                    { id: UserRole.EMPLOYER, label: 'Employer', icon: Building2 }
                                 ].map((role) => (
                                     <button
                                         type="button"
@@ -127,24 +126,6 @@ export default function Register() {
                                     />
                                 </div>
                             </div>
-
-                            {formData.role === 'EMPLOYER' && (
-                                <div>
-                                    <label htmlFor="companyName" className="block text-sm font-semibold text-gray-700">Company Name</label>
-                                    <div className="mt-1">
-                                        <input
-                                            id="companyName"
-                                            name="companyName"
-                                            type="text"
-                                            required
-                                            value={formData.companyName}
-                                            onChange={handleChange}
-                                            className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-[#0e6957] focus:ring-[#0e6957] px-4 py-3 bg-gray-50 border hover:bg-white transition-colors"
-                                            placeholder="Company Name"
-                                        />
-                                    </div>
-                                </div>
-                            )}
 
                             <div>
                                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Email address</label>

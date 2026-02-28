@@ -1,6 +1,6 @@
 "use client";
 
-import { GraduationCap, Briefcase, Building2, ArrowRight } from "lucide-react";
+import { GraduationCap, Briefcase, ArrowRight } from "lucide-react";
 
 export default function Services() {
   const services = [
@@ -12,7 +12,7 @@ export default function Services() {
       keyFocus:
         "Helps students explore suitable career paths, streams, and future options with clarity and confidence.",
       cta: "Explore Assessment",
-      ctaLink: "/contact",
+      ctaLink: "/register",
       icon: <GraduationCap className="w-7 h-7" strokeWidth={2.5} />,
       gradient: "from-blue-500 to-purple-600",
       lightBg: "bg-gradient-to-br from-blue-50 to-purple-50",
@@ -28,29 +28,13 @@ export default function Services() {
       keyFocus:
         "Supports career alignment, skill awareness, and better positioning for opportunities.",
       cta: "Check Employability",
-      ctaLink: "/job-seekers",
+      ctaLink: "/register",
       icon: <Briefcase className="w-7 h-7" strokeWidth={2.5} />,
       gradient: "from-brand-primary to-emerald-700",
       lightBg: "bg-gradient-to-br from-emerald-50 to-teal-50",
       accentColor: "text-brand-primary",
       borderColor: "border-brand-primary/20",
       hoverShadow: "hover:shadow-brand-primary/20",
-    },
-    {
-      category: "EMPLOYERS",
-      title: "Assessment-Integrated Talent Analytics Portal",
-      description:
-        "A talent analytics portal where employer access is integrated with structured employability assessment insights.",
-      keyFocus:
-        "Enables employers to review candidate profiles with career-fit indicators beyond resumes.",
-      cta: "Explore Employer Portal",
-      ctaLink: "/employer-portal",
-      icon: <Building2 className="w-7 h-7" strokeWidth={2.5} />,
-      gradient: "from-brand-secondary to-orange-600",
-      lightBg: "bg-gradient-to-br from-amber-50 to-orange-50",
-      accentColor: "text-brand-secondary",
-      borderColor: "border-brand-secondary/20",
-      hoverShadow: "hover:shadow-brand-secondary/20",
     },
   ];
 
@@ -95,7 +79,7 @@ export default function Services() {
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 max-w-4xl mx-auto">
           {services.map((service, index) => (
             <div
               key={index}

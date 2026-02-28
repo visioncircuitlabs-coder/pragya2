@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Pragya is a full-stack career assessment platform ("India's Pioneer Youth-Developed Career Ecosystem") that helps students and job seekers discover career paths through AI-powered 360° assessments. Users complete a multi-module assessment, scores are computed, Google Gemini generates insights, and a PDF report is produced.
+Pragya is a full-stack career assessment platform ("India's Pioneer Youth-Developed Career Ecosystem") that helps students and job seekers discover career paths through AI-powered assessments. Users complete a multi-module assessment, scores are computed, Google Gemini generates insights, and a PDF report is produced.
+
+### Important Deployment Notes
+- **Employer feature is HIDDEN** from all user-facing UI (navbar, footer, services, CTA, register page). The backend `EMPLOYER` role + `/employer-portal` page still exist but are not linked anywhere. Re-enable after Razorpay approval and server deployment.
+- **All CTA buttons** (Services, CTASection, Pricing) route to `/register` for a clean payment workflow: Register → Pay via Razorpay → Take Assessment → Get Report.
+- **"360°" branding removed** — product is now just "Career Assessment" / "Employability Assessment" / "PRAGYA" everywhere.
 
 ## Commands
 

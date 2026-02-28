@@ -40,10 +40,10 @@ export default function CTASection() {
           </div>
 
           {/* CTA Buttons Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 w-full max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 w-full max-w-4xl">
 
-            {/* CTA 1 */}
-            <div className="group relative bg-white/80 backdrop-blur-sm border-2 border-brand-secondary/20 rounded-3xl p-6 md:p-8 lg:p-12 hover:bg-white hover:border-brand-secondary/60 hover:shadow-2xl hover:shadow-brand-secondary/30 transition-all duration-300 hover:-translate-y-1">
+            {/* CTA 1: Career Assessment → Register */}
+            <a href="/register" className="group relative bg-white/80 backdrop-blur-sm border-2 border-brand-secondary/20 rounded-3xl p-6 md:p-8 lg:p-12 hover:bg-white hover:border-brand-secondary/60 hover:shadow-2xl hover:shadow-brand-secondary/30 transition-all duration-300 hover:-translate-y-1 block">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-secondary/10 rounded-full blur-[60px] group-hover:bg-brand-secondary/20 transition-all duration-300"></div>
 
               <div className="relative z-10">
@@ -61,17 +61,17 @@ export default function CTASection() {
                   Discover your ideal career path with comprehensive assessment tools
                 </p>
 
-                <button aria-label="Get started with Career Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
+                <span aria-label="Get started with Career Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
                   Get Started
                   <div className="w-10 h-10 rounded-full bg-brand-secondary/10 border-2 border-brand-secondary flex items-center justify-center group-hover:bg-brand-secondary group-hover:text-white transition-all">
                     <ArrowRight className="w-5 h-5" />
                   </div>
-                </button>
+                </span>
               </div>
-            </div>
+            </a>
 
-            {/* CTA 2 */}
-            <div className="group relative bg-white/80 backdrop-blur-sm border-2 border-brand-primary/20 rounded-3xl p-6 md:p-8 lg:p-12 hover:bg-white hover:border-brand-primary/60 hover:shadow-2xl hover:shadow-brand-primary/30 transition-all duration-300 hover:-translate-y-1">
+            {/* CTA 2: Employability Assessment → Register */}
+            <a href="/register" className="group relative bg-white/80 backdrop-blur-sm border-2 border-brand-primary/20 rounded-3xl p-6 md:p-8 lg:p-12 hover:bg-white hover:border-brand-primary/60 hover:shadow-2xl hover:shadow-brand-primary/30 transition-all duration-300 hover:-translate-y-1 block">
               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-[60px] group-hover:bg-brand-primary/20 transition-all duration-300"></div>
 
               <div className="relative z-10">
@@ -89,42 +89,14 @@ export default function CTASection() {
                   Evaluate your job readiness and enhance your professional skills
                 </p>
 
-                <button aria-label="Get started with Employability Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
+                <span aria-label="Get started with Employability Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
                   Get Started
                   <div className="w-10 h-10 rounded-full bg-brand-secondary/10 border-2 border-brand-secondary flex items-center justify-center group-hover:bg-brand-secondary group-hover:text-white transition-all">
                     <ArrowRight className="w-5 h-5" />
                   </div>
-                </button>
+                </span>
               </div>
-            </div>
-
-            {/* CTA 3 */}
-            <div className="group relative bg-white/80 backdrop-blur-sm border-2 border-brand-secondary/20 rounded-3xl p-6 md:p-8 lg:p-12 hover:bg-white hover:border-brand-secondary/60 hover:shadow-2xl hover:shadow-brand-secondary/30 transition-all duration-300 hover:-translate-y-1 md:col-span-2 lg:col-span-1">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-secondary/10 rounded-full blur-[60px] group-hover:bg-brand-secondary/20 transition-all duration-300"></div>
-
-              <div className="relative z-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 lg:w-20 lg:h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-brand-secondary shadow-lg shadow-brand-secondary/30 mb-6 group-hover:scale-110 transition-all duration-300">
-                  <svg className="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-
-                <h3 className="text-2xl lg:text-3xl font-bold mb-4 text-brand-primary group-hover:text-brand-secondary transition-colors">
-                  Assessment-Integrated Talent Analytics
-                </h3>
-
-                <p className="text-gray-600 text-lg lg:text-xl mb-6 leading-relaxed">
-                  Access opportunities matched with your assessment insights
-                </p>
-
-                <button aria-label="Explore the Assessment-Integrated Talent Analytics Portal" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
-                  Explore Opportunities
-                  <div className="w-10 h-10 rounded-full bg-brand-secondary/10 border-2 border-brand-secondary flex items-center justify-center group-hover:bg-brand-secondary group-hover:text-white transition-all">
-                    <ArrowRight className="w-5 h-5" />
-                  </div>
-                </button>
-              </div>
-            </div>
+            </a>
 
           </div>
 

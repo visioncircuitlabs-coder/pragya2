@@ -53,9 +53,6 @@ export default function Navbar() {
           <Link href="/students" className="hover:text-brand-primary transition-colors whitespace-nowrap">
             Students
           </Link>
-          <Link href="/employer-portal" className="hover:text-brand-primary transition-colors whitespace-nowrap">
-            Employer
-          </Link>
           <Link href="/career" className="hover:text-brand-primary transition-colors whitespace-nowrap">
             Career
           </Link>
@@ -184,7 +181,6 @@ export default function Navbar() {
             <Link href="/career-library" className="text-lg" onClick={() => setIsOpen(false)}>Digital Career Library</Link>
             <Link href="/job-seekers" className="text-lg" onClick={() => setIsOpen(false)}>Job Seekers</Link>
             <Link href="/students" className="text-lg" onClick={() => setIsOpen(false)}>Students</Link>
-            <Link href="/employer-portal" className="text-lg" onClick={() => setIsOpen(false)}>Employer</Link>
             <Link href="/career" className="text-lg" onClick={() => setIsOpen(false)}>Career</Link>
             <Link href="/contact" className="text-lg" onClick={() => setIsOpen(false)}>Contact</Link>
             <Link href="/pricing" className="text-lg" onClick={() => setIsOpen(false)}>Pricing</Link>
