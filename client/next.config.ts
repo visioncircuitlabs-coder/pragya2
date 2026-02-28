@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  // Server-side rendering mode (no static export)
-  // Compatible with PM2 + Nginx deployment
+  output: 'standalone',
   turbopack: {
     root: path.resolve(__dirname, '..'),
   },

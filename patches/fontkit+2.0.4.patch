@@ -1,0 +1,13 @@
+diff --git a/node_modules/fontkit/dist/module.mjs b/node_modules/fontkit/dist/module.mjs
+index fde88fc..2c6f8bf 100644
+--- a/node_modules/fontkit/dist/module.mjs
++++ b/node_modules/fontkit/dist/module.mjs
+@@ -9968,6 +9968,8 @@ class $c96c93587d49c14d$export$2e2bcd8739ae039 extends (0, $a83b9c36aaa94fd3$exp
+         this.glyphIterator.cur.markAttachment = baseGlyphIndex;
+     }
+     getAnchor(anchor) {
++        // Guard against null/undefined anchors (common in complex Indic scripts)
++        if (!anchor) return { x: 0, y: 0 };
+         // TODO: contour point, device tables
+         let x = anchor.xCoordinate;
+         let y = anchor.yCoordinate;

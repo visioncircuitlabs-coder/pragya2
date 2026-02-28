@@ -70,6 +70,22 @@ build/
 .vercel
 .netlify
 
+# Generated reports
+server/reports/*.pdf
+
+# Screenshots & test artifacts
+*.png
+*.jpg
+*.jpeg
+student_test_results.json
+run_student_test.js
+
+# Production env (template is committed, actual values are not)
+.env.production
+
+# Playwright
+.playwright-mcp/
+
 # Miscellaneous
 *.pem
 *.key

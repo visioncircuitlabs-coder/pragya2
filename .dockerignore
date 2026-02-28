@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+client/.next
+server/dist
+shared/dist
+
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+!.env.production.template
+server/.env
+server/.env.*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+*.spec.ts
+**/__tests__
+coverage
+
+# Screenshots and temp files
+*.png
+*.jpg
+*.jpeg
+student_test_results.json
+run_student_test.js
+
+# Reports (generated at runtime)
+server/reports/*.pdf
+
+# Claude Code
+.claude
+
+# Playwright
+.playwright-mcp
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Patches applied at install time (keep in context)
+# patches/
+
+# Docs
+TESTS/
