@@ -92,7 +92,7 @@ setup_ssh() {
     sed -i 's/^#\?MaxAuthTries.*/MaxAuthTries 5/' /etc/ssh/sshd_config
     sed -i 's/^#\?ClientAliveInterval.*/ClientAliveInterval 300/' /etc/ssh/sshd_config
     sed -i 's/^#\?ClientAliveCountMax.*/ClientAliveCountMax 2/' /etc/ssh/sshd_config
-    systemctl restart sshd
+    systemctl restart ssh || systemctl restart sshd
 }
 
 # ----------------------------------------------------------
