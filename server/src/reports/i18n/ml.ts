@@ -184,6 +184,6 @@ export const ml: Record<string, string> = {
     phase_action_items: 'പ്രവർത്തന ഉപാധികൾ',
 
     // ─── Malayalam Section Header ─────────────────────────────────────────────
-    malayalam_header_student: 'PRAGYA 360\u00B0 Student Career Report (മലയാളം)',
-    malayalam_header_jobseeker: 'PRAGYA 360\u00B0 Employability Report (മലയാളം)',
+    malayalam_header_student: 'PRAGYA Student Career Report (മലയാളം)',
+    malayalam_header_jobseeker: 'PRAGYA Employability Report (മലയാളം)',
 };

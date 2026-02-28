@@ -46,12 +46,12 @@ const generateOverviewText = (data: StudentReportData, lang: Lang = 'en'): strin
     const perfInfo = getPerformanceInfo(data.performanceLevel, lang);
 
     if (lang === 'ml') {
-        return `ഈ സമഗ്ര 360° മൂല്യാങ്കനം നിങ്ങളുടെ ബൗദ്ധിക കഴിവുകൾ, കരിയർ താൽപ്പര്യങ്ങൾ, വ്യക്തിത്വ ഗുണങ്ങൾ, കരിയർ സന്നദ്ധത എന്നിവ വിവിധ മാനങ്ങളിൽ വിലയിരുത്തുന്നു. ` +
+        return `ഈ സമഗ്ര മൂല്യാങ്കനം നിങ്ങളുടെ ബൗദ്ധിക കഴിവുകൾ, കരിയർ താൽപ്പര്യങ്ങൾ, വ്യക്തിത്വ ഗുണങ്ങൾ, കരിയർ സന്നദ്ധത എന്നിവ വിവിധ മാനങ്ങളിൽ വിലയിരുത്തുന്നു. ` +
             `നിങ്ങളുടെ മൊത്തം പ്രകടന സ്കോർ ${data.weightedScore}% (${perfInfo.label}) ആണ്, അഭിരുചി സ്കോർ ${aptPct}%, കരിയർ സന്നദ്ധത ${readPct}%. ` +
             (code ? `നിങ്ങളുടെ ഹോളണ്ട് കോഡ് ${code} (${codeNames}) ആണ്, ഇത് നിങ്ങളുടെ പ്രാഥമിക കരിയർ താൽപ്പര്യ മേഖലകൾ സൂചിപ്പിക്കുന്നു. ` : '') +
             `നിങ്ങളുടെ അക്കാദമിക് സന്നദ്ധത സൂചിക ${data.academicReadinessIndex}% ആണ്, ഇത് അക്കാദമിക്, കരിയർ വെല്ലുവിളികൾക്കുള്ള നിങ്ങളുടെ സന്നദ്ധത പ്രതിഫലിപ്പിക്കുന്നു.`;
     }
-    return `This comprehensive 360° assessment evaluates your cognitive abilities, career interests, personality traits, and career readiness across multiple dimensions. ` +
+    return `This comprehensive assessment evaluates your cognitive abilities, career interests, personality traits, and career readiness across multiple dimensions. ` +
         `Your overall performance score is ${data.weightedScore}% (${perfInfo.label}), with an aptitude score of ${aptPct}% and career readiness of ${readPct}%. ` +
         (code ? `Your Holland Code is ${code} (${codeNames}), indicating your primary career interest areas. ` : '') +
         `Your Academic Readiness Index stands at ${data.academicReadinessIndex}%, reflecting your preparedness for academic and career challenges ahead.`;
@@ -178,7 +178,7 @@ const StudentPage1 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
         // Header
         h(View, { style: styles.header },
             h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
-                'PRAGYA 360\u00B0 Student Career Report',
+                'PRAGYA Student Career Report',
                 lang === 'ml' ? h(Text, { style: { fontFamily: 'NotoSansMalayalam', fontSize: 16 } }, ' (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02)') : null),
             h(Text, { style: styles.headerSubtitle },
                 `Generated on ${data.assessmentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
@@ -897,7 +897,7 @@ const MalayalamCoverPage = ({ data }: { data: StudentReportData }) => {
         // Header
         h(View, { style: styles.header },
             h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
-                'PRAGYA 360\u00B0 ',
+                'PRAGYA ',
                 h(Text, { style: { fontFamily: 'NotoSansMalayalam', fontSize: 16 } }, 'വിദ്യാർത്ഥി കരിയർ റിപ്പോർട്ട്')
             ),
             h(Text, { style: { ...styles.headerSubtitle, fontFamily: 'NotoSansMalayalam' } },

@@ -142,24 +142,46 @@ export class ReportsService {
             } catch (err) {
                 this.logger.warn(`Malayalam analysis failed (non-fatal): ${err instanceof Error ? err.message : err}`);
             }
-        } else if (!isStudentAssessment && currentAI && !currentAI.employabilitySummary_ml) {
-            // For job seekers: keep existing field-by-field translation approach
-            this.logger.log(`Generating Malayalam translations for ${userAssessmentId}...`);
+        } else if (!isStudentAssessment && currentAI && !currentAI.analysis_ml) {
+            // For job seekers: generate native Malayalam career analysis narrative
+            this.logger.log(`Generating native Malayalam analysis for job-seeker ${userAssessmentId}...`);
             try {
-                const mlTranslations = await this.aiAnalysisService.translateInsightsToMalayalam(
-                    currentAI, 'jobseeker',
+                const profile = assessment.user.jobSeekerProfile;
+                const scores = {
+                    aptitude: assessmentData.aptitudeScores || {},
+                    riasec: assessmentData.riasecScores || { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
+                    riasecCode: assessmentData.riasecCode || 'SCA',
+                    employability: assessmentData.employabilityScores || {},
+                    personality: assessmentData.personalityScores || {},
+                    clarityIndex: assessmentData.clarityIndex || 50,
+                };
+                const age = profile?.dateOfBirth
+                    ? Math.floor((Date.now() - new Date(profile.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                    : undefined;
+                const mlAnalysis = await this.aiAnalysisService.generateJobSeekerMalayalamAnalysis(
+                    {
+                        fullName: profile?.fullName || 'Candidate',
+                        age,
+                        gender: profile?.gender || undefined,
+                        location: profile?.location || undefined,
+                        education: profile?.educationLevel || undefined,
+                        currentRole: profile?.currentStatus || undefined,
+                    },
+                    scores as any,
+                    (assessmentData.careerMatches || []) as any,
+                    assessmentData.sectorMatches as any,
                 );
-                if (Object.keys(mlTranslations).length > 0) {
-                    const mergedInsights = { ...currentAI, ...mlTranslations };
+                if (mlAnalysis) {
+                    const mergedInsights = { ...currentAI, ...mlAnalysis };
                     await this.prisma.userAssessment.update({
                         where: { id: userAssessmentId },
                         data: { aiInsights: JSON.parse(JSON.stringify(mergedInsights)) },
                     });
                     assessmentData = { ...assessmentData, aiInsights: mergedInsights };
-                    this.logger.log(`Malayalam translations cached for ${userAssessmentId} (${Object.keys(mlTranslations).length} fields)`);
+                    this.logger.log(`Native Malayalam analysis cached for job-seeker ${userAssessmentId}`);
                 }
             } catch (err) {
-                this.logger.warn(`Malayalam translation failed (non-fatal): ${err instanceof Error ? err.message : err}`);
+                this.logger.warn(`Job-seeker Malayalam analysis failed (non-fatal): ${err instanceof Error ? err.message : err}`);
             }
         }
 

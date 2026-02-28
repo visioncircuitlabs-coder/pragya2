@@ -140,7 +140,7 @@ export default function StudentsAssessmentPage() {
 
             // Find the career assessment for students
             const studentAssessment = availableAssessments.find(
-                (a) => a.title.includes('Career Assessment') || a.title.includes('360°')
+                (a) => a.title.includes('Career Assessment') || a.title.includes('Student')
             ) || availableAssessments[0];
 
             const assessmentId = studentAssessment.id;
@@ -409,7 +409,7 @@ export default function StudentsAssessmentPage() {
                             Your Career Assessment Report
                         </h1>
                         <p className="text-gray-600 max-w-2xl mx-auto">
-                            Based on the Pragya 360° Career Assessment • Completed on {result.completedAt ? new Date(result.completedAt).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'Today'}
+                            Based on the Pragya Career Assessment • Completed on {result.completedAt ? new Date(result.completedAt).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'Today'}
                         </p>
                     </div>
 

@@ -10,15 +10,15 @@ export default function FAQ() {
   const faqs = [
     {
       question: "What is Pragya?",
-      answer: "Pragya is a platform for research and guidance for youth advancement. It is India's First Youth-Developed Career Ecosystem, created to support informed career and employability decisions for students, job seekers, and employers. Pragya brings together: India's First Structured Digital Career Library, Career-Assessment Integrated Talent Analytics Portal, and 360° Career & Employability Assessment. For the first time in India, career discovery, assessment, and opportunity access are integrated into a single structured platform."
+      answer: "Pragya is a platform for research and guidance for youth advancement. It is India's First Youth-Developed Career Ecosystem, created to support informed career and employability decisions for students, job seekers, and employers. Pragya brings together: India's First Structured Digital Career Library, Career-Assessment Integrated Talent Analytics Portal, and Career & Employability Assessment. For the first time in India, career discovery, assessment, and opportunity access are integrated into a single structured platform."
     },
     {
-      question: "What is the 360° Career Assessment?",
-      answer: "The 360° Career Assessment is a structured assessment that combines aptitude, interest, and personality insights to support career clarity for school students."
+      question: "What is the Career Assessment?",
+      answer: "The Career Assessment is a structured assessment that combines aptitude, interest, and personality insights to support career clarity for school students."
     },
     {
-      question: "Who can take the 360° Employability Assessment?",
-      answer: "Graduates, job seekers, and early-career professionals can take the 360° Employability Assessment based on their career stage."
+      question: "Who can take the Employability Assessment?",
+      answer: "Graduates, job seekers, and early-career professionals can take the Employability Assessment based on their career stage."
     },
     {
       question: "How is Pragya different from traditional career counselling?",
@@ -42,7 +42,7 @@ export default function FAQ() {
     },
     {
       question: "How can I get started with Pragya?",
-      answer: "You can start by taking the 360° Career & Employability Assessment or exploring the Career Library through the website."
+      answer: "You can start by taking the Career & Employability Assessment or exploring the Career Library through the website."
     }
   ];
 

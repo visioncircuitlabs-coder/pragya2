@@ -29,7 +29,7 @@ export default function RefundPolicyPage() {
                     {/* Overview */}
                     <div className="bg-brand-primary/5 rounded-2xl p-8 border border-brand-primary/10 mb-12">
                         <p className="text-gray-700 leading-relaxed">
-                            This Refund &amp; Cancellation Policy applies to all paid services offered by Pragya Career Ecosystem, including the 360° Career Assessment for Students and the 360° Employability Assessment for Job Seekers.
+                            This Refund &amp; Cancellation Policy applies to all paid services offered by Pragya Career Ecosystem, including the Career Assessment for Students and the Employability Assessment for Job Seekers.
                         </p>
                     </div>
 

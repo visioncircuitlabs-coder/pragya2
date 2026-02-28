@@ -6,6 +6,7 @@ import { SectorMatchResult } from '../assessments/sector-matching.service';
 import { CareerMatch } from '../assessments/careers.service';
 import { LoggerService } from '../logger/logger.service';
 import { buildJobSeekerPrompt } from './prompts/job-seeker.prompt';
+import { buildJobSeekerMalayalamPrompt } from './prompts/jobseeker-ml.prompt';
 import { buildStudentPrompt as buildStudentPromptFn } from './prompts/student.prompt';
 import { buildStudentMalayalamPrompt } from './prompts/student-ml.prompt';
 
@@ -595,7 +596,7 @@ export class AiAnalysisService {
                 description: `You have a ${topCodes[0]}-${topCodes[1]} orientation, meaning you are drawn to ${topCodeDesc[0]} and ${topCodeDesc[1]}. Your strongest cognitive area is ${topApt[0].name} (${topApt[0].pct}%), which reflects your natural ability to process information in this domain.`,
                 superpower: `${topApt[0].name} combined with your ${topCodes[0]} interest`,
             },
-            overallSummary: `Your 360° assessment reveals a ${topCodes.join('-')} career interest profile (Holland Code: ${riasecCode}) with an overall aptitude of ${overallApt}% and career readiness of ${overallReadiness}%. Your personality profile shows strong ${topTraits[0]?.trait || 'adaptive'} tendencies, and your top cognitive strength is ${topApt[0].name}. This combination points toward career paths that blend ${topCodeDesc[0]} with ${topCodeDesc[1]}.`,
+            overallSummary: `Your comprehensive assessment reveals a ${topCodes.join('-')} career interest profile (Holland Code: ${riasecCode}) with an overall aptitude of ${overallApt}% and career readiness of ${overallReadiness}%. Your personality profile shows strong ${topTraits[0]?.trait || 'adaptive'} tendencies, and your top cognitive strength is ${topApt[0].name}. This combination points toward career paths that blend ${topCodeDesc[0]} with ${topCodeDesc[1]}.`,
             strengthsAnalysis: `Your top cognitive strengths are ${topApt[0].name} (${topApt[0].pct}%) and ${topApt[1].name} (${topApt[1].pct}%). On the personality front, your ${topTraits[0]?.trait || 'leading trait'} is rated "${topTraits[0]?.level || 'Strong'}", indicating maturity in this area. In career readiness, you score highest in ${topReadiness[0]?.section || 'general skills'} (${topReadiness[0]?.percentage || 0}%). Your ${riasecCode} Holland Code confirms interests that align well with these strengths.`,
             areasForGrowth: `Your developing areas include ${weakApt[0].name} (${weakApt[0].pct}%) in aptitude and ${weakReadiness[0]?.section || 'general readiness'} (${weakReadiness[0]?.percentage || 0}%) in career readiness. ${developingTraits.length > 0 ? `Your ${developingTraits[0].trait} trait is at the "Emerging" level, offering room for growth.` : 'Your personality traits are well-balanced.'} Focused practice in these areas will significantly strengthen your overall profile.`,
             riasecAnalysis: `Your Holland Code ${riasecCode} (${topCodes.join('-')}) reveals you are most fulfilled in environments that emphasize ${topCodeDesc[0]} and ${topCodeDesc[1]}. Your top RIASEC score is ${topCodes[0]} at ${riasecScores[riasecCode[0] as keyof StudentRiasecScores]}/8, suggesting a clear preference for ${riasecDescriptions[riasecCode[0]]}. This combination is well-suited for careers in ${topSectors.slice(0, 2).join(' and ')}.`,
@@ -1002,7 +1003,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
         // Section 1: About you
         sections.push(
             `**നിങ്ങളെ കുറിച്ച്**\n\n` +
-            `പ്രിയ ${profile.fullName}, നിങ്ങളുടെ 360° മൂല്യാങ്കനത്തിന്റെ ഫലങ്ങൾ വളരെ രസകരമാണ്. ` +
+            `പ്രിയ ${profile.fullName}, നിങ്ങളുടെ സമഗ്ര മൂല്യാങ്കനത്തിന്റെ ഫലങ്ങൾ വളരെ രസകരമാണ്. ` +
             `നിങ്ങളുടെ ഹോളണ്ട് കോഡ് ${riasecCode} (${hollandExpanded}) ആണ്, ` +
             `ഇത് ${riasecMl[topCodes[0]] || ''} എന്നിവയിലുള്ള നിങ്ങളുടെ താൽപ്പര്യം കാണിക്കുന്നു. ` +
             `${aptSections[0]?.name || ''} (${Math.round(aptSections[0]?.pct || 0)}%) നിങ്ങളുടെ ഏറ്റവും ശക്തമായ ബൗദ്ധിക മേഖലയാണ്. ` +
@@ -1089,6 +1090,252 @@ ${JSON.stringify(sourceDict, null, 2)}`;
             `2. ${topCodes[0] ? `${riasecNames[topCodes[0]] || ''} താൽപ്പര്യങ്ങളുമായി ബന്ധപ്പെട്ട` : ''} പാഠ്യേതര പ്രവർത്തനങ്ങൾ പര്യവേക്ഷണം ചെയ്യുക.\n` +
             `3. ${readinessEntries.length > 0 ? readinessEntries[readinessEntries.length - 1].section : 'വികസന മേഖലകൾ'} മെച്ചപ്പെടുത്താൻ വർക്ക്ഷോപ്പുകളിൽ പങ്കെടുക്കുക.\n` +
             `4. കരിയർ ഓറിയന്റേഷൻ പ്രോഗ്രാമുകളിൽ അല്ലെങ്കിൽ ജോബ് ഷാഡോയിംഗിൽ പങ്കെടുക്കുക.`
+        );
+
+        return {
+            title_ml: `${personaTitle} — ${riasecMl[topCodes[0]] || ''} ${aptSections[0]?.name || ''} കഴിവുകൾ ഒത്തുചേരുന്ന നിങ്ങൾ`,
+            analysis_ml: sections.join('\n\n'),
+        };
+    }
+
+    /**
+     * Generate a native Malayalam career analysis narrative for job-seeker reports.
+     * Instead of translating English insights field-by-field, this produces a
+     * comprehensive, conversational Malayalam narrative in a single Gemini call.
+     */
+    async generateJobSeekerMalayalamAnalysis(
+        profile: CandidateProfile,
+        scores: ComprehensiveScores,
+        careerMatches: CareerMatch[],
+        sectorMatches?: SectorMatchResult,
+    ): Promise<{ title_ml: string; analysis_ml: string } | null> {
+        if (!this.apiKey) {
+            this.logger.warn('Job-seeker Malayalam analysis skipped — no Gemini API key');
+            return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
+        }
+
+        const startTime = Date.now();
+        const prompt = buildJobSeekerMalayalamPrompt(profile, scores, careerMatches, sectorMatches);
+
+        this.logger.logBusinessEvent('GEMINI_JOBSEEKER_ML_REQUEST', {
+            candidate: profile.fullName,
+            hollandCode: scores.riasecCode,
+            promptLength: prompt.length,
+        });
+
+        try {
+            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 8192,
+                        responseMimeType: 'application/json',
+                    },
+                }),
+            });
+
+            const duration = Date.now() - startTime;
+
+            if (!response.ok) {
+                const error = await response.text();
+                this.logger.warn(`Job-seeker Malayalam Gemini error (${duration}ms): ${error.substring(0, 200)}`);
+                return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
+            }
+
+            const data = await response.json();
+            const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (!generatedText) {
+                this.logger.warn('Empty response from Gemini for job-seeker Malayalam analysis');
+                return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
+            }
+
+            const result = JSON.parse(generatedText) as { title_ml: string; analysis_ml: string };
+
+            if (!result.title_ml || !result.analysis_ml) {
+                this.logger.warn('Incomplete job-seeker Malayalam analysis from Gemini');
+                return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
+            }
+
+            this.logger.logBusinessEvent('GEMINI_JOBSEEKER_ML_SUCCESS', {
+                candidate: profile.fullName,
+                duration: `${duration}ms`,
+                analysisLength: result.analysis_ml.length,
+            });
+
+            return result;
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            this.logger.warn(`Job-seeker Malayalam analysis failed (${duration}ms): ${error instanceof Error ? error.message : error}`);
+            return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
+        }
+    }
+
+    /**
+     * Template-based Malayalam fallback for job-seekers when Gemini is unavailable.
+     * Generates structured Malayalam text from raw score data.
+     */
+    private getJobSeekerMalayalamFallback(
+        profile: CandidateProfile,
+        scores: ComprehensiveScores,
+        careerMatches: CareerMatch[],
+        sectorMatches?: SectorMatchResult,
+    ): { title_ml: string; analysis_ml: string } {
+        const riasecNames: Record<string, string> = {
+            R: 'Realistic', I: 'Investigative', A: 'Artistic',
+            S: 'Social', E: 'Enterprising', C: 'Conventional',
+        };
+        const riasecMl: Record<string, string> = {
+            R: 'പ്രായോഗിക പ്രശ്‌നപരിഹാരം',
+            I: 'വിശകലന ചിന്തയും ഗവേഷണവും',
+            A: 'സർഗ്ഗാത്മക ആവിഷ്‌കാരവും നവീകരണവും',
+            S: 'മറ്റുള്ളവരെ സഹായിക്കലും വ്യക്തിബന്ധങ്ങളും',
+            E: 'നേതൃത്വവും സംരംഭകത്വവും',
+            C: 'സംഘടനയും വ്യവസ്ഥാപിത പ്രക്രിയകളും',
+        };
+
+        const topCodes = scores.riasecCode.split('');
+        const hollandExpanded = topCodes.map(c => riasecNames[c] || c).join('-');
+
+        // Aptitude analysis
+        const aptSections = Object.entries(scores.aptitude)
+            .filter(([key]) => key !== 'overall')
+            .map(([name, data]: [string, any]) => ({ name, pct: data.percentage }))
+            .sort((a, b) => b.pct - a.pct);
+        const overallApt = scores.aptitude.overall?.percentage || 0;
+
+        // Employability
+        const empSections = Object.entries(scores.employability)
+            .filter(([key]) => key !== 'overall')
+            .map(([name, data]: [string, any]) => ({ name, pct: data.percentage }))
+            .sort((a, b) => b.pct - a.pct);
+        const overallEmp = scores.employability.overall?.percentage || 0;
+
+        // Personality
+        const personalityEntries = Object.entries(scores.personality)
+            .map(([trait, data]: [string, any]) => ({ trait, average: data.average, level: data.level }))
+            .sort((a, b) => b.average - a.average);
+        const strongTraits = personalityEntries.filter(t => t.level === 'Strong' || t.average >= 3.5);
+        const emergingTraits = personalityEntries.filter(t => t.level === 'Developing' || t.average < 2.5);
+
+        // Composite
+        const personalityAverages = personalityEntries.map(p => p.average);
+        const avgPersonality = personalityAverages.length > 0
+            ? personalityAverages.reduce((a, b) => a + b, 0) / personalityAverages.length
+            : 0;
+        const personalityPct = Math.round(((avgPersonality - 1) / 4) * 100);
+        const compositeScore = Math.round(overallApt * 0.35 + overallEmp * 0.35 + personalityPct * 0.30);
+
+        const personaTitle = compositeScore >= 75 ? 'The Strategic Achiever'
+            : compositeScore >= 60 ? 'The Emerging Professional'
+                : compositeScore >= 45 ? 'The Aspiring Builder'
+                    : 'The Curious Explorer';
+
+        // Sector data
+        const topSectors = sectorMatches?.topSectors?.slice(0, 4) || [];
+
+        const sections: string[] = [];
+
+        // Section 1: About you
+        sections.push(
+            `**നിങ്ങളെ കുറിച്ച്**\n\n` +
+            `പ്രിയ ${profile.fullName}, നിങ്ങളുടെ സമഗ്ര മൂല്യാങ്കനത്തിന്റെ ഫലങ്ങൾ വളരെ രസകരമാണ്. ` +
+            `നിങ്ങളുടെ ഹോളണ്ട് കോഡ് ${scores.riasecCode} (${hollandExpanded}) ആണ്, ` +
+            `ഇത് ${riasecMl[topCodes[0]] || ''} എന്നിവയിലുള്ള നിങ്ങളുടെ താൽപ്പര്യം കാണിക്കുന്നു. ` +
+            `${aptSections[0]?.name || ''} (${Math.round(aptSections[0]?.pct || 0)}%) നിങ്ങളുടെ ഏറ്റവും ശക്തമായ ബൗദ്ധിക മേഖലയാണ്. ` +
+            `നിങ്ങളുടെ മൊത്തം പ്രകടനം ${compositeScore >= 70 ? 'മികച്ചതാണ്' : compositeScore >= 50 ? 'നല്ലതാണ്' : 'വളരുന്ന ഘട്ടത്തിലാണ്'}, ` +
+            `കോമ്പോസിറ്റ് സ്കോർ ${compositeScore}/100 ആണ്.`,
+        );
+
+        // Section 2: Aptitude
+        const aptitudeDetail = aptSections.map(a =>
+            `${a.name}: ${Math.round(a.pct)}% — ${a.pct >= 70 ? 'ശക്തം' : a.pct >= 40 ? 'ശരാശരി' : 'വളരുന്ന'}`,
+        ).join(', ');
+        sections.push(
+            `**ബൗദ്ധിക കഴിവുകൾ**\n\n` +
+            `നിങ്ങളുടെ മൊത്തം ബൗദ്ധിക അഭിരുചി സ്കോർ ${Math.round(overallApt)}% ആണ്. ` +
+            `വിവിധ മേഖലകളിലെ നിങ്ങളുടെ പ്രകടനം: ${aptitudeDetail}. ` +
+            `${aptSections[0]?.name || ''} നിങ്ങളുടെ ഏറ്റവും ശക്തമായ മേഖലയാണ്, ` +
+            `ഇത് ഈ മേഖലയിൽ വിവരങ്ങൾ പ്രോസസ്സ് ചെയ്യാനും പ്രയോഗിക്കാനുമുള്ള നിങ്ങളുടെ സ്വാഭാവിക കഴിവ് പ്രതിഫലിപ്പിക്കുന്നു. ` +
+            `${aptSections.length > 1 ? `${aptSections[aptSections.length - 1].name} (${Math.round(aptSections[aptSections.length - 1].pct)}%) വളർച്ചയ്ക്കുള്ള പ്രധാന അവസരമാണ്.` : ''}`,
+        );
+
+        // Section 3: RIASEC
+        const riasecDetail = (['R', 'I', 'A', 'S', 'E', 'C'] as ('R' | 'I' | 'A' | 'S' | 'E' | 'C')[])
+            .sort((a, b) => (scores.riasec[b] || 0) - (scores.riasec[a] || 0))
+            .map(code => `${riasecNames[code]} (${code}): ${scores.riasec[code]}/32`)
+            .join(', ');
+        sections.push(
+            `**കരിയർ താൽപ്പര്യങ്ങൾ**\n\n` +
+            `നിങ്ങളുടെ ഹോളണ്ട് കോഡ് ${scores.riasecCode} (${hollandExpanded}) ആണ്. ` +
+            `ഇതിനർത്ഥം നിങ്ങൾ ${riasecMl[topCodes[0]] || ''} ഊന്നൽ നൽകുന്ന തൊഴിൽ ചുറ്റുപാടുകളിൽ ഏറ്റവും സംതൃപ്തരാണ് എന്നാണ്. ` +
+            `നിങ്ങളുടെ RIASEC സ്കോറുകൾ: ${riasecDetail}. ` +
+            `${topCodes[1] ? `${riasecNames[topCodes[1]] || topCodes[1]} താൽപ്പര്യം ഇത് ${riasecMl[topCodes[1]] || ''} ചേർക്കുന്നു.` : ''}`,
+        );
+
+        // Section 4: Personality
+        sections.push(
+            `**വ്യക്തിത്വ ഗുണങ്ങൾ**\n\n` +
+            (strongTraits.length > 0
+                ? `നിങ്ങളുടെ ഏറ്റവും ശക്തമായ വ്യക്തിത്വ ഗുണങ്ങൾ ${strongTraits.map(t => `${t.trait} (${t.average.toFixed(1)}/5.0)`).join(', ')} ആണ്. ` +
+                  `ഇത് ഈ ഗുണങ്ങളിൽ ഉയർന്ന പക്വതയും സ്ഥിരതയും സൂചിപ്പിക്കുന്നു. `
+                : `നിങ്ങളുടെ വ്യക്തിത്വ ഗുണങ്ങൾ സമതുലിതമായ വികസനം കാണിക്കുന്നു. `) +
+            (emergingTraits.length > 0
+                ? `${emergingTraits.map(t => t.trait).join(', ')} ഇപ്പോഴും വളരുന്ന ഘട്ടത്തിലാണ്, ബോധപൂർവ്വമായ ശ്രമത്തിലൂടെ ഇവ ശക്തിപ്പെടുത്താം. `
+                : '') +
+            `ഈ ഗുണങ്ങൾ നിങ്ങൾ ജോലിസ്ഥലത്ത് വെല്ലുവിളികളെ എങ്ങനെ നേരിടുന്നു, സഹപ്രവർത്തകരുമായി എങ്ങനെ ഇടപെടുന്നു എന്നിവ രൂപപ്പെടുത്തുന്നു.`,
+        );
+
+        // Section 5: Employability
+        const empDetail = empSections.map(e =>
+            `${e.name}: ${Math.round(e.pct)}%`,
+        ).join(', ');
+        sections.push(
+            `**തൊഴിൽ സന്നദ്ധത**\n\n` +
+            `നിങ്ങളുടെ മൊത്തം തൊഴിൽ സന്നദ്ധത സ്കോർ ${Math.round(overallEmp)}% ആണ്. ` +
+            `വിവിധ കഴിവുകളിലെ നിങ്ങളുടെ പ്രകടനം: ${empDetail}. ` +
+            (empSections.length > 0
+                ? `${empSections[0].name} (${Math.round(empSections[0].pct)}%) നിങ്ങളുടെ ഏറ്റവും ശക്തമായ തൊഴിൽ കഴിവാണ്. `
+                : '') +
+            (empSections.length > 1
+                ? `${empSections[empSections.length - 1].name} (${Math.round(empSections[empSections.length - 1].pct)}%) നിങ്ങളുടെ പ്രധാന വികസന മേഖലയാണ്. `
+                : '') +
+            `ഈ കഴിവുകൾ വർക്ക്ഷോപ്പുകൾ, പ്രായോഗിക പദ്ധതികൾ എന്നിവയിലൂടെ വികസിപ്പിക്കാം.`,
+        );
+
+        // Section 6: Sector & Career recommendations
+        sections.push(
+            `**ശുപാർശ ചെയ്യുന്ന മേഖലകൾ**\n\n` +
+            (topSectors.length > 0
+                ? `നിങ്ങളുടെ പ്രൊഫൈലുമായി ഏറ്റവും അനുയോജ്യമായ മേഖലകൾ: ${topSectors.map(s => `${s.sector.name} (${s.matchScore}%)`).join(', ')}. ` +
+                  `${topSectors[0]?.sector.name || ''} ൽ നിങ്ങളുടെ താൽപ്പര്യവും അഭിരുചിയും ഏറ്റവും നന്നായി ഒത്തുചേരുന്നു. `
+                : `നിങ്ങളുടെ ${scores.riasecCode} ഹോളണ്ട് കോഡ് അനുസരിച്ച് ${riasecMl[topCodes[0]] || ''} ഊന്നൽ നൽകുന്ന മേഖലകൾ നിങ്ങൾക്ക് അനുയോജ്യമാണ്. `) +
+            (careerMatches.length > 0
+                ? `ശുപാർശ ചെയ്യുന്ന കരിയറുകൾ: ${careerMatches.slice(0, 5).map(c => `${c.title} (${c.matchScore}%)`).join(', ')}. `
+                : '') +
+            `നിങ്ങളുടെ ${aptSections[0]?.name || ''} അഭിരുചി ശക്തിയും ${scores.riasecCode} താൽപ്പര്യ പ്രൊഫൈലും ഈ മേഖലകളിൽ വിജയത്തിന് സഹായിക്കും.`,
+        );
+
+        // Section 7: Growth roadmap
+        sections.push(
+            `**വളർച്ചയ്ക്കുള്ള നിർദ്ദേശങ്ങൾ**\n\n` +
+            `ഉടനടി (1-3 മാസം): നിങ്ങളുടെ ${aptSections[aptSections.length - 1]?.name || ''} കഴിവ് മെച്ചപ്പെടുത്താൻ ദിവസവും 20-30 മിനിറ്റ് ഘടനാപരമായ പരിശീലനം ചെയ്യുക. ` +
+            (empSections.length > 0 ? `${empSections[empSections.length - 1]?.name || ''} കഴിവ് വികസിപ്പിക്കാൻ ഓൺലൈൻ കോഴ്‌സുകൾ ആരംഭിക്കുക. ` : '') +
+            `ഹ്രസ്വകാലം (3-6 മാസം): ${topSectors[0]?.sector?.name || 'നിങ്ങളുടെ താൽപ്പര്യ മേഖല'} ൽ ഇന്റേൺഷിപ്പ് അല്ലെങ്കിൽ പ്രായോഗിക പരിചയം നേടുക. ` +
+            `മധ്യകാലം (6-12 മാസം): ${topSectors[0]?.sector?.exampleRoles?.[0] || 'ലക്ഷ്യ കരിയർ'} റോളിലേക്ക് സജീവമായി അപേക്ഷിക്കുക, പോർട്ട്‌ഫോളിയോ നിർമ്മിക്കുക.`,
+        );
+
+        // Section 8: Next steps
+        sections.push(
+            `**അടുത്ത ഘട്ടങ്ങൾ**\n\n` +
+            `1. ഈ ഫലങ്ങൾ ഒരു കരിയർ കൗൺസിലറുമായി ചർച്ച ചെയ്യുക, ${scores.riasecCode} ഹോളണ്ട് കോഡ് കേന്ദ്രീകരിച്ച്.\n` +
+            `2. ${topCodes[0] ? `${riasecNames[topCodes[0]] || ''} താൽപ്പര്യങ്ങളുമായി ബന്ധപ്പെട്ട` : ''} പ്രൊഫഷണൽ നെറ്റ്‌വർക്കിംഗ് ഇവന്റുകളിൽ പങ്കെടുക്കുക.\n` +
+            `3. ${empSections.length > 0 ? empSections[empSections.length - 1].name : 'വികസന മേഖലകൾ'} മെച്ചപ്പെടുത്താൻ ഓൺലൈൻ സർട്ടിഫിക്കേഷൻ പ്രോഗ്രാമുകളിൽ ചേരുക.\n` +
+            `4. LinkedIn പ്രൊഫൈൽ അപ്ഡേറ്റ് ചെയ്ത് ${topSectors[0]?.sector?.name || 'ലക്ഷ്യ മേഖല'} ൽ പ്രൊഫഷണലുകളുമായി ബന്ധപ്പെടുക.\n` +
+            `5. നിങ്ങളുടെ ശക്തമായ ${aptSections[0]?.name || ''} കഴിവ് ഉപയോഗിച്ച് ഒരു പ്രായോഗിക പദ്ധതി തയ്യാറാക്കുക.`,
         );
 
         return {

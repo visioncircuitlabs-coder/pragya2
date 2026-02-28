@@ -54,14 +54,14 @@ export default function CTASection() {
                 </div>
 
                 <h3 className="text-2xl lg:text-3xl font-bold mb-4 text-brand-primary group-hover:text-brand-secondary transition-colors">
-                  360° Career Assessment
+                  Career Assessment
                 </h3>
 
                 <p className="text-gray-600 text-lg lg:text-xl mb-6 leading-relaxed">
                   Discover your ideal career path with comprehensive assessment tools
                 </p>
 
-                <button aria-label="Get started with 360 degree Career Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
+                <button aria-label="Get started with Career Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
                   Get Started
                   <div className="w-10 h-10 rounded-full bg-brand-secondary/10 border-2 border-brand-secondary flex items-center justify-center group-hover:bg-brand-secondary group-hover:text-white transition-all">
                     <ArrowRight className="w-5 h-5" />
@@ -82,14 +82,14 @@ export default function CTASection() {
                 </div>
 
                 <h3 className="text-2xl lg:text-3xl font-bold mb-4 text-brand-primary group-hover:text-brand-secondary transition-colors">
-                  360° Employability Assessment
+                  Employability Assessment
                 </h3>
 
                 <p className="text-gray-600 text-lg lg:text-xl mb-6 leading-relaxed">
                   Evaluate your job readiness and enhance your professional skills
                 </p>
 
-                <button aria-label="Get started with 360 degree Employability Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
+                <button aria-label="Get started with Employability Assessment" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand-secondary group-hover:text-brand-primary group-hover:gap-3 transition-all duration-300">
                   Get Started
                   <div className="w-10 h-10 rounded-full bg-brand-secondary/10 border-2 border-brand-secondary flex items-center justify-center group-hover:bg-brand-secondary group-hover:text-white transition-all">
                     <ArrowRight className="w-5 h-5" />

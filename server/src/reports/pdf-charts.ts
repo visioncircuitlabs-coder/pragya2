@@ -362,7 +362,7 @@ export const PageFooter = ({ reportType, lang = 'en' }: { reportType: string; la
         h(Text, {
             style: { ...styles.footerText, fontFamily: getFontFamily(lang) },
             render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
-                `PRAGYA 360\u00B0 ${reportType} | Vision Circuit Labs | Page ${pageNumber} of ${totalPages} | ${confidential}`
+                `PRAGYA ${reportType} | Vision Circuit Labs | Page ${pageNumber} of ${totalPages} | ${confidential}`
         } as any)
     );
 };

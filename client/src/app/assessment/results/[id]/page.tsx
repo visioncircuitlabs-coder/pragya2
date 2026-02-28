@@ -450,8 +450,8 @@ export default function ResultsPage() {
                 <div className="text-center mb-10">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                         {isStudentAssessment
-                            ? "PRAGYA 360° Student Career Assessment Results"
-                            : "PRAGYA 360° Assessment Results"
+                            ? "PRAGYA Student Career Assessment Results"
+                            : "PRAGYA Assessment Results"
                         }
                     </h1>
                     <p className="text-gray-600">

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
- * Comprehensive Scoring Service for Pragya 360° Assessment
+ * Comprehensive Scoring Service for Pragya Assessment
  * 
  * Calculates scores for all 4 assessment modules:
  * 1. Aptitude: Percentage correct per section

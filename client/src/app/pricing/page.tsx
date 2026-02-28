@@ -7,7 +7,7 @@ import { useState } from "react";
 const plans = [
     {
         id: "student",
-        name: "360° Career Assessment",
+        name: "Career Assessment",
         audience: "For Students",
         originalPrice: "2,499",
         price: "1,499",
@@ -29,7 +29,7 @@ const plans = [
     },
     {
         id: "jobseeker",
-        name: "360° Employability Assessment",
+        name: "Employability Assessment",
         audience: "For Job Seekers",
         originalPrice: "2,499",
         price: "1,499",
@@ -60,7 +60,7 @@ const paymentSteps = [
     {
         step: "2",
         title: "Select Your Assessment",
-        desc: "Choose the 360° Career Assessment (Students) or 360° Employability Assessment (Job Seekers)."
+        desc: "Choose the Career Assessment (Students) or Employability Assessment (Job Seekers)."
     },
     {
         step: "3",

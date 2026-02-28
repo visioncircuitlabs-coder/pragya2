@@ -79,7 +79,7 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1: 360° Assessment */}
+            {/* Card 1: Career Assessment */}
             <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
               <div className="w-14 h-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary mb-6 group-hover:scale-110 transition-transform">
                 <BrainCircuit className="w-8 h-8" />
@@ -87,7 +87,7 @@ export default function AboutPage() {
               <div className="inline-block px-3 py-1 rounded-full bg-brand-primary/5 text-brand-primary text-xs font-bold mb-4">
                 INDIA&apos;S FIRST
               </div>
-              <h3 className="text-2xl font-bold mb-4 group-hover:text-brand-primary transition-colors">360° Career & Employability Assessment</h3>
+              <h3 className="text-2xl font-bold mb-4 group-hover:text-brand-primary transition-colors">Career & Employability Assessment</h3>
               <p className="text-gray-600 leading-relaxed text-base md:text-lg lg:text-xl">
                 A comprehensive assessment that combines aptitude, interest, and personality insights into a single structured profile.
               </p>

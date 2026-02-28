@@ -31,7 +31,7 @@ const JobSeekerPage1 = ({ data, lang = 'en' }: { data: ReportData; lang?: Lang }
         // Header
         h(View, { style: styles.header },
             h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
-                'PRAGYA 360\u00B0 Employability Report',
+                'PRAGYA Employability Report',
                 lang === 'ml' ? h(Text, { style: { fontFamily: 'NotoSansMalayalam', fontSize: 16 } }, ' (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02)') : null),
             h(Text, { style: styles.headerSubtitle },
                 `${data.candidateName} | ${data.assessmentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
@@ -570,6 +570,188 @@ function parseRoadmapPhases(text: string): { title: string; items: string[] }[] 
     return phases.filter(Boolean);
 }
 
+// ─── MALAYALAM COVER PAGE ────────────────────────────────────────────────────
+const JobSeekerMalayalamCoverPage = ({ data }: { data: ReportData }) => {
+    const ai = data.aiInsights;
+    const personalityAverages = Object.values(data.personalityScores).map((p: any) => p.average || 0);
+    const avgPersonality = personalityAverages.length > 0
+        ? personalityAverages.reduce((a, b) => a + b, 0) / personalityAverages.length
+        : 0;
+    const personalityPct = Math.round(((avgPersonality - 1) / 4) * 100);
+    const avgApt = Math.round(Object.values(data.aptitudeScores).reduce((s, v) => s + v.percentage, 0) / Math.max(1, Object.keys(data.aptitudeScores).length));
+    const avgEmp = Math.round(Object.values(data.employabilityScores).reduce((s, v) => s + v.percentage, 0) / Math.max(1, Object.keys(data.employabilityScores).length));
+    const clarityLevel = ai?.clarityIndex?.level ||
+        (data.clarityIndex >= 70 ? 'HIGH' : data.clarityIndex >= 40 ? 'MEDIUM' : 'LOW');
+
+    return h(Page, { size: 'A4', style: getPageStyle('ml') },
+        // Header
+        h(View, { style: styles.header },
+            h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
+                'PRAGYA ',
+                h(Text, { style: { fontFamily: 'NotoSansMalayalam', fontSize: 16 } },
+                    '\u0D24\u0D4A\u0D34\u0D3F\u0D7D \u0D38\u0D28\u0D4D\u0D28\u0D26\u0D4D\u0D27\u0D24\u0D3E \u0D31\u0D3F\u0D2A\u0D4D\u0D2A\u0D4B\u0D7C\u0D1F\u0D4D\u0D1F\u0D4D')
+            ),
+            h(Text, { style: { ...styles.headerSubtitle, fontFamily: 'NotoSansMalayalam' } },
+                `${data.assessmentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} \u0D28\u0D4D \u0D24\u0D2F\u0D4D\u0D2F\u0D3E\u0D31\u0D3E\u0D15\u0D4D\u0D15\u0D3F\u0D2F\u0D24\u0D4D`
+            )
+        ),
+
+        // Persona card with title_ml
+        ai?.title_ml && h(View, { style: styles.personaCard },
+            h(Text, { style: { ...styles.personaTitle, fontFamily: 'NotoSansMalayalam', fontSize: 13 } }, ai.title_ml)
+        ),
+
+        // Profile card
+        h(View, { style: { ...styles.section, paddingVertical: 8 } },
+            h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam' } }, '\u0D2A\u0D4D\u0D30\u0D4A\u0D2B\u0D48\u0D7D'),
+            h(View, { style: styles.profileGrid },
+                h(View, { style: styles.profileItem },
+                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_name', 'ml')),
+                    h(Text, { style: styles.profileValue }, data.candidateName)
+                ),
+                ...(data.age ? [h(View, { style: styles.profileItem, key: 'age' },
+                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, '\u0D2A\u0D4D\u0D30\u0D3E\u0D2F\u0D02:'),
+                    h(Text, { style: styles.profileValue }, `${data.age}`)
+                )] : []),
+                ...(data.education ? [h(View, { style: styles.profileItem, key: 'edu' },
+                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, '\u0D35\u0D3F\u0D26\u0D4D\u0D2F\u0D3E\u0D2D\u0D4D\u0D2F\u0D3E\u0D38\u0D02:'),
+                    h(Text, { style: styles.profileValue }, data.education)
+                )] : []),
+                ...(data.location ? [h(View, { style: styles.profileItem, key: 'loc' },
+                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_location', 'ml')),
+                    h(Text, { style: styles.profileValue }, data.location)
+                )] : []),
+                ...(data.riasecCode ? [h(View, { style: styles.profileItem, key: 'holland' },
+                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_holland_code', 'ml')),
+                    h(Text, { style: styles.profileValue },
+                        `${data.riasecCode} (${data.riasecCode.split('').map(c => RIASEC_NAMES[c] || c).join('-')})`
+                    )
+                )] : []),
+            )
+        ),
+
+        // Performance Overview Rings
+        h(View, { style: { ...styles.section, padding: 10 } },
+            h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam' } }, t('performance_overview', 'ml')),
+            h(View, { style: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', marginTop: 2 } },
+                h(ScoreRing, { value: avgApt, max: 100, label: t('label_aptitude', 'ml') }),
+                h(ScoreRing, { value: avgEmp, max: 100, label: '\u0D24\u0D4A\u0D34\u0D3F\u0D7D \u0D38\u0D28\u0D4D\u0D28\u0D26\u0D4D\u0D27\u0D24' }),
+                h(ScoreRing, { value: Math.round(personalityPct), max: 100, label: '\u0D35\u0D4D\u0D2F\u0D15\u0D4D\u0D24\u0D3F\u0D24\u0D4D\u0D35\u0D02' }),
+                h(ScoreRing, {
+                    value: data.clarityIndex,
+                    max: 100,
+                    label: '\u0D38\u0D4D\u0D2A\u0D37\u0D4D\u0D1F\u0D24',
+                    color: getClarityColor(clarityLevel),
+                })
+            )
+        ),
+
+        // Holland Code display
+        data.riasecCode && h(View, { style: { ...styles.section, padding: 8 } },
+            h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam' } }, t('label_holland_code', 'ml')),
+            h(HollandCodeDisplay, { code: data.riasecCode })
+        ),
+
+        h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
+    );
+};
+
+// ─── MALAYALAM ANALYSIS PAGES ───────────────────────────────────────────────
+const parseMalayalamSections = (text: string): { header: string; body: string }[] => {
+    if (!text) return [];
+    const parts = text.split(/\n*\*\*([^*]+)\*\*\n*/);
+    const sections: { header: string; body: string }[] = [];
+    for (let i = 1; i < parts.length; i += 2) {
+        const header = parts[i]?.trim();
+        const body = parts[i + 1]?.trim();
+        if (header && body) {
+            sections.push({ header, body });
+        }
+    }
+    return sections;
+};
+
+const JobSeekerMalayalamAnalysisPages = ({ data }: { data: ReportData }): React.ReactElement[] => {
+    const ai = data.aiInsights;
+    const analysisMl = ai?.analysis_ml || '';
+    const sections = parseMalayalamSections(analysisMl);
+
+    if (sections.length === 0) {
+        return [
+            h(Page, { key: 'ml-analysis-1', size: 'A4', style: getPageStyle('ml') },
+                h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none' } },
+                    '\u0D15\u0D30\u0D3F\u0D2F\u0D7C \u0D35\u0D3F\u0D36\u0D15\u0D32\u0D28\u0D02'),
+                h(View, { style: styles.section },
+                    h(Text, { style: { ...styles.sectionContent, fontFamily: 'NotoSansMalayalam' } },
+                        '\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02 \u0D35\u0D3F\u0D36\u0D15\u0D32\u0D28\u0D02 \u0D32\u0D2D\u0D4D\u0D2F\u0D2E\u0D32\u0D4D\u0D32. \u0D26\u0D2F\u0D35\u0D3E\u0D2F\u0D3F \u0D07\u0D02\u0D17\u0D4D\u0D32\u0D40\u0D37\u0D4D \u0D2A\u0D24\u0D3F\u0D2A\u0D4D\u0D2A\u0D4D \u0D2A\u0D30\u0D3F\u0D36\u0D4B\u0D27\u0D3F\u0D15\u0D4D\u0D15\u0D41\u0D15.')
+                ),
+                h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
+            ),
+        ];
+    }
+
+    const midpoint = Math.ceil(sections.length / 2);
+    const page1Sections = sections.slice(0, midpoint);
+    const page2Sections = sections.slice(midpoint);
+
+    const renderSections = (secs: { header: string; body: string }[]) =>
+        secs.map((sec, i) =>
+            h(View, { key: `ml-sec-${i}`, style: { ...styles.section, marginBottom: 6 } },
+                h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam', fontSize: 11, textTransform: 'none' } }, sec.header),
+                ...sec.body.split('\n').map((para, pi) =>
+                    h(Text, {
+                        key: `ml-p-${i}-${pi}`,
+                        style: {
+                            fontSize: 9,
+                            lineHeight: 1.4,
+                            color: COLORS.TEXT_BODY,
+                            fontFamily: 'NotoSansMalayalam',
+                            marginBottom: 3,
+                        },
+                    }, para.trim())
+                )
+            )
+        );
+
+    const pages: React.ReactElement[] = [];
+
+    pages.push(
+        h(Page, { key: 'ml-analysis-1', size: 'A4', style: getPageStyle('ml') },
+            h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none' } },
+                '\u0D15\u0D30\u0D3F\u0D2F\u0D7C \u0D35\u0D3F\u0D36\u0D15\u0D32\u0D28\u0D02'),
+            ...renderSections(page1Sections),
+            h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
+        )
+    );
+
+    if (page2Sections.length > 0) {
+        pages.push(
+            h(Page, { key: 'ml-analysis-2', size: 'A4', style: getPageStyle('ml') },
+                h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none' } },
+                    '\u0D15\u0D30\u0D3F\u0D2F\u0D7C \u0D35\u0D3F\u0D36\u0D15\u0D32\u0D28\u0D02 (\u0D24\u0D41\u0D1F\u0D7C\u0D1A\u0D4D\u0D1A)'),
+                ...renderSections(page2Sections),
+
+                // Disclaimer
+                h(View, { style: { ...styles.disclaimer, marginTop: 8 } },
+                    h(Text, { style: { ...styles.disclaimerTitle, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_title', 'ml')),
+                    h(Text, { style: { ...styles.disclaimerText, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_jobseeker', 'ml'))
+                ),
+
+                // Branding footer
+                h(View, { style: { marginTop: 'auto', alignItems: 'center', paddingTop: 8 } },
+                    h(Text, { style: { fontSize: 11, fontWeight: 700, color: COLORS.PRIMARY, marginBottom: 2, fontFamily: 'Nunito' } }, 'PRAGYA'),
+                    h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam' } }, t('ecosystem_tagline', 'ml')),
+                    h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam', marginTop: 2 } }, t('powered_by', 'ml'))
+                ),
+
+                h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
+            )
+        );
+    }
+
+    return pages;
+};
+
 // ─── MAIN DOCUMENT ───────────────────────────────────────────────────────────
 export const JobSeekerReportDocument = ({ data }: { data: ReportData }) => {
     return h(Document, {},
@@ -580,12 +762,8 @@ export const JobSeekerReportDocument = ({ data }: { data: ReportData }) => {
         h(JobSeekerPage4, { data, lang: 'en' }),
         h(JobSeekerPage5, { data, lang: 'en' }),
         h(JobSeekerPage6, { data, lang: 'en' }),
-        // Malayalam pages (7-12)
-        h(JobSeekerPage1, { data, lang: 'ml' }),
-        h(JobSeekerPage2, { data, lang: 'ml' }),
-        h(JobSeekerPage3, { data, lang: 'ml' }),
-        h(JobSeekerPage4, { data, lang: 'ml' }),
-        h(JobSeekerPage5, { data, lang: 'ml' }),
-        h(JobSeekerPage6, { data, lang: 'ml' })
+        // Malayalam pages (cover + 1-2 analysis pages)
+        h(JobSeekerMalayalamCoverPage, { data }),
+        ...JobSeekerMalayalamAnalysisPages({ data }),
     );
 };

@@ -6,7 +6,7 @@ export default function Services() {
   const services = [
     {
       category: "SCHOOL STUDENTS",
-      title: "360° Career Assessment",
+      title: "Career Assessment",
       description:
         "A structured assessment designed for school students to understand their aptitude, interests, and personality before making career decisions.",
       keyFocus:
@@ -22,7 +22,7 @@ export default function Services() {
     },
     {
       category: "JOB SEEKERS",
-      title: "360° Employability Assessment",
+      title: "Employability Assessment",
       description:
         "An assessment for job seekers to evaluate career readiness, role suitability, and employability strengths.",
       keyFocus:

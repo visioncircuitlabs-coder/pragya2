@@ -89,7 +89,7 @@ export default function AssessmentPage() {
                 return;
             }
 
-            // Use the first available assessment (Employability 360)
+            // Use the first available assessment (Employability)
             const assessmentId = availableAssessments[0].id;
 
             // Get questions — API returns flat { id, title, timeLimit, questions, ... }

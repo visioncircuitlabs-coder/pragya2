@@ -537,6 +537,8 @@ export interface ReportData {
         developmentRoadmap?: string;
         clarityIndex?: { level: string; justification: string };
         detailedTraitInterpretation?: Record<string, string>;
+        title_ml?: string;
+        analysis_ml?: string;
     };
     careerMatches: { title: string; matchScore: number }[];
     sectorMatches?: {

@@ -39,7 +39,7 @@ export default function EmployerPortalPage() {
           </p>
 
           <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-10">
-            It helps companies identify role-fit candidates with higher retention potential, using structured data from the 360° Career & Employability Assessment.
+            It helps companies identify role-fit candidates with higher retention potential, using structured data from the Career & Employability Assessment.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

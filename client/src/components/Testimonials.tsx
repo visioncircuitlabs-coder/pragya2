@@ -47,7 +47,7 @@ export default function Testimonials() {
           tag: "found clarity after +2"
         },
         {
-          quote: "The 360° assessment helped me understand my true potential. Now I'm confident about my career direction and working towards my goals.",
+          quote: "The assessment helped me understand my true potential. Now I'm confident about my career direction and working towards my goals.",
           name: "Anugreh",
           role: "Student, Kozhikode",
           image: "/testimonials/students/anugreh.webp",

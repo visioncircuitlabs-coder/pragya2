@@ -115,7 +115,7 @@ export default function DashboardPage() {
             case 'JOB_SEEKER':
                 return [
                     {
-                        title: 'Employability 360° Assessment',
+                        title: 'Employability Assessment',
                         description: 'Complete your comprehensive career assessment and get AI-powered insights.',
                         href: '/assessment',
                         icon: CheckCircle2,
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                                         <div key={assessment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                                             <div>
                                                 <p className="font-medium text-gray-900">
-                                                    {user.role === 'STUDENT' ? 'Student Aptitude Assessment' : 'Pragya 360° Assessment'}
+                                                    {user.role === 'STUDENT' ? 'Student Aptitude Assessment' : 'Pragya Assessment'}
                                                 </p>
                                                 <p className="text-sm text-gray-500">
                                                     Completed {assessment.completedAt && new Date(assessment.completedAt).toLocaleDateString()}

@@ -184,6 +184,6 @@ export const en: Record<string, string> = {
     final_remarks: 'Final Remarks',
 
     // ─── Malayalam Section Header ─────────────────────────────────────────────
-    malayalam_header_student: 'PRAGYA 360\u00B0 Student Career Report (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02)',
-    malayalam_header_jobseeker: 'PRAGYA 360\u00B0 Employability Report (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02)',
+    malayalam_header_student: 'PRAGYA Student Career Report (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02)',
+    malayalam_header_jobseeker: 'PRAGYA Employability Report (\u0D2E\u0D32\u0D2F\u0D3E\u0D33\u0D02)',
 };
