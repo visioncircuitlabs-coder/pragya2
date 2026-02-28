@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
+import api from '@/lib/api';
 import { UserRole, AssessmentStatus } from '@pragya/shared';
 import {
     Clock,
@@ -16,8 +16,6 @@ import {
     Target,
     Send,
 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 interface Option {
     id: string;
@@ -67,21 +65,13 @@ export default function AssessmentPage() {
     const [completed, setCompleted] = useState(false);
     const [result, setResult] = useState<unknown>(null);
 
-    // Get auth token
-    const getAuthHeaders = useCallback(() => {
-        const token = localStorage.getItem('accessToken');
-        return {
-            headers: { Authorization: `Bearer ${token}` },
-        };
-    }, []);
-
     // Fetch assessment and questions
     const fetchAssessment = useCallback(async () => {
         try {
             setLoading(true);
 
             // Get available assessments
-            const assessmentsRes = await axios.get(`${API_URL}/assessments`, getAuthHeaders());
+            const assessmentsRes = await api.get('/assessments');
             const availableAssessments = assessmentsRes.data as { id: string }[];
 
             if (!availableAssessments || availableAssessments.length === 0) {
@@ -93,9 +83,8 @@ export default function AssessmentPage() {
             const assessmentId = availableAssessments[0].id;
 
             // Get questions — API returns flat { id, title, timeLimit, questions, ... }
-            const questionsRes = await axios.get(
-                `${API_URL}/assessments/${assessmentId}/questions`,
-                getAuthHeaders()
+            const questionsRes = await api.get(
+                `/assessments/${assessmentId}/questions`
             );
 
             const assessmentData = questionsRes.data;
@@ -118,10 +107,9 @@ export default function AssessmentPage() {
             }
 
             // Start the assessment
-            const startRes = await axios.post(
-                `${API_URL}/assessments/start`,
-                { assessmentId },
-                getAuthHeaders()
+            const startRes = await api.post(
+                '/assessments/start',
+                { assessmentId }
             );
 
             // Map response: backend returns { userAssessmentId } but we need { id }
@@ -144,7 +132,7 @@ export default function AssessmentPage() {
         } finally {
             setLoading(false);
         }
-    }, [getAuthHeaders]);
+    }, []);
 
     // Timer countdown
     useEffect(() => {
@@ -186,15 +174,14 @@ export default function AssessmentPage() {
         // Auto-save progress immediately
         if (userAssessment) {
             try {
-                await axios.post(
-                    `${API_URL}/assessments/save-progress`,
+                await api.post(
+                    '/assessments/save-progress',
                     {
                         userAssessmentId: userAssessment.id,
                         questionId,
                         selectedOptionId: optionId,
                         currentQuestionIndex,
-                    },
-                    getAuthHeaders()
+                    }
                 );
             } catch (err) {
                 console.error('Failed to auto-save progress', err);
@@ -221,13 +208,12 @@ export default function AssessmentPage() {
                 selectedOptionId,
             }));
 
-            const res = await axios.post(
-                `${API_URL}/assessments/submit`,
+            const res = await api.post(
+                '/assessments/submit',
                 {
                     userAssessmentId: userAssessment.id,
                     answers: answersArray,
-                },
-                getAuthHeaders()
+                }
             );
 
             setResult(res.data);

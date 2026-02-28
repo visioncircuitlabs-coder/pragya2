@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
+import api from '@/lib/api';
 import { UserRole, AssessmentStatus } from '@pragya/shared';
 import {
     User,
@@ -17,8 +17,6 @@ import {
     BarChart3,
     Eye,
 } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 const roleLabels: Record<string, string> = {
     [UserRole.STUDENT]: 'Student',
@@ -39,14 +37,6 @@ export default function DashboardPage() {
     const { user, isLoading, isAuthenticated } = useAuth();
     const [completedAssessments, setCompletedAssessments] = useState<CompletedAssessment[]>([]);
 
-    // Get auth token
-    const getAuthHeaders = useCallback(() => {
-        const token = localStorage.getItem('accessToken');
-        return {
-            headers: { Authorization: `Bearer ${token}` },
-        };
-    }, []);
-
     // Fetch completed assessments
     useEffect(() => {
         const fetchAssessments = async () => {
@@ -54,7 +44,7 @@ export default function DashboardPage() {
             if (!isAuthenticated || !user || (user.role !== UserRole.JOB_SEEKER && user.role !== UserRole.STUDENT)) return;
 
             try {
-                const res = await axios.get(`${API_URL}/assessments/my-results`, getAuthHeaders());
+                const res = await api.get('/assessments/my-results');
                 const completed = res.data.filter((a: { status: AssessmentStatus }) => a.status === AssessmentStatus.COMPLETED);
                 setCompletedAssessments(completed);
             } catch (err) {
@@ -65,7 +55,7 @@ export default function DashboardPage() {
         if (!isLoading && isAuthenticated) {
             fetchAssessments();
         }
-    }, [isLoading, isAuthenticated, user, getAuthHeaders]);
+    }, [isLoading, isAuthenticated, user]);
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -100,7 +90,7 @@ export default function DashboardPage() {
                     {
                         title: 'Career Assessment',
                         description: 'Discover your ideal career path based on your strengths.',
-                        href: '/students',
+                        href: '/students/assessment',
                         icon: GraduationCap,
                         primary: true
                     },

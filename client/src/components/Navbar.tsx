@@ -122,7 +122,7 @@ export default function Navbar() {
           {/* Social Media Icons */}
           <div className="hidden md:flex items-center gap-2">
             <a
-              href="https://www.instagram.com/pragyacareer"
+              href="https://www.instagram.com/pragya_career/"
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"
@@ -202,7 +202,7 @@ export default function Navbar() {
 
             <div className="flex items-center justify-center gap-4">
               <a
-                href="https://www.instagram.com/pragyacareer"
+                href="https://www.instagram.com/pragya_career/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"

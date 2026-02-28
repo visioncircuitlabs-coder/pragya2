@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
+import api from '@/lib/api';
 
 import {
     RadarChart,
@@ -35,7 +35,6 @@ import {
     Sparkles,
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 // Color palette
 const COLORS = {
@@ -181,14 +180,6 @@ export default function ResultsPage() {
     const [result, setResult] = useState<AssessmentResult | null>(null);
     const [downloading, setDownloading] = useState(false);
 
-    // Get auth token
-    const getAuthHeaders = useCallback(() => {
-        const token = localStorage.getItem('accessToken');
-        return {
-            headers: { Authorization: `Bearer ${token}` },
-        };
-    }, []);
-
     // Fetch result
     useEffect(() => {
         const fetchResult = async () => {
@@ -196,10 +187,7 @@ export default function ResultsPage() {
 
             try {
                 setLoading(true);
-                const res = await axios.get(
-                    `${API_URL}/assessments/results/${params.id}`,
-                    getAuthHeaders()
-                );
+                const res = await api.get(`/assessments/results/${params.id}`);
                 setResult(res.data);
             } catch (err: unknown) {
                 console.error('Error fetching result:', err);
@@ -215,7 +203,7 @@ export default function ResultsPage() {
         } else if (!authLoading && !isAuthenticated) {
             router.push('/login');
         }
-    }, [params?.id, authLoading, isAuthenticated, getAuthHeaders, router]);
+    }, [params?.id, authLoading, isAuthenticated, router]);
 
     // Download PDF report
     const handleDownload = () => {
