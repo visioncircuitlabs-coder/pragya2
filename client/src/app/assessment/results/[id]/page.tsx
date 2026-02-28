@@ -439,7 +439,7 @@ export default function ResultsPage() {
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                         {isStudentAssessment
                             ? "PRAGYA Student Career Assessment Results"
-                            : "PRAGYA Assessment Results"
+                            : "PRAGYA Employability Assessment Results"
                         }
                     </h1>
                     <p className="text-gray-600">

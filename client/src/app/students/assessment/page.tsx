@@ -110,7 +110,7 @@ export default function StudentsAssessmentPage() {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
-    const [completed, setCompleted] = useState(false);
+    const [, setCompleted] = useState(false);
     const [result, setResult] = useState<AssessmentResult | null>(null);
     const [showIntro, setShowIntro] = useState(true);
 

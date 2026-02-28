@@ -74,8 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('user', JSON.stringify(response.user));
 
             setUser(response.user);
-        } catch (error: any) {
-            const message = error.response?.data?.message || 'Login failed. Please try again.';
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { message?: string } } };
+            const message = axiosErr.response?.data?.message || 'Login failed. Please try again.';
             throw new Error(message);
         }
     };
@@ -95,8 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('user', JSON.stringify(response.user));
 
             setUser(response.user);
-        } catch (error: any) {
-            const message = error.response?.data?.message || 'Registration failed. Please try again.';
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { message?: string } } };
+            const message = axiosErr.response?.data?.message || 'Registration failed. Please try again.';
             throw new Error(message);
         }
     };

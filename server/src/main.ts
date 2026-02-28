@@ -51,8 +51,17 @@ async function bootstrap() {
         }),
     );
 
+    // Health check (before global prefix so it's at /health)
+    const httpAdapter = app.getHttpAdapter();
+    httpAdapter.get('/health', (_req: any, res: any) => {
+        res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    });
+
     // API prefix
     app.setGlobalPrefix('api/v1');
+
+    // Graceful shutdown (close DB connections, finish requests)
+    app.enableShutdownHooks();
 
     const port = process.env.PORT || 4000;
     await app.listen(port);

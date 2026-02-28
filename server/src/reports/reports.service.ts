@@ -245,7 +245,21 @@ export class ReportsService {
             throw new NotFoundException('Assessment not found');
         }
 
-        // Always generate a fresh report to ensure latest layout and AI text
+        // Return cached report if it exists and AI insights haven't changed
+        const reportPath = assessment.reportUrl as string | null;
+        const reportGenAt = assessment.reportGeneratedAt as Date | null;
+        const aiAnalyzedAt = assessment.aiAnalyzedAt as Date | null;
+
+        if (
+            reportPath &&
+            reportGenAt &&
+            fs.existsSync(reportPath) &&
+            (!aiAnalyzedAt || reportGenAt > aiAnalyzedAt)
+        ) {
+            this.logger.log(`Returning cached report for assessment ${userAssessmentId}`);
+            return reportPath;
+        }
+
         this.logger.log(`Generating fresh report for assessment ${userAssessmentId}`);
         return this.generateReport(userAssessmentId);
     }

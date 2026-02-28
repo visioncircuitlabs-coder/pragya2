@@ -652,6 +652,7 @@ export class AssessmentsService {
                 },
             },
             orderBy: { createdAt: 'desc' },
+            take: 50,
         });
     }
 }

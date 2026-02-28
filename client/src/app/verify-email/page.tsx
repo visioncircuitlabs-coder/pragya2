@@ -87,8 +87,9 @@ export default function VerifyEmailPage() {
             await authApi.verifyEmail(code);
             await refreshUser();
             router.push('/dashboard');
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Invalid verification code. Please try again.';
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            const message = axiosErr.response?.data?.message || 'Invalid verification code. Please try again.';
             setError(message);
             setOtp(Array(6).fill(''));
             inputRefs.current[0]?.focus();
@@ -114,8 +115,9 @@ export default function VerifyEmailPage() {
             setError('');
             setOtp(Array(6).fill(''));
             inputRefs.current[0]?.focus();
-        } catch (err: any) {
-            const message = err.response?.data?.message || 'Failed to resend code. Please try again.';
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
+            const message = axiosErr.response?.data?.message || 'Failed to resend code. Please try again.';
             setError(message);
         }
 

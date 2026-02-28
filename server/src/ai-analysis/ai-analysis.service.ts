@@ -123,6 +123,23 @@ export class AiAnalysisService {
         }
     }
 
+    /** Fetch from Gemini with a 15-second timeout */
+    private async geminiRequest(body: object): Promise<Response> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        try {
+            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify(body),
+            });
+            return response;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
     /**
      * Generate comprehensive AI analysis for assessment results
      */
@@ -147,21 +164,13 @@ export class AiAnalysisService {
         });
 
         try {
-            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [
-                        {
-                            parts: [{ text: prompt }],
-                        },
-                    ],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 4096,
-                        responseMimeType: 'application/json',
-                    },
-                }),
+            const response = await this.geminiRequest({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 4096,
+                    responseMimeType: 'application/json',
+                },
             });
 
             const duration = Date.now() - startTime;
@@ -431,17 +440,13 @@ export class AiAnalysisService {
         });
 
         try {
-            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 4096,
-                        responseMimeType: 'application/json',
-                    },
-                }),
+            const response = await this.geminiRequest({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 4096,
+                    responseMimeType: 'application/json',
+                },
             });
 
             const duration = Date.now() - startTime;
@@ -758,17 +763,13 @@ ${JSON.stringify(sourceDict, null, 2)}`;
 
         const startTime = Date.now();
         try {
-            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 8192,
-                        responseMimeType: 'application/json',
-                    },
-                }),
+            const response = await this.geminiRequest({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.3,
+                    maxOutputTokens: 8192,
+                    responseMimeType: 'application/json',
+                },
             });
 
             const duration = Date.now() - startTime;
@@ -877,17 +878,13 @@ ${JSON.stringify(sourceDict, null, 2)}`;
         });
 
         try {
-            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 8192,
-                        responseMimeType: 'application/json',
-                    },
-                }),
+            const response = await this.geminiRequest({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 8192,
+                    responseMimeType: 'application/json',
+                },
             });
 
             const duration = Date.now() - startTime;
@@ -1124,17 +1121,13 @@ ${JSON.stringify(sourceDict, null, 2)}`;
         });
 
         try {
-            const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 8192,
-                        responseMimeType: 'application/json',
-                    },
-                }),
+            const response = await this.geminiRequest({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 8192,
+                    responseMimeType: 'application/json',
+                },
             });
 
             const duration = Date.now() - startTime;
