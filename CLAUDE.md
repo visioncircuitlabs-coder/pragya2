@@ -99,3 +99,77 @@ Seed scripts in `server/prisma/`: `seed-assessments.ts` (job seeker questions), 
 
 ### Environment
 Server requires `server/.env` (see `server/.env.example`). Key vars: `DATABASE_URL` (Neon PostgreSQL), `JWT_SECRET`, `JWT_REFRESH_SECRET`, `GEMINI_API_KEY`, `PORT` (4000), `FRONTEND_URL` (http://localhost:3001).
+
+## Production Deployment
+
+### Live URL
+- **Domain**: https://pragyacareer.com
+- **VPS**: Hostinger KVM 1, IP `72.60.237.208`, Ubuntu 24.04, 4GB RAM, 1 vCPU
+- **SSL**: Let's Encrypt (auto-renews via Certbot)
+
+### Architecture
+```
+Internet → [Nginx :80/:443]
+              ├── /health     → [NestJS Server :4000]
+              ├── /api/v1/*   → [NestJS Server :4000] → Neon Cloud PostgreSQL
+              │                       └── [Redis :6379]
+              └── /*          → [Next.js Client :3001]
+```
+
+### Docker Compose Setup (5 containers)
+| Container | Image | Purpose | Memory Limit |
+|-----------|-------|---------|-------------|
+| `pragya-nginx` | nginx:1.25-alpine | Reverse proxy, SSL, rate limiting | — |
+| `pragya-server` | pragya-server (custom) | NestJS API | 1.5GB |
+| `pragya-client` | pragya-client (custom) | Next.js frontend (standalone) | 512MB |
+| `pragya-redis` | redis:7-alpine | Cache (128MB max, LRU eviction) | 192MB |
+| `pragya-certbot` | certbot/certbot | SSL auto-renewal sidecar | — |
+
+Database is **NOT** in Docker — stays on Neon Cloud PostgreSQL.
+
+### Deployment Files
+- **`server/Dockerfile`** — Multi-stage build (builder→runner), node:20-alpine, includes OpenSSL + fonts
+- **`client/Dockerfile`** — Multi-stage build, standalone Next.js output, includes musl native binaries for lightningcss + tailwindcss-oxide
+- **`docker-compose.prod.yml`** — Production compose with bind mounts for SSL certs
+- **`nginx/nginx.conf`** — Main nginx config (1 worker, gzip, rate limit zones, security headers)
+- **`nginx/conf.d/default.conf`** — Site config (HTTP→HTTPS redirect, API proxy with 120s timeout, static asset caching)
+- **`deploy.sh`** — VPS provisioning script (swap, UFW, fail2ban, Docker, repo clone, SSL bootstrap)
+- **`.env.production.template`** — Template for production environment variables
+- **`.dockerignore`** — Excludes dev artifacts from Docker context
+
+### Production Commands (run on VPS at `/opt/pragya`)
+```bash
+# Deploy updates
+git pull origin main
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker compose -f docker-compose.prod.yml logs -f              # All services
+docker compose -f docker-compose.prod.yml logs -f server       # Server only
+docker logs pragya-server --tail 50                             # Last 50 lines
+
+# Restart a single service
+docker compose -f docker-compose.prod.yml restart server
+
+# Check status
+docker compose -f docker-compose.prod.yml ps
+
+# Run Prisma migrations
+docker compose -f docker-compose.prod.yml run --rm --user root --entrypoint sh server -c "apk add --no-cache openssl && npx prisma migrate deploy --schema=./server/prisma/schema.prisma"
+
+# SSL certificate renewal (auto via cron, but manual if needed)
+certbot certonly --webroot -w /var/www/certbot -d pragyacareer.com -d www.pragyacareer.com --force-renewal
+docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+
+# Health check
+curl https://pragyacareer.com/health
+```
+
+### Known Deployment Notes
+- Alpine Linux requires explicit installation of musl native binaries: `lightningcss-linux-x64-musl` and `@tailwindcss/oxide-linux-x64-musl` (npm optional deps bug)
+- Prisma on Alpine needs `apk add openssl` to detect libssl correctly
+- The host had a pre-existing nginx on port 80 — it was stopped and disabled (`systemctl stop nginx && systemctl disable nginx`)
+- SSH password auth is enabled (not disabled for convenience)
+- UFW firewall allows only SSH, HTTP (80), HTTPS (443)
+- `.env.production` lives on VPS at `/opt/pragya/.env.production` (not in git) — includes `DIRECT_URL` for Prisma migrations
