@@ -10,9 +10,9 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - certbot-etc:/etc/letsencrypt:ro
-      - certbot-var:/var/lib/letsencrypt
-      - certbot-webroot:/var/www/certbot:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - /var/www/certbot:/var/www/certbot:ro
     depends_on:
       - server
       - client
@@ -75,9 +75,9 @@ services:
     image: certbot/certbot
     container_name: pragya-certbot
     volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - certbot-webroot:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - /var/www/certbot:/var/www/certbot
     depends_on:
       - nginx
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'"
@@ -89,9 +89,6 @@ volumes:
   server-reports:
   server-logs:
   redis-data:
-  certbot-etc:
-  certbot-var:
-  certbot-webroot:
 
 networks:
   pragya-net:
