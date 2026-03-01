@@ -48,9 +48,11 @@ COPY shared/package.json ./shared/
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 
-# Install production dependencies only
+# Copy Prisma schema (needed for generate + runtime migrations)
+COPY --from=builder /app/server/prisma ./server/prisma
+
+# Install production dependencies only + generate Prisma client
 RUN npm ci --omit=dev && \
-    # Prisma client needs to be generated again in prod context
     cd server && npx prisma generate && \
     npm cache clean --force
 
@@ -59,9 +61,6 @@ COPY --from=builder /app/shared/dist ./shared/dist
 
 # Copy built server
 COPY --from=builder /app/server/dist ./server/dist
-
-# Copy Prisma schema (needed at runtime for migrations)
-COPY --from=builder /app/server/prisma ./server/prisma
 
 # Copy font assets for PDF generation
 COPY --from=builder /app/server/src/reports/fonts ./server/dist/reports/fonts
