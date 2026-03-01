@@ -16,8 +16,10 @@ COPY shared/package.json ./shared/
 COPY client/package.json ./client/
 COPY server/package.json ./server/
 
-# Install all dependencies + lightningcss native binary for Alpine (musl)
-RUN npm ci && npm install --no-save lightningcss-linux-x64-musl
+# Install all dependencies + musl native binaries for Alpine
+# npm has a bug with optional deps on Alpine (github.com/npm/cli/issues/4828)
+RUN npm ci && \
+    npm install --no-save lightningcss-linux-x64-musl @tailwindcss/oxide-linux-x64-musl
 
 # Copy shared source and build it
 COPY shared/ ./shared/
