@@ -71,8 +71,9 @@ COPY --from=builder /app/server/src/reports/fonts ./server/dist/reports/fonts
 # Create reports output directory
 RUN mkdir -p /app/server/reports && chown nestjs:nodejs /app/server/reports
 
-# Create logs directory
-RUN mkdir -p /app/server/logs && chown nestjs:nodejs /app/server/logs
+# Create logs directories (logger uses process.cwd()/logs = /app/logs)
+RUN mkdir -p /app/logs /app/server/logs && \
+    chown nestjs:nodejs /app/logs /app/server/logs
 
 USER nestjs
 
