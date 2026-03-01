@@ -173,3 +173,117 @@ curl https://pragyacareer.com/health
 - SSH password auth is enabled (not disabled for convenience)
 - UFW firewall allows only SSH, HTTP (80), HTTPS (443)
 - `.env.production` lives on VPS at `/opt/pragya/.env.production` (not in git) — includes `DIRECT_URL` for Prisma migrations
+
+## Post-Deployment Roadmap
+
+### 🔥 Immediate (Week 1)
+
+#### Re-enable Registration
+Registration is currently closed for Razorpay verification. Once Razorpay approves:
+1. In `server/src/auth/auth.controller.ts`: remove the `throw new ForbiddenException()` in the register method, uncomment `this.authService.register(dto)`
+2. Restore original register page: `git show HEAD~1:client/src/app/register/page.tsx > client/src/app/register/page.tsx`
+3. Rebuild and redeploy
+
+#### Uptime Monitoring
+Set up free monitoring to get alerted if the site goes down:
+- **UptimeRobot** (https://uptimerobot.com) or **Better Stack** (https://betterstack.com)
+- Monitor both `https://pragyacareer.com` and `https://pragyacareer.com/health`
+- Configure email/SMS alerts for downtime
+
+#### Verify Database Backups
+- Neon PostgreSQL includes built-in backups — verify your plan includes point-in-time recovery
+- Check Neon dashboard for backup retention settings
+
+### 🛡️ Security Hardening (Week 1-2)
+
+#### Disable Root SSH Login
+Currently SSH uses root login directly. Create a regular user:
+```bash
+adduser deploy
+usermod -aG sudo deploy
+# Copy SSH key to new user
+su - deploy
+mkdir -p ~/.ssh
+# Add your public key to ~/.ssh/authorized_keys
+```
+Then in `/etc/ssh/sshd_config`:
+```
+PermitRootLogin no
+PasswordAuthentication no
+```
+Restart SSH: `systemctl restart sshd`
+
+#### Enable Automatic Security Updates
+```bash
+apt install unattended-upgrades
+dpkg-reconfigure unattended-upgrades
+```
+This auto-installs critical security patches on Ubuntu.
+
+### 📈 Development (Week 2-4)
+
+#### CI/CD Pipeline
+Currently deployment is manual (`git pull` + `docker compose build` + `up -d` on VPS). Set up GitHub Actions:
+- On push to `main`: SSH into VPS → pull → build → restart containers
+- Consider a staging branch that deploys to a staging subdomain first
+- Store VPS SSH key as a GitHub secret
+
+#### Staging Environment
+Never test directly on production. Options:
+- Subdomain: `staging.pragyacareer.com` on the same VPS (different Docker Compose project + ports)
+- Separate lightweight VPS for staging
+- Use a separate Neon database branch for staging
+
+#### Configure SMTP for Real Emails
+The email service (`server/src/email/`) is console-only in dev. Set up a transactional email provider:
+- **Resend** (https://resend.com) — free tier: 3,000 emails/month, easy API
+- **SendGrid** (https://sendgrid.com) — free tier: 100 emails/day
+- **AWS SES** — cheapest at scale
+- Update `.env.production` with SMTP credentials (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`)
+
+#### Re-enable Email Verification
+Once SMTP is configured, restore the OTP verification flow:
+1. In `server/src/auth/auth.service.ts`: uncomment OTP generation in register method
+2. Remove the auto-verify `prisma.user.update` call
+3. Change register redirect back to `/verify-email`
+4. Restore unverified-user redirect in dashboard
+5. Re-add `EmailVerifiedGuard` to `server/src/users/users.controller.ts`
+
+### 🚀 Growth (Month 2+)
+
+#### Analytics
+- **Google Analytics 4** — standard, free, comprehensive
+- **Plausible** (https://plausible.io) — privacy-friendly alternative, no cookies, GDPR-compliant
+- Add tracking script to `client/src/app/layout.tsx`
+
+#### SEO Optimization
+- Add proper meta tags (title, description, Open Graph) to all pages via Next.js `metadata` exports
+- Create `public/sitemap.xml` listing all public routes
+- Create `public/robots.txt` allowing search engine crawling
+- Submit sitemap to Google Search Console (https://search.google.com/search-console)
+- Add structured data (JSON-LD) for the career library pages
+
+#### Performance Optimization
+- Enable Redis caching for expensive API calls (career matching, AI analysis results)
+- Implement CDN (Cloudflare free tier) for static assets and global edge caching
+- Add `Cache-Control` headers for static assets in nginx config
+- Monitor server memory/CPU via `htop` or set up Prometheus + Grafana
+
+#### Error Tracking
+- **Sentry** (https://sentry.io) — free tier: 5,000 errors/month
+- Install `@sentry/nextjs` for frontend error tracking
+- Install `@sentry/node` for backend error tracking
+- Captures stack traces, user context, breadcrumbs for debugging production issues
+
+#### Razorpay Integration
+Once Razorpay approval is complete:
+- Re-enable the employer feature in navbar, footer, services, CTA, and register page
+- Test payment flow end-to-end: Register → Pay → Assessment → Report
+- Set up Razorpay webhooks for payment confirmation
+
+#### Future Features
+- **Admin Dashboard** — manage users, view assessment stats, revenue tracking
+- **Bulk Assessment** — allow institutions to purchase assessments for multiple students
+- **API Rate Limiting per User** — more granular than global throttle
+- **Report Versioning** — regenerate reports when AI model improves
+- **Mobile App** — React Native wrapper or PWA for mobile users
