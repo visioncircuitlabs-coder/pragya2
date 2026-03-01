@@ -16,8 +16,8 @@ COPY shared/package.json ./shared/
 COPY client/package.json ./client/
 COPY server/package.json ./server/
 
-# Install all dependencies
-RUN npm ci
+# Install all dependencies + lightningcss native binary for Alpine (musl)
+RUN npm ci && npm install --no-save lightningcss-linux-x64-musl
 
 # Copy shared source and build it
 COPY shared/ ./shared/
