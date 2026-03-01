@@ -68,8 +68,9 @@ COPY --from=builder /app/server/dist ./server/dist
 # Copy font assets for PDF generation
 COPY --from=builder /app/server/src/reports/fonts ./server/dist/reports/fonts
 
-# Create reports output directory
-RUN mkdir -p /app/server/reports && chown nestjs:nodejs /app/server/reports
+# Create reports directories (service uses process.cwd()/reports = /app/reports)
+RUN mkdir -p /app/reports /app/server/reports && \
+    chown nestjs:nodejs /app/reports /app/server/reports
 
 # Create logs directories (logger uses process.cwd()/logs = /app/logs)
 RUN mkdir -p /app/logs /app/server/logs && \
