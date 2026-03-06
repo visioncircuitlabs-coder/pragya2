@@ -12,6 +12,24 @@ Pragya is a full-stack career assessment platform ("India's Pioneer Youth-Develo
 - **"360°" branding removed** — product is now just "Career Assessment" / "Employability Assessment" / "PRAGYA" everywhere.
 - **Registration is CLOSED** — the `POST /auth/register` endpoint returns 403 and the `/register` page shows a "Coming Soon" message. This is temporary for Razorpay verification phase. Two demo accounts exist in the DB (see below). Re-enable by: (1) removing the `throw ForbiddenException` in `auth.controller.ts` register method and uncommenting `this.authService.register(dto)`, (2) restoring the original register page from git history (`git show HEAD~1:client/src/app/register/page.tsx`).
 - **Demo accounts** (for Razorpay verification): `testjobseeker@pragya.in` / `Test@1234` (JOB_SEEKER, completed), `teststudent@pragya.in` / `Test@1234` (STUDENT, completed).
+- **14 batch student accounts** — **DO NOT DELETE these accounts or their data from the database.** These are real users. Created via seed script (`server/prisma/seed-batch-students.ts` / `.cjs`). Login uses phone number as identifier — email format is `{phone}@pragya.in`, password is `Student@1234`. The login page auto-detects 10-digit Indian phone numbers and appends `@pragya.in`. Full list:
+  1. Sajitha — 7510941782
+  2. Rajitha — 9947789673
+  3. Nisha Udhayan — 9747189699
+  4. Kalaranjini — 9744494672
+  5. Bindhu Sreeraman — 8606402014
+  6. Beena K — 8157815033
+  7. Samitha — 9544691652
+  8. Sulu Sadheesh — 9747135695
+  9. Savithri — 9747497285
+  10. Subha — 9207250732
+  11. Leela — 9605731527
+  12. Manju — 9847742012
+  13. Divya — 8086155399
+  14. Reji — 7559801037
+- **Login page accepts phone numbers** — `client/src/app/login/page.tsx` detects 10-digit numbers starting with 6-9 (regex: `/^[6-9]\d{9}$/`) and auto-appends `@pragya.in` before calling the API. Normal email login still works.
+- **`sanitizeUser` hoists `fullName`** — `server/src/auth/auth.service.ts` extracts `fullName` from `studentProfile`, `jobSeekerProfile`, or `employerProfile` so the dashboard shows the user's real name instead of the email prefix (critical for phone-based users who would otherwise see their phone number).
+- **Student assessment redirects to dedicated results page** — `/students/assessment` no longer shows inline results. After completing or if already completed, it redirects to `/assessment/results/[id]` which has charts, RIASEC radar, AI insights, sector matches, and proper PDF download.
 - **Email verification is DISABLED** — new users are auto-verified on registration. The full OTP flow (6-digit code, 10-min expiry, brute-force protection, `/verify-email` page) is still in the codebase but bypassed. Re-enable by: (1) uncommenting OTP generation in `auth.service.ts` register method, (2) removing the auto-verify `prisma.user.update`, (3) changing register redirect back to `/verify-email`, (4) restoring the unverified-user redirect in dashboard, (5) re-adding `EmailVerifiedGuard` to `users.controller.ts`.
 
 ## Commands
@@ -63,7 +81,7 @@ Each NestJS module follows the standard controller → service → module patter
 - **`auth/`** — JWT authentication with access + refresh tokens (Passport strategy). Guards: `JwtAuthGuard`, `RolesGuard`, `EmailVerifiedGuard`. Decorators: `@CurrentUser()`, `@Roles()`.
 - **`assessments/`** — Core business logic. `AssessmentsService` handles CRUD and submission flow. `ScoringService` computes scores per module. `CareersService` matches users to 50+ careers by RIASEC codes + aptitude thresholds. `SectorMatchingService` maps careers to industry sectors.
 - **`ai-analysis/`** — Google Gemini 1.5 Flash integration. Prompt templates in `prompts/` (separate for job-seeker and student). Has a comprehensive rule-based fallback when Gemini is unavailable.
-- **`reports/`** — PDF generation using `@react-pdf/renderer`. Generates 4-page reports server-side. Stale AI detection auto-regenerates insights on download.
+- **`reports/`** — PDF generation using `@react-pdf/renderer`. Generates bilingual reports server-side (6 English pages + 2-3 Malayalam pages, auto-paginated). Templates: `student-report.ts` (students), `jobseeker-report.ts` (job seekers). Shared styles/fonts/charts in `pdf-styles.ts`, `pdf-charts.ts`, `i18n.ts`. Malayalam content uses `NotoSansMalayalam` font. Stale AI detection auto-regenerates insights on download.
 - **`email/`** — Nodemailer service. Console-only in dev (SMTP not configured yet).
 - **`prisma/`** — PrismaService wraps `@prisma/client` as a NestJS injectable.
 - **`logger/`** — Winston-based structured logging with request correlation IDs and automatic sensitive data redaction.
@@ -86,7 +104,7 @@ Each NestJS module follows the standard controller → service → module patter
 ### Database
 PostgreSQL via Prisma ORM. Schema at `server/prisma/schema.prisma`. Key models: `User` (with role-specific profiles: Student/JobSeeker/Employer), `Assessment` → `Question` → `Option`, `UserAssessment` (scores + AI insights stored as JSON fields), `UserResponse`, `Career`. Unique constraint on `[userId, assessmentId]` prevents duplicate attempts.
 
-Seed scripts in `server/prisma/`: `seed-assessments.ts` (job seeker questions), `seed-student-assessment.ts`, `seed-careers.ts` (50+ careers with RIASEC codes).
+Seed scripts in `server/prisma/`: `seed-assessments.ts` (job seeker questions), `seed-student-assessment.ts`, `seed-careers.ts` (50+ careers with RIASEC codes), `seed-batch-students.ts` / `.cjs` (14 batch student accounts with phone-based login).
 
 ### Key Conventions
 - Server path alias: `@/*` maps to `src/*` (in both client and server tsconfig)
