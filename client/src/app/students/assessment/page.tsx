@@ -144,9 +144,20 @@ export default function StudentsAssessmentPage() {
                 );
 
                 if (existingResult) {
-                    // User already completed - show results directly
+                    // User already completed - map Prisma fields to AssessmentResult
+                    const raw = existingResult as Record<string, unknown>;
+                    const aptScores = (raw.aptitudeScores || {}) as Record<string, { percentage: number }>;
                     setAssessment(studentAssessment as unknown as Assessment);
-                    setResult(existingResult as unknown as AssessmentResult);
+                    setResult({
+                        id: raw.id as string,
+                        status: raw.status as string,
+                        totalScore: raw.totalScore as number,
+                        completedAt: raw.completedAt as string,
+                        sectionScores: Object.fromEntries(
+                            Object.entries(aptScores).map(([key, val]) => [key, val?.percentage ?? 0])
+                        ),
+                        aiInsights: raw.aiInsights as AssessmentResult['aiInsights'],
+                    });
                     setCompleted(true);
                     setShowIntro(false);
                     return;
@@ -282,7 +293,19 @@ export default function StudentsAssessmentPage() {
                 }
             );
 
-            setResult(res.data);
+            // Transform server response to match AssessmentResult interface
+            const data = res.data;
+            const aptitudeScores = data.scores?.aptitude || {};
+            setResult({
+                id: userAssessment.id,
+                status: data.status,
+                totalScore: data.scores?.weightedScore,
+                sectionScores: Object.fromEntries(
+                    Object.entries(aptitudeScores).map(([key, val]) => [key, (val as { percentage: number }).percentage])
+                ),
+                completedAt: new Date().toISOString(),
+                aiInsights: data.aiAnalysis,
+            } as AssessmentResult);
             setCompleted(true);
         } catch (err: unknown) {
             console.error('Error submitting assessment:', err);
