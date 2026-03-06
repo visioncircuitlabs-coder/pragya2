@@ -886,14 +886,61 @@ const StudentPage6 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     );
 };
 
-// ─── MALAYALAM COVER PAGE ────────────────────────────────────────────────────
-const MalayalamCoverPage = ({ data }: { data: StudentReportData }) => {
+// ─── MALAYALAM PAGES (combined cover + analysis in one wrapping Page) ────────
+/**
+ * Parse the analysis_ml text into sections based on **header** markers.
+ * Returns array of { header, body } objects.
+ */
+const parseMalayalamSections = (text: string): { header: string; body: string }[] => {
+    if (!text) return [];
+    const parts = text.split(/\n*\*\*([^*]+)\*\*\n*/);
+    const sections: { header: string; body: string }[] = [];
+    for (let i = 1; i < parts.length; i += 2) {
+        const header = parts[i]?.trim();
+        const body = parts[i + 1]?.trim();
+        if (header && body) {
+            sections.push({ header, body });
+        }
+    }
+    return sections;
+};
+
+/**
+ * Renders all Malayalam content (cover + analysis) in a single wrapping Page.
+ * @react-pdf/renderer auto-paginates when content exceeds one A4 page,
+ * and the fixed PageFooter repeats on every generated page.
+ * This eliminates the large whitespace gap that occurred when the cover
+ * was a separate page with only ~40% content.
+ */
+const MalayalamPages = ({ data }: { data: StudentReportData }): React.ReactElement => {
     const ai = data.aiInsights;
     const performanceInfo = getPerformanceInfo(data.performanceLevel, 'ml');
     const apt = data.aptitudeScores['overall'];
     const readiness = data.readinessScores?.['overall'];
+    const analysisMl = ai?.analysis_ml || '';
+    const sections = parseMalayalamSections(analysisMl);
+
+    const renderSections = (secs: { header: string; body: string }[]) =>
+        secs.map((sec, i) =>
+            h(View, { key: `ml-sec-${i}`, style: { ...styles.section, marginBottom: 6 } },
+                h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam', fontSize: 11, textTransform: 'none' } }, sec.header),
+                ...sec.body.split('\n').map((para, pi) =>
+                    h(Text, {
+                        key: `ml-p-${i}-${pi}`,
+                        style: {
+                            fontSize: 9,
+                            lineHeight: 1.4,
+                            color: COLORS.TEXT_BODY,
+                            fontFamily: 'NotoSansMalayalam',
+                            marginBottom: 3,
+                        },
+                    }, para.trim())
+                )
+            )
+        );
 
     return h(Page, { size: 'A4', style: getPageStyle('ml') },
+        // ── Cover content ──
         // Header
         h(View, { style: styles.header },
             h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
@@ -973,119 +1020,33 @@ const MalayalamCoverPage = ({ data }: { data: StudentReportData }) => {
             h(HollandCodeDisplay, { code: data.riasecCode })
         ),
 
+        // ── Analysis content ──
+        h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none', marginTop: 6 } },
+            'കരിയർ വിശകലനം'),
+
+        ...(sections.length > 0
+            ? renderSections(sections)
+            : [h(View, { key: 'ml-placeholder', style: styles.section },
+                h(Text, { style: { ...styles.sectionContent, fontFamily: 'NotoSansMalayalam' } },
+                    'മലയാളം വിശകലനം ലഭ്യമല്ല. ദയവായി ഇംഗ്ലീഷ് പതിപ്പ് പരിശോധിക്കുക.')
+            )]
+        ),
+
+        // Disclaimer
+        h(View, { style: { ...styles.disclaimer, marginTop: 8 } },
+            h(Text, { style: { ...styles.disclaimerTitle, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_title', 'ml')),
+            h(Text, { style: { ...styles.disclaimerText, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_student', 'ml'))
+        ),
+
+        // Branding footer
+        h(View, { style: { marginTop: 'auto', alignItems: 'center', paddingTop: 8 } },
+            h(Text, { style: { fontSize: 11, fontWeight: 700, color: COLORS.PRIMARY, marginBottom: 2, fontFamily: 'Nunito' } }, 'PRAGYA'),
+            h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam' } }, t('ecosystem_tagline', 'ml')),
+            h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam', marginTop: 2 } }, t('powered_by', 'ml'))
+        ),
+
         h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
     );
-};
-
-// ─── MALAYALAM ANALYSIS PAGES ───────────────────────────────────────────────
-/**
- * Parse the analysis_ml text into sections based on **header** markers.
- * Returns array of { header, body } objects.
- */
-const parseMalayalamSections = (text: string): { header: string; body: string }[] => {
-    if (!text) return [];
-    // Split on lines that start with ** (section headers)
-    const parts = text.split(/\n*\*\*([^*]+)\*\*\n*/);
-    const sections: { header: string; body: string }[] = [];
-    // parts[0] is text before first header (usually empty)
-    // Then alternating: header, body, header, body...
-    for (let i = 1; i < parts.length; i += 2) {
-        const header = parts[i]?.trim();
-        const body = parts[i + 1]?.trim();
-        if (header && body) {
-            sections.push({ header, body });
-        }
-    }
-    return sections;
-};
-
-/**
- * Renders 1-2 pages of Malayalam narrative analysis.
- * Splits content across pages to avoid overflow.
- */
-const MalayalamAnalysisPages = ({ data }: { data: StudentReportData }): React.ReactElement[] => {
-    const ai = data.aiInsights;
-    const analysisMl = ai?.analysis_ml || '';
-    const sections = parseMalayalamSections(analysisMl);
-
-    if (sections.length === 0) {
-        // No analysis available — render a single placeholder page
-        return [
-            h(Page, { key: 'ml-analysis-1', size: 'A4', style: getPageStyle('ml') },
-                h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam' } },
-                    'കരിയർ വിശകലനം'),
-                h(View, { style: styles.section },
-                    h(Text, { style: { ...styles.sectionContent, fontFamily: 'NotoSansMalayalam' } },
-                        'മലയാളം വിശകലനം ലഭ്യമല്ല. ദയവായി ഇംഗ്ലീഷ് പതിപ്പ് പരിശോധിക്കുക.')
-                ),
-                h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
-            ),
-        ];
-    }
-
-    // Split sections into two groups for two pages
-    const midpoint = Math.ceil(sections.length / 2);
-    const page1Sections = sections.slice(0, midpoint);
-    const page2Sections = sections.slice(midpoint);
-
-    const renderSections = (secs: { header: string; body: string }[]) =>
-        secs.map((sec, i) =>
-            h(View, { key: `ml-sec-${i}`, style: { ...styles.section, marginBottom: 6 } },
-                h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam', fontSize: 11, textTransform: 'none' } }, sec.header),
-                ...sec.body.split('\n').map((para, pi) =>
-                    h(Text, {
-                        key: `ml-p-${i}-${pi}`,
-                        style: {
-                            fontSize: 9,
-                            lineHeight: 1.4,
-                            color: COLORS.TEXT_BODY,
-                            fontFamily: 'NotoSansMalayalam',
-                            marginBottom: 3,
-                        },
-                    }, para.trim())
-                )
-            )
-        );
-
-    const pages: React.ReactElement[] = [];
-
-    // Page 1 of analysis
-    pages.push(
-        h(Page, { key: 'ml-analysis-1', size: 'A4', style: getPageStyle('ml') },
-            h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none' } },
-                'കരിയർ വിശകലനം'),
-            ...renderSections(page1Sections),
-            h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
-        )
-    );
-
-    // Page 2 of analysis (if content remains)
-    if (page2Sections.length > 0) {
-        pages.push(
-            h(Page, { key: 'ml-analysis-2', size: 'A4', style: getPageStyle('ml') },
-                h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none' } },
-                    'കരിയർ വിശകലനം (തുടർച്ച)'),
-                ...renderSections(page2Sections),
-
-                // Disclaimer
-                h(View, { style: { ...styles.disclaimer, marginTop: 8 } },
-                    h(Text, { style: { ...styles.disclaimerTitle, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_title', 'ml')),
-                    h(Text, { style: { ...styles.disclaimerText, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_student', 'ml'))
-                ),
-
-                // Branding footer
-                h(View, { style: { marginTop: 'auto', alignItems: 'center', paddingTop: 8 } },
-                    h(Text, { style: { fontSize: 11, fontWeight: 700, color: COLORS.PRIMARY, marginBottom: 2, fontFamily: 'Nunito' } }, 'PRAGYA'),
-                    h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam' } }, t('ecosystem_tagline', 'ml')),
-                    h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam', marginTop: 2 } }, t('powered_by', 'ml'))
-                ),
-
-                h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
-            )
-        );
-    }
-
-    return pages;
 };
 
 // ─── MAIN DOCUMENT ───────────────────────────────────────────────────────────
@@ -1098,8 +1059,7 @@ export const StudentReportDocument = ({ data }: { data: StudentReportData }) => 
         h(StudentPage4, { data, lang: 'en' }),
         h(StudentPage5, { data, lang: 'en' }),
         h(StudentPage6, { data, lang: 'en' }),
-        // Malayalam pages (cover + 1-2 analysis pages)
-        h(MalayalamCoverPage, { data }),
-        ...MalayalamAnalysisPages({ data }),
+        // Malayalam pages (auto-paginated single wrapping page)
+        h(MalayalamPages, { data }),
     );
 };
