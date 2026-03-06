@@ -361,6 +361,11 @@ export class AuthService {
 
     private sanitizeUser(user: any) {
         const { password, ...sanitized } = user;
+        sanitized.fullName =
+            user.studentProfile?.fullName ||
+            user.jobSeekerProfile?.fullName ||
+            user.employerProfile?.contactPerson ||
+            undefined;
         return sanitized;
     }
 }

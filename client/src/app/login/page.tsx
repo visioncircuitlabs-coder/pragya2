@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2, ChevronRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Loader2, ChevronRight, Eye, EyeOff, Lock, Phone } from 'lucide-react';
 
 export default function Login() {
     const router = useRouter();
@@ -28,12 +28,18 @@ export default function Login() {
         setLoading(true);
 
         try {
-            await login(formData.email, formData.password);
+            // If input is a 10-digit Indian phone number, convert to email format
+            let loginEmail = formData.email.trim();
+            if (/^[6-9]\d{9}$/.test(loginEmail)) {
+                loginEmail = `${loginEmail}@pragya.in`;
+            }
+
+            await login(loginEmail, formData.password);
             router.push('/dashboard');
         } catch (err: unknown) {
             const errorData = err as { response?: { data?: { message?: string } }; message?: string };
             const errorMessage = typeof errorData === 'string' ? errorData :
-                (errorData?.response?.data?.message || errorData?.message || 'Invalid email or password');
+                (errorData?.response?.data?.message || errorData?.message || 'Invalid credentials');
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -61,21 +67,21 @@ export default function Login() {
 
                         <div className="space-y-5">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Email address</label>
+                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Phone Number or Email</label>
                                 <div className="mt-1 relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                        <Phone className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
                                         id="email"
                                         name="email"
-                                        type="email"
-                                        autoComplete="email"
+                                        type="text"
+                                        autoComplete="username"
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
                                         className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-[#0e6957] focus:ring-[#0e6957] pl-10 px-4 py-3 bg-gray-50 border hover:bg-white transition-colors"
-                                        placeholder="you@example.com"
+                                        placeholder="Enter phone number or email"
                                     />
                                 </div>
                             </div>
