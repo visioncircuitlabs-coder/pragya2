@@ -8,7 +8,6 @@ import { UserRole } from '@pragya/shared';
 import {
     ChevronLeft,
     ChevronRight,
-    CheckCircle2,
     AlertCircle,
     Loader2,
     Brain,
@@ -83,19 +82,6 @@ const SECTION_INFO: Record<string, { icon: React.ReactNode; color: string; descr
     },
 };
 
-interface AssessmentResult {
-    id: string;
-    assessmentId?: string;
-    status?: string;
-    totalScore?: number;
-    sectionScores?: Record<string, number>;
-    completedAt?: string;
-    aiInsights?: {
-        studentPersona?: { title: string; description: string; superpower: string };
-        academicStreams?: { recommended: string[] };
-        careerGuidance?: { suggestedCareers: (string | { role: string; fitReason?: string })[]; skillsToDevelop: string[] };
-    };
-}
 
 export default function StudentsAssessmentPage() {
     const router = useRouter();
@@ -110,8 +96,6 @@ export default function StudentsAssessmentPage() {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
-    const [, setCompleted] = useState(false);
-    const [result, setResult] = useState<AssessmentResult | null>(null);
     const [showIntro, setShowIntro] = useState(true);
 
     // Fetch assessment and questions
@@ -144,22 +128,9 @@ export default function StudentsAssessmentPage() {
                 );
 
                 if (existingResult) {
-                    // User already completed - map Prisma fields to AssessmentResult
+                    // User already completed - redirect to the full results page
                     const raw = existingResult as Record<string, unknown>;
-                    const aptScores = (raw.aptitudeScores || {}) as Record<string, { percentage: number }>;
-                    setAssessment(studentAssessment as unknown as Assessment);
-                    setResult({
-                        id: raw.id as string,
-                        status: raw.status as string,
-                        totalScore: raw.totalScore as number,
-                        completedAt: raw.completedAt as string,
-                        sectionScores: Object.fromEntries(
-                            Object.entries(aptScores).map(([key, val]) => [key, val?.percentage ?? 0])
-                        ),
-                        aiInsights: raw.aiInsights as AssessmentResult['aiInsights'],
-                    });
-                    setCompleted(true);
-                    setShowIntro(false);
+                    router.push(`/assessment/results/${raw.id as string}`);
                     return;
                 }
             } catch {
@@ -225,14 +196,12 @@ export default function StudentsAssessmentPage() {
                     const resultsRes = await api.get('/assessments/my-results');
 
                     // Find the result for this assessment
-                    const assessmentResult = (resultsRes.data as { assessmentId: string }[]).find(
+                    const assessmentResult = (resultsRes.data as { assessmentId: string; id: string }[]).find(
                         (r) => r.assessmentId === assessment.id
                     );
 
                     if (assessmentResult) {
-                        setResult(assessmentResult as unknown as AssessmentResult);
-                        setCompleted(true);
-                        setShowIntro(false);
+                        router.push(`/assessment/results/${assessmentResult.id}`);
                     } else {
                         setError('You have already completed this assessment. Check your results in the dashboard.');
                     }
@@ -293,20 +262,8 @@ export default function StudentsAssessmentPage() {
                 }
             );
 
-            // Transform server response to match AssessmentResult interface
-            const data = res.data;
-            const aptitudeScores = data.scores?.aptitude || {};
-            setResult({
-                id: userAssessment.id,
-                status: data.status,
-                totalScore: data.scores?.weightedScore,
-                sectionScores: Object.fromEntries(
-                    Object.entries(aptitudeScores).map(([key, val]) => [key, (val as { percentage: number }).percentage])
-                ),
-                completedAt: new Date().toISOString(),
-                aiInsights: data.aiAnalysis,
-            } as AssessmentResult);
-            setCompleted(true);
+            // Redirect to the full results page
+            router.push(`/assessment/results/${userAssessment.id}`);
         } catch (err: unknown) {
             console.error('Error submitting assessment:', err);
             const errorData = err as { response?: { data?: { message?: string } } };
@@ -368,346 +325,9 @@ export default function StudentsAssessmentPage() {
         );
     }
 
-    // Completed - Show Results
-    if (result) {
-        const sectionScores = result.sectionScores || {};
-        const sortedSections = Object.entries(sectionScores)
-            .sort(([, a], [, b]) => (Number(b) || 0) - (Number(a) || 0));
-        const topStrengths = sortedSections.slice(0, 3);
-        const areasForGrowth = sortedSections.slice(-2).reverse();
-
-        // Career recommendations based on top aptitudes
-        const careerRecommendations: Record<string, { streams: string[]; careers: string[]; skills: string[] }> = {
-            'Numerical Reasoning': {
-                streams: ['Commerce', 'Science (PCM)', 'Economics', 'Statistics'],
-                careers: ['Data Analyst', 'Accountant', 'Financial Planner', 'Actuary', 'Economist'],
-                skills: ['Excel & Spreadsheets', 'Statistical Analysis', 'Financial Modeling']
-            },
-            'Verbal Reasoning': {
-                streams: ['Humanities', 'Law', 'Journalism', 'Literature'],
-                careers: ['Lawyer', 'Content Writer', 'Journalist', 'Teacher', 'Public Relations'],
-                skills: ['Critical Reading', 'Debate', 'Creative Writing']
-            },
-            'Abstract-Fluid Reasoning': {
-                streams: ['Science', 'Engineering', 'Research', 'Philosophy'],
-                careers: ['Researcher', 'Data Scientist', 'Strategic Consultant', 'Scientist', 'Software Developer'],
-                skills: ['Problem Solving', 'Logical Thinking', 'Pattern Recognition']
-            },
-            'Spatial Ability': {
-                streams: ['Architecture', 'Design', 'Engineering', 'Fine Arts'],
-                careers: ['Architect', 'Interior Designer', 'Civil Engineer', 'Game Designer', 'Animator'],
-                skills: ['CAD Software', '3D Modeling', 'Technical Drawing']
-            },
-            'Mechanical Reasoning': {
-                streams: ['Engineering', 'Technology', 'Automobile', 'Manufacturing'],
-                careers: ['Mechanical Engineer', 'Robotics Engineer', 'Technician', 'Product Designer', 'Mechanic'],
-                skills: ['Technical Skills', 'Hardware Knowledge', 'Problem Diagnosis']
-            },
-            'Processing Speed & Accuracy': {
-                streams: ['Computer Science', 'Administration', 'Quality Control', 'Operations'],
-                careers: ['Software Developer', 'Quality Analyst', 'Data Entry Specialist', 'Air Traffic Controller', 'Surgeon'],
-                skills: ['Attention to Detail', 'Speed Typing', 'Quality Assurance']
-            }
-        };
-
-        // Get recommendations based on top strength
-        const topSection = topStrengths[0]?.[0] || '';
-        const recommendations = careerRecommendations[topSection] || { streams: [], careers: [], skills: [] };
-
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 py-8 px-4">
-                <div className="max-w-6xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg mb-6">
-                            <CheckCircle2 className="w-10 h-10 text-white" />
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                            Your Career Assessment Report
-                        </h1>
-                        <p className="text-gray-600 max-w-2xl mx-auto">
-                            Based on the Pragya Career Assessment • Completed on {result.completedAt ? new Date(result.completedAt).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'Today'}
-                        </p>
-                    </div>
-
-                    {/* Overall Score Banner */}
-                    <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-3xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div>
-                                <p className="text-violet-200 text-sm mb-1">Overall Aptitude Score</p>
-                                <p className="text-6xl font-black">
-                                    {result.totalScore !== undefined ? `${Math.round(result.totalScore)}%` : 'N/A'}
-                                </p>
-                                <p className="text-violet-200 mt-2">
-                                    {(result.totalScore || 0) >= 80 ? 'Excellent Performance!' :
-                                        (result.totalScore || 0) >= 60 ? 'Good Performance!' :
-                                            (result.totalScore || 0) >= 40 ? 'Average Performance' : 'Needs Improvement'}
-                                </p>
-                            </div>
-                            <div className="text-center md:text-right">
-                                <p className="text-violet-200 text-sm mb-2">Top Aptitude</p>
-                                <div className="flex items-center gap-3 bg-white/20 rounded-xl px-4 py-3">
-                                    {SECTION_INFO[topSection]?.icon || <span className="text-2xl">🎯</span>}
-                                    <span className="text-xl font-bold">{topSection}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Student Persona Section - NEW */}
-                    {result.aiInsights?.studentPersona && (
-                        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border-l-8 border-violet-600 relative overflow-hidden">
-                            <div className="relative z-10">
-                                <span className="inline-block px-4 py-1 bg-violet-100 text-violet-700 rounded-full text-sm font-bold mb-4">
-                                    Your Learning Persona
-                                </span>
-                                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                                    {result.aiInsights.studentPersona.title}
-                                </h2>
-                                <p className="text-lg text-gray-700 leading-relaxed max-w-3xl mb-6">
-                                    {result.aiInsights.studentPersona.description}
-                                </p>
-                                <div className="flex items-center gap-3 bg-violet-50 rounded-xl p-4 w-fit">
-                                    <span className="text-2xl">⚡</span>
-                                    <div>
-                                        <p className="text-xs text-uppercase font-bold text-violet-500 tracking-wider">SUPERPOWER</p>
-                                        <p className="font-bold text-gray-900">{result.aiInsights.studentPersona.superpower}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="absolute -right-20 -bottom-20 opacity-5">
-                                <Brain className="w-96 h-96" />
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="grid md:grid-cols-3 gap-6 mb-8">
-                        {/* Strengths */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                                    <span className="text-lg">💪</span>
-                                </div>
-                                <h3 className="font-bold text-gray-900">Your Strengths</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {topStrengths.map(([section, score], idx) => (
-                                    <div key={section} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-green-600">#{idx + 1}</span>
-                                            <span className="text-sm text-gray-700">{section}</span>
-                                        </div>
-                                        <span className="text-sm font-bold text-green-600">{Math.round(Number(score))}%</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Recommended Streams */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-violet-500">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                                    <GraduationCap className="w-5 h-5 text-violet-600" />
-                                </div>
-                                <h3 className="font-bold text-gray-900">Recommended Streams</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {result.aiInsights?.academicStreams?.recommended ? (
-                                    (result.aiInsights.academicStreams.recommended as string[]).map((stream: string) => (
-                                        <span key={stream} className="px-3 py-1.5 bg-violet-50 text-violet-700 rounded-full text-sm font-medium">
-                                            {stream}
-                                        </span>
-                                    ))
-                                ) : (
-                                    recommendations.streams.map((stream) => (
-                                        <span key={stream} className="px-3 py-1.5 bg-violet-50 text-violet-700 rounded-full text-sm font-medium">
-                                            {stream}
-                                        </span>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Areas for Growth */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-amber-500">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                                    <span className="text-lg">📈</span>
-                                </div>
-                                <h3 className="font-bold text-gray-900">Areas for Growth</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {areasForGrowth.map(([section, score]) => (
-                                    <div key={section} className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-700">{section}</span>
-                                        <span className="text-sm font-medium text-amber-600">{Math.round(Number(score))}%</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Detailed Section Analysis */}
-                    <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <Brain className="w-6 h-6 text-violet-600" />
-                            Detailed Aptitude Analysis
-                        </h2>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {sortedSections.map(([section, score], idx) => {
-                                const sectionInfo = SECTION_INFO[section];
-                                const scoreNum = Number(score) || 0;
-                                const isStrength = idx < 3;
-                                return (
-                                    <div key={section} className={`p-5 rounded-xl border-2 transition-all ${isStrength ? 'border-green-200 bg-green-50/50' : 'border-gray-100 bg-gray-50/50'}`}>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-3">
-                                                {sectionInfo?.icon || <span className="text-2xl">📊</span>}
-                                                <div>
-                                                    <span className="font-semibold text-gray-900">{section}</span>
-                                                    <p className="text-xs text-gray-500">{sectionInfo?.description}</p>
-                                                </div>
-                                            </div>
-                                            <span className={`text-2xl font-black ${scoreNum >= 70 ? 'text-green-600' : scoreNum >= 40 ? 'text-amber-600' : 'text-red-500'}`}>
-                                                {Math.round(scoreNum)}%
-                                            </span>
-                                        </div>
-                                        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full bg-gradient-to-r ${sectionInfo?.color || 'from-violet-500 to-purple-600'}`}
-                                                style={{ width: `${Math.min(100, scoreNum)}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Career Pathways */}
-                    <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <Target className="w-6 h-6 text-violet-600" />
-                            Career Pathways for You
-                        </h2>
-                        <p className="text-gray-600 mb-6">
-                            Based on your top aptitude in <span className="font-bold text-violet-600">{topSection}</span>, here are career paths that align with your natural abilities:
-                        </p>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {result.aiInsights?.careerGuidance?.suggestedCareers ? (
-                                // AI Data (Detailed objects or strings)
-                                (result.aiInsights.careerGuidance.suggestedCareers as (string | { role: string; fitReason?: string })[]).map((career, idx: number) => (
-                                    <div key={idx} className="flex flex-col gap-3 p-5 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                                {idx + 1}
-                                            </div>
-                                            <span className="font-bold text-gray-800 text-lg">
-                                                {typeof career === 'string' ? career : career.role}
-                                            </span>
-                                        </div>
-                                        {typeof career !== 'string' && career.fitReason && (
-                                            <p className="text-sm text-gray-600 italic border-l-2 border-violet-200 pl-3">
-                                                &quot;{career.fitReason}&quot;
-                                            </p>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                // Fallback Static Data (Strings)
-                                recommendations.careers.map((career, idx) => (
-                                    <div key={career} className="flex items-center gap-3 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-100">
-                                        <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center text-sm font-bold">
-                                            {idx + 1}
-                                        </div>
-                                        <span className="font-medium text-gray-800">{career}</span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Skills to Develop */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-3xl shadow-xl p-6 md:p-8 mb-8 text-white">
-                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                            <span className="text-2xl">🎯</span>
-                            Skills to Develop
-                        </h2>
-                        <p className="text-indigo-100 mb-6">
-                            Focus on building these skills to excel in your chosen career path:
-                        </p>
-                        <div className="flex flex-wrap gap-3">
-                            {result.aiInsights?.careerGuidance?.skillsToDevelop ? (
-                                (result.aiInsights.careerGuidance.skillsToDevelop as string[]).map((skill: string) => (
-                                    <span key={skill} className="px-4 py-2 bg-white/20 rounded-full font-medium">
-                                        {skill}
-                                    </span>
-                                ))
-                            ) : (
-                                recommendations.skills.map((skill) => (
-                                    <span key={skill} className="px-4 py-2 bg-white/20 rounded-full font-medium">
-                                        {skill}
-                                    </span>
-                                ))
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Next Steps */}
-                    <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 mb-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6">What&apos;s Next?</h2>
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <div className="p-5 bg-violet-50 rounded-xl text-center">
-                                <div className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <span className="text-2xl">📚</span>
-                                </div>
-                                <h3 className="font-bold text-gray-900 mb-2">Explore Courses</h3>
-                                <p className="text-sm text-gray-600">Find courses aligned with your aptitudes</p>
-                            </div>
-                            <div className="p-5 bg-purple-50 rounded-xl text-center">
-                                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <span className="text-2xl">💼</span>
-                                </div>
-                                <h3 className="font-bold text-gray-900 mb-2">Career Counseling</h3>
-                                <p className="text-sm text-gray-600">Get personalized guidance from experts</p>
-                            </div>
-                            <div className="p-5 bg-indigo-50 rounded-xl text-center">
-                                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                    <span className="text-2xl">🎓</span>
-                                </div>
-                                <h3 className="font-bold text-gray-900 mb-2">Skill Building</h3>
-                                <p className="text-sm text-gray-600">Develop skills for your dream career</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <button
-                            onClick={() => router.push('/dashboard')}
-                            className="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg"
-                        >
-                            Go to Dashboard
-                        </button>
-                        <button
-                            onClick={() => router.push('/career')}
-                            className="px-8 py-4 border-2 border-violet-600 text-violet-600 rounded-xl font-semibold hover:bg-violet-50 transition-colors"
-                        >
-                            Explore All Careers
-                        </button>
-                        <button
-                            onClick={() => window.print()}
-                            className="px-8 py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                        >
-                            Download Report
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+    // Results are shown on the dedicated results page at /assessment/results/[id]
+    // The page redirects there after submission or when completed results are found
+    // (see fetchAssessment and handleSubmit above)
     // Intro/Welcome Screen
     if (showIntro && assessment) {
         return (
