@@ -161,8 +161,21 @@ export default function StudentsAssessmentPage() {
                 `/assessments/${assessmentId}/questions`
             );
 
-            setAssessment(questionsRes.data.assessment);
-            setQuestions(questionsRes.data.questions);
+            const data = questionsRes.data;
+            setAssessment(data as unknown as Assessment);
+            setQuestions(data.questions);
+
+            // Restore in-progress attempt if it exists
+            if (data.userAssessmentId) {
+                setUserAssessment({ id: data.userAssessmentId, status: data.status || 'IN_PROGRESS' });
+                setShowIntro(false);
+
+                // Restore saved answers
+                if (data.savedAnswers && Object.keys(data.savedAnswers).length > 0) {
+                    setAnswers(data.savedAnswers);
+                    setCurrentQuestionIndex(data.lastQuestionIndex || 0);
+                }
+            }
 
         } catch (err: unknown) {
             console.error('Error fetching assessment:', err);
