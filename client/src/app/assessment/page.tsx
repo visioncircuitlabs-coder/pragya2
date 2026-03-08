@@ -483,7 +483,7 @@ export default function AssessmentPage() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+            <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8 pb-24">
                 {currentQuestion && (
                     <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
                         {/* Section Badge */}
@@ -564,7 +564,7 @@ export default function AssessmentPage() {
             </main>
 
             {/* Footer Navigation */}
-            <footer className="bg-white border-t border-gray-200 sticky bottom-0">
+            <footer className="bg-white border-t border-gray-200 sticky bottom-0 z-10">
                 <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
                         onClick={() => goToQuestion(currentQuestionIndex - 1)}
