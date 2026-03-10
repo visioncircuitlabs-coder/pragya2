@@ -36,8 +36,7 @@ export default function Footer() {
         <div className="absolute -bottom-[20%] -left-[10%] w-[800px] h-[800px] bg-brand-primary/20 rounded-full blur-[120px] mix-blend-screen"></div>
         <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-brand-secondary/5 rounded-full blur-[100px]"></div>
 
-        {/* Grid Overlay */}
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]"></div>
+        {/* Grid Overlay (decorative) */}
       </div>
 
       <div className="w-full max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10">

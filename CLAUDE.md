@@ -30,6 +30,9 @@ Pragya is a full-stack career assessment platform ("India's Pioneer Youth-Develo
 - **Login page accepts phone numbers** — `client/src/app/login/page.tsx` detects 10-digit numbers starting with 6-9 (regex: `/^[6-9]\d{9}$/`) and auto-appends `@pragya.in` before calling the API. Normal email login still works.
 - **`sanitizeUser` hoists `fullName`** — `server/src/auth/auth.service.ts` extracts `fullName` from `studentProfile`, `jobSeekerProfile`, or `employerProfile` so the dashboard shows the user's real name instead of the email prefix (critical for phone-based users who would otherwise see their phone number).
 - **Student assessment redirects to dedicated results page** — `/students/assessment` no longer shows inline results. After completing or if already completed, it redirects to `/assessment/results/[id]` which has charts, RIASEC radar, AI insights, sector matches, and proper PDF download.
+- **Assessment auto-saves every answer** — `handleSelectOption` in `/students/assessment` fires a background `POST /assessments/save-progress` on every answer selection. The server upserts the `UserResponse` and updates `lastQuestionIndex`. On resume, the page restores all saved answers and jumps to the last question. No "Jump to Question" grid — navigation is strictly via Prev/Next buttons with mandatory cool-off breaks between sections.
+- **Assessment intro page** — `/students/assessment` shows a redesigned intro with "Discover Your True Career Direction" heading, 4 session overview cards (Aptitude 60q, Interest 48q, Personality 36q, Skill 36q), estimated time, and numbered instructions before starting.
+- **Results page uses simple language** — Section headers use student-friendly labels: "What Interests You" (not "Career Interests (RIASEC)"), "Your Thinking Skills" (not "Aptitude Scores"), "Your Personality", "Best Career Fields for You", "What Your Results Mean". All scores display as percentages (e.g., "85%"). Personality section has expandable trait insight cards (6 traits × 3 levels with description, career connection, and tips).
 - **Email verification is DISABLED** — new users are auto-verified on registration. The full OTP flow (6-digit code, 10-min expiry, brute-force protection, `/verify-email` page) is still in the codebase but bypassed. Re-enable by: (1) uncommenting OTP generation in `auth.service.ts` register method, (2) removing the auto-verify `prisma.user.update`, (3) changing register redirect back to `/verify-email`, (4) restoring the unverified-user redirect in dashboard, (5) re-adding `EmailVerifiedGuard` to `users.controller.ts`.
 
 ## Commands
@@ -81,7 +84,7 @@ Each NestJS module follows the standard controller → service → module patter
 - **`auth/`** — JWT authentication with access + refresh tokens (Passport strategy). Guards: `JwtAuthGuard`, `RolesGuard`, `EmailVerifiedGuard`. Decorators: `@CurrentUser()`, `@Roles()`.
 - **`assessments/`** — Core business logic. `AssessmentsService` handles CRUD and submission flow. `ScoringService` computes scores per module. `CareersService` matches users to 50+ careers by RIASEC codes + aptitude thresholds. `SectorMatchingService` maps careers to industry sectors.
 - **`ai-analysis/`** — Google Gemini 1.5 Flash integration. Prompt templates in `prompts/` (separate for job-seeker and student). Has a comprehensive rule-based fallback when Gemini is unavailable.
-- **`reports/`** — PDF generation using `@react-pdf/renderer`. Generates bilingual reports server-side (6 English pages + 2-3 Malayalam pages, auto-paginated). Templates: `student-report.ts` (students), `jobseeker-report.ts` (job seekers). Shared styles/fonts/charts in `pdf-styles.ts`, `pdf-charts.ts`, `i18n.ts`. Malayalam content uses `NotoSansMalayalam` font. Stale AI detection auto-regenerates insights on download.
+- **`reports/`** — PDF generation using `@react-pdf/renderer`. Student reports are 6 English pages with inline Manglish (Malayalam+English) insights after each major section — no separate Malayalam pages. Generated dynamically from actual scores via `generateInlineMl()` and rendered with `InlineMalayalam` component (green background, NotoSansMalayalam font). Templates: `student-report.ts` (students), `jobseeker-report.ts` (job seekers). Shared styles/fonts/charts in `pdf-styles.ts`, `pdf-charts.ts`, `i18n.ts`. Stale AI detection auto-regenerates insights on download. Scores are labeled as percentiles (e.g., "85th percentile") throughout.
 - **`email/`** — Nodemailer service. Console-only in dev (SMTP not configured yet).
 - **`prisma/`** — PrismaService wraps `@prisma/client` as a NestJS injectable.
 - **`logger/`** — Winston-based structured logging with request correlation IDs and automatic sensitive data redaction.
@@ -94,12 +97,13 @@ Each NestJS module follows the standard controller → service → module patter
 
 ### Assessment Pipeline
 1. User starts assessment → `POST /assessments/:id/start`
-2. Answers saved progressively → `POST /assessments/:id/progress` (stop & resume support)
-3. User submits → `POST /assessments/:id/submit`
-4. Server runs `ScoringService` (4 modules: Aptitude→% per section, RIASEC→Holland Code, Employability→weighted %, Personality→trait averages)
-5. `AiAnalysisService` calls Gemini with scoring data → generates 12 insight fields
-6. Results returned → `GET /assessments/:id/results`
-7. PDF report generated on demand → `GET /reports/:assessmentId/download`
+2. Each answer auto-saved in real-time → `POST /assessments/save-progress` (fire-and-forget from client, upserts `UserResponse` + updates `lastQuestionIndex`). Users can close the browser and resume later from exactly where they left off.
+3. Mandatory cool-off breaks between sections: 2-minute breaks between aptitude subsections, 5-minute breaks between main modules (Aptitude→Interest→Personality→Skill). Full-screen overlay with countdown timer, "Continue" button disabled until timer completes. Break state tracked in `completedBreaks` Set to prevent re-triggering.
+4. User submits → `POST /assessments/:id/submit`
+5. Server runs `ScoringService` (4 modules: Aptitude→percentile per section, RIASEC→Holland Code, Employability→weighted percentile, Personality→trait averages with Strong/Moderate/Emerging levels)
+6. `AiAnalysisService` calls Gemini with scoring data → generates 12 insight fields
+7. Results returned → `GET /assessments/:id/results`
+8. PDF report generated on demand → `GET /reports/:assessmentId/download`
 
 ### Database
 PostgreSQL via Prisma ORM. Schema at `server/prisma/schema.prisma`. Key models: `User` (with role-specific profiles: Student/JobSeeker/Employer), `Assessment` → `Question` → `Option`, `UserAssessment` (scores + AI insights stored as JSON fields), `UserResponse`, `Career`. Unique constraint on `[userId, assessmentId]` prevents duplicate attempts.

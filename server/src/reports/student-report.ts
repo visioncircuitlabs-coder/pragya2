@@ -153,6 +153,112 @@ const generateGrowthText = (data: StudentReportData, lang: Lang = 'en'): string 
         `Focused effort in these areas — through structured learning, practice exercises, and mentorship — will significantly enhance your overall profile and expand your career options.`;
 };
 
+// ─── Inline Malayalam (Manglish) Helpers ─────────────────────────────────────
+
+const generateInlineMl = (section: string, data: StudentReportData): string => {
+    const apt = data.aptitudeScores['overall'];
+    const aptPct = apt ? Math.round(apt.percentage) : 0;
+    const code = data.riasecCode || '';
+    const readiness = data.readinessScores?.['overall'];
+    const readPct = readiness ? Math.round(readiness.percentage) : 0;
+    const perfInfo = getPerformanceInfo(data.performanceLevel, 'ml');
+
+    const aptEntries = Object.entries(data.aptitudeScores).filter(([k]) => k !== 'overall');
+    const aptSorted = [...aptEntries].sort((a, b) => b[1].percentage - a[1].percentage);
+    const strongest = aptSorted[0]?.[0] || '';
+    const weakest = aptSorted[aptSorted.length - 1]?.[0] || '';
+
+    switch (section) {
+        case 'overview':
+            return `${data.studentName}-ന്റെ overall performance score ${data.weightedScore}% (${perfInfo.label}) ആണ്. ` +
+                `Aptitude score ${aptPct}%, career readiness ${readPct}%. ` +
+                (code ? `Holland Code ${code} ആണ്, ഇത് നിങ്ങളുടെ primary career interests indicate ചെയ്യുന്നു. ` : '') +
+                `Academic Readiness Index ${data.academicReadinessIndex}% ആണ്.`;
+
+        case 'aptitude':
+            return `നിങ്ങളുടെ aptitude score ${aptPct}% ആണ്. ` +
+                (strongest ? `${strongest} section-ൽ നിങ്ങൾ well perform ചെയ്തു. ` : '') +
+                (weakest && weakest !== strongest ? `Practice through ചെയ്യുക ${weakest} improve ചെയ്യാൻ.` : '');
+
+        case 'riasec': {
+            if (!code) return '';
+            const primaryType = RIASEC_NAMES[code[0]] || code[0];
+            return `നിങ്ങളുടെ Holland Code ${code} ആണ്. ${primaryType} type career-കൾ നിങ്ങൾക്ക് suitable ആണ്. ` +
+                (code.length > 1 ? `${RIASEC_NAMES[code[1]] || code[1]} secondary interest ആണ്.` : '');
+        }
+
+        case 'personality': {
+            if (!data.personalityScores) return '';
+            const entries = Object.entries(data.personalityScores);
+            const strong = entries.filter(([, v]) => v.level === 'Strong').map(([k]) => k);
+            const emerging = entries.filter(([, v]) => v.level === 'Emerging').map(([k]) => k);
+            let text = '';
+            if (strong.length > 0) text += `${strong.join(', ')} traits-ൽ നിങ്ങൾ strong ആണ്. `;
+            if (emerging.length > 0) text += `${emerging.join(', ')} areas-ൽ improvement സാധ്യമാണ്. `;
+            text += 'ഈ traits career success-ന് important ആണ്.';
+            return text;
+        }
+
+        case 'readiness': {
+            if (!data.readinessScores) return '';
+            const rEntries = Object.entries(data.readinessScores).filter(([k]) => k !== 'overall');
+            const rSorted = [...rEntries].sort((a, b) => b[1].percentage - a[1].percentage);
+            const strongSkill = rSorted[0]?.[0] || '';
+            const weakSkill = rSorted[rSorted.length - 1]?.[0] || '';
+            return `Career readiness score ${readPct}% ആണ്. ` +
+                (strongSkill ? `${strongSkill} നിങ്ങളുടെ strongest skill ആണ്. ` : '') +
+                (weakSkill && weakSkill !== strongSkill ? `${weakSkill} develop ചെയ്യേണ്ടതുണ്ട്. ` : '') +
+                'Practice, workshops, projects എന്നിവ through skills improve ചെയ്യാം.';
+        }
+
+        case 'career': {
+            const { suggestedCareers } = normalizeCareers(data.aiInsights);
+            const topCareers = suggestedCareers.slice(0, 3).map(c => c.role);
+            const sectorNames = data.sectorMatches?.slice(0, 3).map(s => stripEmoji(s.name)) || [];
+            let text = '';
+            if (topCareers.length > 0) text += `${topCareers.join(', ')} career options നിങ്ങൾക്ക് suitable ആണ്. `;
+            else if (data.careerMatches && data.careerMatches.length > 0)
+                text += `${data.careerMatches.slice(0, 3).map(c => c.title).join(', ')} career options consider ചെയ്യുക. `;
+            if (sectorNames.length > 0) text += `${sectorNames.join(', ')} sectors explore ചെയ്യുക. `;
+            text += 'Internships, mentoring, online courses എന്നിവ try ചെയ്യുക.';
+            return text;
+        }
+
+        default:
+            return '';
+    }
+};
+
+const InlineMalayalam = ({ heading, body }: { heading: string; body: string }): React.ReactElement => {
+    return h(View, {
+        style: {
+            backgroundColor: '#e8f5e9',
+            padding: 8,
+            borderRadius: 4,
+            marginTop: 8,
+            marginBottom: 4,
+        }
+    },
+        h(Text, {
+            style: {
+                fontFamily: 'NotoSansMalayalam',
+                fontSize: 8,
+                fontWeight: 'bold' as any,
+                color: '#1b5e20',
+                marginBottom: 3,
+            }
+        }, heading),
+        h(Text, {
+            style: {
+                fontFamily: 'NotoSansMalayalam',
+                fontSize: 7,
+                color: '#2e7d32',
+                lineHeight: 1.5,
+            }
+        }, body)
+    );
+};
+
 const generateSectorText = (data: StudentReportData, lang: Lang = 'en'): string => {
     if (!data.sectorMatches || data.sectorMatches.length === 0) return '';
     const top = data.sectorMatches.slice(0, 3).map(s => stripEmoji(s.name));
@@ -264,6 +370,9 @@ const StudentPage1 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
             h(Text, { style: styles.sectionContent }, overviewText)
         ),
 
+        // Inline Malayalam — overview summary
+        h(InlineMalayalam, { heading: 'മൊത്തത്തിലുള്ള സംഗ്രഹം', body: generateInlineMl('overview', data) }),
+
         // Key Highlights row
         h(View, { style: { ...styles.section, padding: 8 } },
             h(Text, { style: sectionTitleStyle(lang) }, t('key_highlights', lang)),
@@ -356,6 +465,9 @@ const StudentPage2 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
             )
         ),
 
+        // Inline Malayalam — aptitude insight
+        h(InlineMalayalam, { heading: 'അഭിരുചി വിശകലനം', body: generateInlineMl('aptitude', data) }),
+
         // RIASEC Section
         data.riasecScores && h(View, { style: styles.section },
             h(Text, { style: sectionTitleStyle(lang) }, t('career_interest_riasec', lang)),
@@ -393,6 +505,9 @@ const StudentPage2 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                     `Your secondary interest in ${RIASEC_NAMES[data.riasecCode[1]] || ''} activities complements this by adding ${data.riasecCode[1] === 'R' ? 'practical skills' : data.riasecCode[1] === 'I' ? 'research capability' : data.riasecCode[1] === 'A' ? 'creative thinking' : data.riasecCode[1] === 'S' ? 'interpersonal skills' : data.riasecCode[1] === 'E' ? 'leadership ability' : 'organizational skills'}.` : '')
             )
         ),
+
+        // Inline Malayalam — RIASEC insight
+        data.riasecCode && h(InlineMalayalam, { heading: 'കരിയർ താൽപ്പര്യ വിശകലനം', body: generateInlineMl('riasec', data) }),
 
         h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
@@ -456,16 +571,30 @@ const StudentPage3 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                         ? t(`trait_${traitKey}_${levelKey}`, lang)
                         : `Your ${trait} score of ${info.score}/${info.maxScore} places you at the ${level.level} level.`;
 
-                    return h(View, { key: `ti-${trait}`, style: { marginBottom: 3, paddingLeft: 4 } },
+                    // Detailed insight keys
+                    const insightDesc = traitKey ? t(`trait_insight_${traitKey}_${levelKey}_description`, lang) : '';
+                    const insightCareer = traitKey ? t(`trait_insight_${traitKey}_${levelKey}_career`, lang) : '';
+                    const insightTips = traitKey ? t(`trait_insight_${traitKey}_${levelKey}_tips`, lang) : '';
+
+                    return h(View, { key: `ti-${trait}`, style: { marginBottom: 6, paddingLeft: 4 } },
                         h(View, { style: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 1 } },
                             h(View, { style: { width: 6, height: 6, borderRadius: 3, backgroundColor: level.color } }),
                             h(Text, { style: { fontSize: 8, fontWeight: 700, color: COLORS.PRIMARY_DARK } }, `${trait} (${info.score}/${info.maxScore} — ${level.level})`),
                         ),
-                        h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, lineHeight: 1.3, paddingLeft: 10 } }, traitInterp)
+                        h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, lineHeight: 1.3, paddingLeft: 10 } }, traitInterp),
+                        // Detailed insight
+                        insightDesc && h(View, { style: { paddingLeft: 10, marginTop: 2 } },
+                            h(Text, { style: { fontSize: 7, color: COLORS.TEXT_BODY, lineHeight: 1.3, fontStyle: 'italic' } }, insightDesc),
+                            insightCareer && h(Text, { style: { fontSize: 7, color: COLORS.PRIMARY, lineHeight: 1.3, marginTop: 1 } }, `Career connection: ${insightCareer}`),
+                            insightTips && h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, lineHeight: 1.3, marginTop: 1 } }, `Tips: ${insightTips}`)
+                        )
                     );
                 })
             )
         ),
+
+        // Inline Malayalam — personality insight
+        data.personalityScores && h(InlineMalayalam, { heading: 'വ്യക്തിത്വ വിശകലനം', body: generateInlineMl('personality', data) }),
 
         // Strengths & Growth Areas — two columns
         h(View, { style: styles.section },
@@ -534,6 +663,9 @@ const StudentPage4 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
             h(Text, { style: { ...styles.sectionContent, marginTop: 6 } }, readinessText)
         ),
 
+        // Inline Malayalam — readiness insight
+        data.readinessScores && h(InlineMalayalam, { heading: 'കരിയർ സന്നദ്ധത', body: generateInlineMl('readiness', data) }),
+
         // Sector Recommendations
         (ai?.sectorRecommendations?.topSectors || (data.sectorMatches && data.sectorMatches.length > 0)) && h(View, { style: styles.section },
             h(Text, { style: sectionTitleStyle(lang) }, t('sector_recommendations', lang)),
@@ -561,7 +693,7 @@ const StudentPage4 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                         h(View, { style: { flex: 1, height: 7, backgroundColor: '#e2e8f0', borderRadius: 3, marginRight: 6 } },
                             h(View, { style: { width: `${sector.matchScore}%`, height: 7, backgroundColor: getBarColor(sector.matchScore), borderRadius: 3 } })
                         ),
-                        h(Text, { style: { fontSize: 8, fontWeight: 700, color: COLORS.PRIMARY, width: 32, textAlign: 'right' } }, `${sector.matchScore}%`)
+                        h(Text, { style: { fontSize: 7, fontWeight: 700, color: COLORS.PRIMARY, width: 32, textAlign: 'right' } }, `${sector.matchScore}%`)
                     )
                 )
             ),
@@ -699,6 +831,9 @@ const StudentPage5 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                 `5. ${t('general_guidance_5', lang)}`
             )
         ),
+
+        // Inline Malayalam — career guidance insight
+        h(InlineMalayalam, { heading: 'കരിയർ മാർഗ്ഗനിർദ്ദേശം', body: generateInlineMl('career', data) }),
 
         h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
@@ -886,180 +1021,16 @@ const StudentPage6 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     );
 };
 
-// ─── MALAYALAM PAGES (combined cover + analysis in one wrapping Page) ────────
-/**
- * Parse the analysis_ml text into sections based on **header** markers.
- * Returns array of { header, body } objects.
- */
-const parseMalayalamSections = (text: string): { header: string; body: string }[] => {
-    if (!text) return [];
-    const parts = text.split(/\n*\*\*([^*]+)\*\*\n*/);
-    const sections: { header: string; body: string }[] = [];
-    for (let i = 1; i < parts.length; i += 2) {
-        const header = parts[i]?.trim();
-        const body = parts[i + 1]?.trim();
-        if (header && body) {
-            sections.push({ header, body });
-        }
-    }
-    return sections;
-};
-
-/**
- * Renders all Malayalam content (cover + analysis) in a single wrapping Page.
- * @react-pdf/renderer auto-paginates when content exceeds one A4 page,
- * and the fixed PageFooter repeats on every generated page.
- * This eliminates the large whitespace gap that occurred when the cover
- * was a separate page with only ~40% content.
- */
-const MalayalamPages = ({ data }: { data: StudentReportData }): React.ReactElement => {
-    const ai = data.aiInsights;
-    const performanceInfo = getPerformanceInfo(data.performanceLevel, 'ml');
-    const apt = data.aptitudeScores['overall'];
-    const readiness = data.readinessScores?.['overall'];
-    const analysisMl = ai?.analysis_ml || '';
-    const sections = parseMalayalamSections(analysisMl);
-
-    const renderSections = (secs: { header: string; body: string }[]) =>
-        secs.map((sec, i) =>
-            h(View, { key: `ml-sec-${i}`, style: { ...styles.section, marginBottom: 6 } },
-                h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam', fontSize: 11, textTransform: 'none' } }, sec.header),
-                ...sec.body.split('\n').map((para, pi) =>
-                    h(Text, {
-                        key: `ml-p-${i}-${pi}`,
-                        style: {
-                            fontSize: 9,
-                            lineHeight: 1.4,
-                            color: COLORS.TEXT_BODY,
-                            fontFamily: 'NotoSansMalayalam',
-                            marginBottom: 3,
-                        },
-                    }, para.trim())
-                )
-            )
-        );
-
-    return h(Page, { size: 'A4', style: getPageStyle('ml') },
-        // ── Cover content ──
-        // Header
-        h(View, { style: styles.header },
-            h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
-                'PRAGYA ',
-                h(Text, { style: { fontFamily: 'NotoSansMalayalam', fontSize: 16 } }, 'വിദ്യാർത്ഥി കരിയർ റിപ്പോർട്ട്')
-            ),
-            h(Text, { style: { ...styles.headerSubtitle, fontFamily: 'NotoSansMalayalam' } },
-                `${data.assessmentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} ന് തയ്യാറാക്കിയത്`
-            )
-        ),
-
-        // Persona card with title_ml
-        ai?.title_ml && h(View, { style: styles.personaCard },
-            h(Text, { style: { ...styles.personaTitle, fontFamily: 'NotoSansMalayalam', fontSize: 13 } }, ai.title_ml)
-        ),
-
-        // Student Profile
-        h(View, { style: { ...styles.section, paddingVertical: 8 } },
-            h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam' } }, 'വിദ്യാർത്ഥി പ്രൊഫൈൽ'),
-            h(View, { style: styles.profileGrid },
-                h(View, { style: styles.profileItem },
-                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_name', 'ml')),
-                    h(Text, { style: styles.profileValue }, data.studentName)
-                ),
-                ...(data.grade ? [h(View, { style: styles.profileItem, key: 'grade' },
-                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_grade', 'ml')),
-                    h(Text, { style: styles.profileValue }, data.grade)
-                )] : []),
-                ...(data.schoolName ? [h(View, { style: styles.profileItem, key: 'school' },
-                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_school', 'ml')),
-                    h(Text, { style: styles.profileValue }, data.schoolName)
-                )] : []),
-                ...(data.location ? [h(View, { style: styles.profileItem, key: 'loc' },
-                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_location', 'ml')),
-                    h(Text, { style: styles.profileValue }, data.location)
-                )] : []),
-                ...(data.riasecCode ? [h(View, { style: styles.profileItem, key: 'holland' },
-                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_holland_code', 'ml')),
-                    h(Text, { style: styles.profileValue },
-                        `${data.riasecCode} (${data.riasecCode.split('').map(c => RIASEC_NAMES[c] || c).join('-')})`
-                    )
-                )] : []),
-                h(View, { style: styles.profileItem, key: 'perf' },
-                    h(Text, { style: { ...styles.profileLabel, fontFamily: 'NotoSansMalayalam' } }, t('label_performance', 'ml')),
-                    h(Text, { style: { ...styles.profileValue, color: performanceInfo.color, fontWeight: 700, fontFamily: 'NotoSansMalayalam' } }, performanceInfo.label)
-                )
-            )
-        ),
-
-        // Performance Overview Rings
-        h(View, { style: { ...styles.section, padding: 10 } },
-            h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam' } }, t('performance_overview', 'ml')),
-            h(View, { style: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', marginTop: 2 } },
-                h(ScoreRing, { value: data.weightedScore, max: 100, label: t('label_overall_score', 'ml'), color: performanceInfo.color }),
-                h(View, { style: { alignItems: 'center', width: 84 } },
-                    h(View, {
-                        style: {
-                            backgroundColor: performanceInfo.color,
-                            paddingHorizontal: 12,
-                            paddingVertical: 6,
-                            borderRadius: 6,
-                        }
-                    },
-                        h(Text, { style: { fontSize: 10, fontWeight: 700, color: '#FFFFFF', textAlign: 'center', fontFamily: 'NotoSansMalayalam' } }, performanceInfo.label)
-                    ),
-                    h(Text, { style: { fontSize: 7, fontWeight: 600, color: COLORS.TEXT_DARK, textAlign: 'center', marginTop: 4, fontFamily: 'NotoSansMalayalam' } }, t('label_performance_level', 'ml'))
-                ),
-                apt && h(ScoreRing, { value: Math.round(apt.percentage), max: 100, label: t('label_aptitude', 'ml') }),
-                readiness && h(ScoreRing, { value: Math.round(readiness.percentage), max: 100, label: t('label_readiness', 'ml') }),
-                h(ScoreRing, { value: data.academicReadinessIndex, max: 100, label: t('label_academic_readiness', 'ml') })
-            )
-        ),
-
-        // Holland Code display
-        data.riasecCode && h(View, { style: { ...styles.section, padding: 8 } },
-            h(Text, { style: { ...styles.sectionTitle, fontFamily: 'NotoSansMalayalam' } }, t('label_holland_code', 'ml')),
-            h(HollandCodeDisplay, { code: data.riasecCode })
-        ),
-
-        // ── Analysis content ──
-        h(Text, { style: { ...styles.pageTitle, fontFamily: 'NotoSansMalayalam', textTransform: 'none', marginTop: 6 } },
-            'കരിയർ വിശകലനം'),
-
-        ...(sections.length > 0
-            ? renderSections(sections)
-            : [h(View, { key: 'ml-placeholder', style: styles.section },
-                h(Text, { style: { ...styles.sectionContent, fontFamily: 'NotoSansMalayalam' } },
-                    'മലയാളം വിശകലനം ലഭ്യമല്ല. ദയവായി ഇംഗ്ലീഷ് പതിപ്പ് പരിശോധിക്കുക.')
-            )]
-        ),
-
-        // Disclaimer
-        h(View, { style: { ...styles.disclaimer, marginTop: 8 } },
-            h(Text, { style: { ...styles.disclaimerTitle, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_title', 'ml')),
-            h(Text, { style: { ...styles.disclaimerText, fontFamily: 'NotoSansMalayalam' } }, t('disclaimer_student', 'ml'))
-        ),
-
-        // Branding footer
-        h(View, { style: { marginTop: 'auto', alignItems: 'center', paddingTop: 8 } },
-            h(Text, { style: { fontSize: 11, fontWeight: 700, color: COLORS.PRIMARY, marginBottom: 2, fontFamily: 'Nunito' } }, 'PRAGYA'),
-            h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam' } }, t('ecosystem_tagline', 'ml')),
-            h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, fontFamily: 'NotoSansMalayalam', marginTop: 2 } }, t('powered_by', 'ml'))
-        ),
-
-        h(PageFooter, { reportType: REPORT_TYPE, lang: 'ml' })
-    );
-};
-
 // ─── MAIN DOCUMENT ───────────────────────────────────────────────────────────
+
 export const StudentReportDocument = ({ data }: { data: StudentReportData }) => {
     return h(Document, {},
-        // English pages (1-6)
+        // English pages (1-6) with inline Malayalam insights
         h(StudentPage1, { data, lang: 'en' }),
         h(StudentPage2, { data, lang: 'en' }),
         h(StudentPage3, { data, lang: 'en' }),
         h(StudentPage4, { data, lang: 'en' }),
         h(StudentPage5, { data, lang: 'en' }),
         h(StudentPage6, { data, lang: 'en' }),
-        // Malayalam pages (auto-paginated single wrapping page)
-        h(MalayalamPages, { data }),
     );
 };

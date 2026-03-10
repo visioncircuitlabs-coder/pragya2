@@ -15,6 +15,12 @@ import {
     GraduationCap,
     Send,
     BookOpen,
+    CheckCircle2,
+    Clock,
+    Lightbulb,
+    Heart,
+    Sparkles,
+    Timer,
 } from 'lucide-react';
 
 interface Option {
@@ -46,6 +52,141 @@ interface UserAssessment {
     id: string;
     status: string;
     startedAt?: string;
+}
+
+// ─── Module classification for break detection ─────────────────────────────
+const APTITUDE_SECTIONS = new Set([
+    'Numerical Reasoning', 'Verbal Reasoning', 'Abstract-Fluid Reasoning',
+    'Spatial Ability', 'Mechanical Reasoning', 'Processing Speed & Accuracy',
+]);
+const RIASEC_SECTIONS = new Set([
+    'REALISTIC', 'INVESTIGATIVE', 'ARTISTIC', 'SOCIAL', 'ENTERPRISING', 'CONVENTIONAL',
+]);
+const PERSONALITY_SECTIONS = new Set([
+    'Responsibility & Discipline', 'Curiosity & Openness', 'Stress Tolerance',
+    'Social Interaction', 'Team vs Independent Style', 'Decision-Making Style',
+]);
+
+type ModuleName = 'APTITUDE' | 'INTEREST' | 'PERSONALITY' | 'SKILL';
+
+const getModule = (section: string): ModuleName => {
+    if (APTITUDE_SECTIONS.has(section)) return 'APTITUDE';
+    if (RIASEC_SECTIONS.has(section)) return 'INTEREST';
+    if (PERSONALITY_SECTIONS.has(section)) return 'PERSONALITY';
+    return 'SKILL';
+};
+
+interface BreakInfo {
+    type: '2min' | '5min';
+    key: string;
+    label: string;
+}
+
+/**
+ * Detects whether a mandatory break should trigger when moving forward.
+ * - 2-min break: between aptitude subsections
+ * - 5-min break: between main modules (Aptitude→Interest, Interest→Personality, Personality→Skill)
+ */
+const detectBreak = (fromIdx: number, toIdx: number, qs: Question[]): BreakInfo | null => {
+    if (toIdx <= fromIdx || !qs[fromIdx] || !qs[toIdx]) return null;
+
+    const fromSection = qs[fromIdx].section;
+    const toSection = qs[toIdx].section;
+    if (fromSection === toSection) return null;
+
+    const fromModule = getModule(fromSection);
+    const toModule = getModule(toSection);
+
+    if (fromModule !== toModule) {
+        const MODULE_LABELS: Record<ModuleName, string> = {
+            APTITUDE: 'Aptitude', INTEREST: 'Interest',
+            PERSONALITY: 'Personality Traits', SKILL: 'Skill',
+        };
+        return {
+            type: '5min',
+            key: `module:${fromModule}->${toModule}`,
+            label: `Great work finishing ${MODULE_LABELS[fromModule]}! Take a 5-minute break before starting ${MODULE_LABELS[toModule]}.`,
+        };
+    }
+
+    if (fromModule === 'APTITUDE') {
+        return {
+            type: '2min',
+            key: `aptitude:${fromSection}->${toSection}`,
+            label: `You just finished ${fromSection}. Take a short 2-minute break before moving on to ${toSection}.`,
+        };
+    }
+
+    return null;
+};
+
+// ─── Break Overlay Component ────────────────────────────────────────────────
+function BreakOverlay({ breakInfo, onContinue }: { breakInfo: BreakInfo; onContinue: () => void }) {
+    const totalSeconds = breakInfo.type === '5min' ? 5 * 60 : 2 * 60;
+    const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
+
+    useEffect(() => {
+        if (secondsLeft <= 0) return;
+        const timer = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
+        return () => clearInterval(timer);
+    }, [secondsLeft]);
+
+    const mins = Math.floor(secondsLeft / 60);
+    const secs = secondsLeft % 60;
+    const canContinue = secondsLeft <= 0;
+    const progress = ((totalSeconds - secondsLeft) / totalSeconds) * 100;
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-5 md:p-8 text-center">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Timer className="w-8 h-8 md:w-10 md:h-10 text-violet-600" />
+                </div>
+
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                    {breakInfo.type === '5min' ? 'Section Complete!' : 'Quick Break'}
+                </h2>
+                <p className="text-sm md:text-base text-gray-600 mb-6 leading-relaxed">
+                    {breakInfo.label}
+                </p>
+
+                {/* Timer Display */}
+                <div className="mb-6">
+                    <div className="text-4xl md:text-5xl font-bold text-violet-600 font-mono mb-3">
+                        {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+                    </div>
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-1000"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Tips during break */}
+                <div className="bg-violet-50 rounded-xl p-4 mb-6 text-left">
+                    <p className="text-sm text-violet-700 font-medium mb-2">While you wait:</p>
+                    <ul className="text-xs text-violet-600 space-y-1">
+                        <li>- Take a few deep breaths</li>
+                        <li>- Look away from the screen for a moment</li>
+                        <li>- Stretch your hands and shoulders</li>
+                    </ul>
+                </div>
+
+                <button
+                    onClick={onContinue}
+                    disabled={!canContinue}
+                    className={`w-full py-3 rounded-xl font-semibold text-lg transition-all ${
+                        canContinue
+                            ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                >
+                    {canContinue ? 'Continue Assessment' : 'Please wait...'}
+                </button>
+            </div>
+        </div>
+    );
 }
 
 // Section information for better UX
@@ -98,6 +239,11 @@ export default function StudentsAssessmentPage() {
     const [submitting, setSubmitting] = useState(false);
     const [showIntro, setShowIntro] = useState(true);
 
+    // Break timer state
+    const [completedBreaks, setCompletedBreaks] = useState<Set<string>>(new Set());
+    const [activeBreak, setActiveBreak] = useState<BreakInfo | null>(null);
+    const [pendingNavIndex, setPendingNavIndex] = useState<number | null>(null);
+
     // Fetch assessment and questions
     const fetchAssessment = useCallback(async () => {
         try {
@@ -135,7 +281,6 @@ export default function StudentsAssessmentPage() {
                 }
             } catch {
                 // No existing results, continue loading assessment
-                console.log('No existing results found');
             }
 
             // Get questions
@@ -228,20 +373,54 @@ export default function StudentsAssessmentPage() {
         }
     }, [authLoading, isAuthenticated, user, fetchAssessment, router]);
 
-    // Handle answer selection
+    // Handle answer selection — auto-save to server
     const handleSelectOption = (questionId: string, optionId: string) => {
         setAnswers((prev) => ({
             ...prev,
             [questionId]: optionId,
         }));
-    };
 
-    // Navigate questions
-    const goToQuestion = (index: number) => {
-        if (index >= 0 && index < questions.length) {
-            setCurrentQuestionIndex(index);
+        // Fire-and-forget save to server so progress persists across sessions
+        if (userAssessment?.id) {
+            api.post('/assessments/save-progress', {
+                userAssessmentId: userAssessment.id,
+                questionId,
+                selectedOptionId: optionId,
+                currentQuestionIndex,
+            }).catch((err) => {
+                console.warn('Auto-save failed:', err);
+            });
         }
     };
+
+    // Navigate questions (with break detection for forward navigation)
+    const goToQuestion = useCallback((index: number) => {
+        if (index < 0 || index >= questions.length) return;
+
+        // Only check breaks on forward navigation
+        if (index > currentQuestionIndex && questions.length > 0) {
+            const breakInfo = detectBreak(currentQuestionIndex, index, questions);
+            if (breakInfo && !completedBreaks.has(breakInfo.key)) {
+                setActiveBreak(breakInfo);
+                setPendingNavIndex(index);
+                return; // Don't navigate yet — show break overlay
+            }
+        }
+
+        setCurrentQuestionIndex(index);
+    }, [currentQuestionIndex, questions, completedBreaks]);
+
+    // Called when break timer finishes and user clicks Continue
+    const handleBreakComplete = useCallback(() => {
+        if (activeBreak) {
+            setCompletedBreaks((prev) => new Set([...prev, activeBreak.key]));
+        }
+        setActiveBreak(null);
+        if (pendingNavIndex !== null) {
+            setCurrentQuestionIndex(pendingNavIndex);
+            setPendingNavIndex(null);
+        }
+    }, [activeBreak, pendingNavIndex]);
 
     // Submit assessment
     const handleSubmit = async () => {
@@ -330,73 +509,105 @@ export default function StudentsAssessmentPage() {
     // (see fetchAssessment and handleSubmit above)
     // Intro/Welcome Screen
     if (showIntro && assessment) {
+        const SESSION_CARDS = [
+            { num: '1', label: 'Aptitude', questions: 60, icon: <Brain className="w-6 h-6" />, color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50' },
+            { num: '2', label: 'Interest', questions: 48, icon: <Heart className="w-6 h-6" />, color: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50' },
+            { num: '3', label: 'Personality Traits', questions: 36, icon: <Sparkles className="w-6 h-6" />, color: 'from-purple-500 to-violet-600', bg: 'bg-purple-50' },
+            { num: '4', label: 'Skill', questions: 36, icon: <Target className="w-6 h-6" />, color: 'from-orange-500 to-amber-600', bg: 'bg-orange-50' },
+        ];
+
         return (
-            <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 py-12 px-4">
+            <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 py-8 md:py-12 px-4">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
-                    <div className="text-center mb-10">
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-lg mb-6">
-                            <GraduationCap className="w-10 h-10 text-white" />
+                    <div className="text-center mb-8 md:mb-10">
+                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-lg mb-5">
+                            <GraduationCap className="w-8 h-8 md:w-10 md:h-10 text-white" />
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                            {assessment.title}
+                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
+                            Discover Your True Career Direction
                         </h1>
-                        <p className="text-gray-600 max-w-2xl mx-auto">
-                            Discover your aptitudes and find the career path that&apos;s right for you
+                        <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                            Choosing the right career should not be based only on marks, trends, or others&apos; opinions.
+                            The PRAGYA Career Assessment helps you understand your natural strengths, interests, personality,
+                            and future readiness using a scientifically designed evaluation system. Instead of guessing your future,
+                            you will gain clear insights about the paths that may suit you best.
                         </p>
                     </div>
 
-                    {/* Assessment Info Card */}
-                    <div className="bg-white rounded-3xl shadow-xl p-6 md:p-10 mb-8">
-                        <div className="grid md:grid-cols-3 gap-6 mb-8">
-                            <div className="text-center p-4 bg-violet-50 rounded-xl">
-                                <BookOpen className="w-8 h-8 text-violet-600 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{assessment.totalQuestions}</p>
-                                <p className="text-sm text-gray-600">Questions</p>
-                            </div>
-                            <div className="text-center p-4 bg-purple-50 rounded-xl">
-                                <Target className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">{sections.length}</p>
-                                <p className="text-sm text-gray-600">Sections</p>
-                            </div>
-                            <div className="text-center p-4 bg-indigo-50 rounded-xl">
-                                <Brain className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                                <p className="text-2xl font-bold text-gray-900">No Limit</p>
-                                <p className="text-sm text-gray-600">Time</p>
-                            </div>
-                        </div>
-
-                        {/* Sections Preview */}
-                        <h3 className="font-semibold text-gray-900 mb-4">Assessment Sections:</h3>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                            {sections.map((section) => {
-                                const info = SECTION_INFO[section];
-                                return (
-                                    <div
-                                        key={section}
-                                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-                                    >
-                                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${info?.color || 'from-gray-400 to-gray-500'} flex items-center justify-center text-white`}>
-                                            {info?.icon || '📝'}
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900 text-sm">{section}</p>
-                                            <p className="text-xs text-gray-500">{info?.description || ''}</p>
-                                        </div>
+                    <div className="bg-white rounded-3xl shadow-xl p-5 md:p-10 mb-8">
+                        {/* What This Assessment Helps You Discover */}
+                        <div className="mb-8">
+                            <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                                <Lightbulb className="w-5 h-5 text-violet-600" />
+                                What This Assessment Helps You Discover
+                            </h3>
+                            <div className="space-y-3">
+                                {[
+                                    'Your natural thinking and problem-solving strengths',
+                                    'The type of careers and work environments you may enjoy',
+                                    'Your learning style and work preferences',
+                                    'Your readiness for future careers and skills',
+                                    'Career pathways that may match your profile',
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                        <p className="text-gray-700 text-sm md:text-base">{item}</p>
                                     </div>
-                                );
-                            })}
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Instructions */}
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
-                            <h4 className="font-semibold text-amber-800 mb-2">📋 Instructions</h4>
-                            <ul className="text-sm text-amber-700 space-y-1">
-                                <li>• Read each question carefully before answering</li>
-                                <li>• You can navigate between questions using the navigation panel</li>
-                                <li>• There is no time limit - take your time</li>
-                                <li>• Answer all questions before submitting</li>
-                                <li>• Questions are available in English and Malayalam</li>
+                        {/* Assessment Overview — 4 Session Cards */}
+                        <div className="mb-8">
+                            <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                                <BookOpen className="w-5 h-5 text-violet-600" />
+                                Assessment Overview
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
+                                {SESSION_CARDS.map((card) => (
+                                    <div key={card.num} className={`${card.bg} rounded-xl p-4 text-center`}>
+                                        <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center text-white mx-auto mb-2`}>
+                                            {card.icon}
+                                        </div>
+                                        <p className="font-semibold text-gray-900 text-sm md:text-base">{card.label}</p>
+                                        <p className="text-xs md:text-sm text-gray-500">{card.questions} questions</p>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg px-4 py-3">
+                                <Clock className="w-4 h-4 flex-shrink-0" />
+                                <p><span className="font-medium text-gray-700">Estimated Time:</span> No time limits. You can complete section by section with breaks in between.</p>
+                            </div>
+                        </div>
+
+                        {/* Important Instructions */}
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 md:p-5 mb-8">
+                            <h4 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5" />
+                                Important Instructions
+                            </h4>
+                            <ul className="text-sm text-amber-700 space-y-2">
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold">1.</span>
+                                    <span>Read each question carefully and choose the answer that feels most natural to you.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold">2.</span>
+                                    <span>There are no right or wrong answers — this is about understanding you.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold">3.</span>
+                                    <span>You will get short breaks between sections. Use them to relax before continuing.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold">4.</span>
+                                    <span>Answer all questions before submitting. You can go back to previous questions.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold">5.</span>
+                                    <span>Questions are available in both English and Malayalam.</span>
+                                </li>
                             </ul>
                         </div>
 
@@ -435,7 +646,7 @@ export default function StudentsAssessmentPage() {
                             </div>
                         )}
                         <div>
-                            <h1 className="text-lg font-bold text-gray-900">{currentQuestion?.section}</h1>
+                            <h1 className="text-base md:text-lg font-bold text-gray-900 truncate max-w-[180px] sm:max-w-none">{currentQuestion?.section}</h1>
                             <p className="text-sm text-gray-500">
                                 Question {currentQuestionIndex + 1} of {questions.length}
                             </p>
@@ -458,7 +669,7 @@ export default function StudentsAssessmentPage() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+            <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 md:py-8">
                 {currentQuestion && (
                     <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
                         {/* Question Text */}
@@ -467,7 +678,7 @@ export default function StudentsAssessmentPage() {
                                 {currentQuestion.text}
                             </h2>
                             {currentQuestion.textMl && (
-                                <p className="mt-2 text-lg text-gray-600 leading-relaxed" style={{ fontFamily: 'Noto Sans Malayalam, Manjari, sans-serif' }}>
+                                <p className="mt-2 text-base md:text-lg text-gray-600 leading-relaxed" style={{ fontFamily: 'Noto Sans Malayalam, Manjari, sans-serif' }}>
                                     {currentQuestion.textMl}
                                 </p>
                             )}
@@ -514,30 +725,6 @@ export default function StudentsAssessmentPage() {
                     </div>
                 )}
 
-                {/* Question Navigator */}
-                <div className="mt-6 bg-white rounded-xl shadow p-4">
-                    <p className="text-sm text-gray-500 mb-3">Jump to question:</p>
-                    <div className="flex flex-wrap gap-2">
-                        {questions.map((q, idx) => {
-                            const isAnswered = answers[q.id];
-                            const isCurrent = idx === currentQuestionIndex;
-                            return (
-                                <button
-                                    key={q.id}
-                                    onClick={() => goToQuestion(idx)}
-                                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${isCurrent
-                                        ? 'bg-violet-600 text-white shadow-lg'
-                                        : isAnswered
-                                            ? 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
-                                >
-                                    {idx + 1}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
             </main>
 
             {/* Footer Navigation */}
@@ -546,26 +733,27 @@ export default function StudentsAssessmentPage() {
                     <button
                         onClick={() => goToQuestion(currentQuestionIndex - 1)}
                         disabled={currentQuestionIndex === 0}
-                        className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                     >
                         <ChevronLeft className="w-5 h-5" />
-                        Previous
+                        <span className="hidden sm:inline">Previous</span>
                     </button>
 
-                    <div className="text-sm text-gray-500">
-                        {answeredCount} of {questions.length} answered
+                    <div className="text-xs sm:text-sm text-gray-500 text-center min-w-0">
+                        {answeredCount}/{questions.length}
+                        <span className="hidden sm:inline"> answered</span>
                     </div>
 
                     {currentQuestionIndex === questions.length - 1 ? (
                         <button
                             onClick={handleSubmit}
                             disabled={submitting || answeredCount < questions.length}
-                            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:from-violet-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                            className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:from-violet-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shrink-0"
                         >
                             {submitting ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Submitting...
+                                    <span className="hidden sm:inline">Submitting...</span>
                                 </>
                             ) : (
                                 <>
@@ -577,7 +765,7 @@ export default function StudentsAssessmentPage() {
                     ) : (
                         <button
                             onClick={() => goToQuestion(currentQuestionIndex + 1)}
-                            className="flex items-center gap-2 px-4 py-2 text-violet-600 hover:text-violet-800 font-semibold"
+                            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-violet-600 hover:text-violet-800 font-semibold shrink-0"
                         >
                             Next
                             <ChevronRight className="w-5 h-5" />
@@ -585,6 +773,11 @@ export default function StudentsAssessmentPage() {
                     )}
                 </div>
             </footer>
+
+            {/* Break Timer Overlay */}
+            {activeBreak && (
+                <BreakOverlay breakInfo={activeBreak} onContinue={handleBreakComplete} />
+            )}
         </div>
     );
 }
