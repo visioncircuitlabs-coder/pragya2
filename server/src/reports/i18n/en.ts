@@ -73,6 +73,127 @@ export const en: Record<string, string> = {
     trait_responsibility_emerging:
         'Developing structured routines and accountability systems will help you build stronger discipline over time.',
 
+    // ─── Trait Detailed Insights (Student Page 3) ───────────────────────────────
+    // Responsibility & Discipline
+    trait_insight_responsibility_strong_description:
+        'You take ownership of your commitments and follow through reliably.',
+    trait_insight_responsibility_strong_career:
+        'Valued in project management, medicine, law, finance, engineering.',
+    trait_insight_responsibility_strong_tips:
+        'Take on leadership roles. Mentor others in time management.',
+    trait_insight_responsibility_moderate_description:
+        'You generally meet responsibilities but may struggle with consistency.',
+    trait_insight_responsibility_moderate_career:
+        'Strengthening helps in accounting, teaching, administration.',
+    trait_insight_responsibility_moderate_tips:
+        'Use a daily planner. Set small goals. Complete less exciting tasks first.',
+    trait_insight_responsibility_emerging_description:
+        'Still building habits around discipline and responsibility.',
+    trait_insight_responsibility_emerging_career:
+        'Creative careers (design, startups) suit now; discipline opens more.',
+    trait_insight_responsibility_emerging_tips:
+        'Start with one habit. Use reminders. Find an accountability partner.',
+
+    // Stress Tolerance
+    trait_insight_stress_strong_description:
+        'Handle pressure well, stay calm, think clearly under stress.',
+    trait_insight_stress_strong_career:
+        'Emergency services, healthcare, finance, leadership roles.',
+    trait_insight_stress_strong_tips:
+        'Continue building resilience. Share coping strategies with peers.',
+    trait_insight_stress_moderate_description:
+        'Manage stress reasonably; may feel overwhelmed when pressures pile up.',
+    trait_insight_stress_moderate_career:
+        'Can handle moderately demanding roles; building helps for leadership.',
+    trait_insight_stress_moderate_tips:
+        'Practice mindfulness. Break large tasks into smaller steps. Exercise regularly.',
+    trait_insight_stress_emerging_description:
+        'Stressful situations can feel overwhelming.',
+    trait_insight_stress_emerging_career:
+        'Predictable environments: research, library science, writing.',
+    trait_insight_stress_emerging_tips:
+        'Learn breathing techniques. Identify stress triggers. Seek support when needed.',
+
+    // Curiosity & Openness
+    trait_insight_curiosity_strong_description:
+        'Love exploring new ideas, asking questions, drawn to new experiences.',
+    trait_insight_curiosity_strong_career:
+        'Research, science, journalism, design, technology, innovation.',
+    trait_insight_curiosity_strong_tips:
+        'Pursue interdisciplinary learning. Join innovation challenges and hackathons.',
+    trait_insight_curiosity_moderate_description:
+        'Open to new things but also appreciate familiar approaches.',
+    trait_insight_curiosity_moderate_career:
+        'Teaching, healthcare, business, IT support.',
+    trait_insight_curiosity_moderate_tips:
+        'Try one new activity monthly. Read outside your usual topics. Ask more questions.',
+    trait_insight_curiosity_emerging_description:
+        'Prefer what is familiar, hesitant to try new things.',
+    trait_insight_curiosity_emerging_career:
+        'Administration, operations, manufacturing.',
+    trait_insight_curiosity_emerging_tips:
+        'Start small with new experiences. Explore one new topic each week.',
+
+    // Social Interaction
+    trait_insight_social_strong_description:
+        'Comfortable meeting people, working in groups, expressing thoughts.',
+    trait_insight_social_strong_career:
+        'Sales, counseling, HR, teaching, public relations, management.',
+    trait_insight_social_strong_tips:
+        'Develop public speaking skills. Lead group activities and discussions.',
+    trait_insight_social_moderate_description:
+        'Work well with others but also value alone time.',
+    trait_insight_social_moderate_career:
+        'Software development, analysis, consulting.',
+    trait_insight_social_moderate_tips:
+        'Practice networking at events. Join a club or volunteer group.',
+    trait_insight_social_emerging_description:
+        'Social situations uncomfortable, prefer working alone.',
+    trait_insight_social_emerging_career:
+        'Programming, research, data analysis, writing.',
+    trait_insight_social_emerging_tips:
+        'Start with small group interactions. Practice conversations with trusted friends.',
+
+    // Team vs Independent Style
+    trait_insight_team_strong_description:
+        'Adapt easily between solo and team work.',
+    trait_insight_team_strong_career:
+        'Consulting, engineering, creative agencies, management.',
+    trait_insight_team_strong_tips:
+        'Take on hybrid roles. Mentor others on collaboration skills.',
+    trait_insight_team_moderate_description:
+        'Slight preference for one mode but can adapt.',
+    trait_insight_team_moderate_career:
+        'Most roles; knowing preference helps alignment.',
+    trait_insight_team_moderate_tips:
+        'Reflect on when you perform best. Communicate work style preferences to teams.',
+    trait_insight_team_emerging_description:
+        'Strongly prefer one style, struggle with the other.',
+    trait_insight_team_emerging_career:
+        'Solo preference: research, writing, data. Team: events, teaching, sales.',
+    trait_insight_team_emerging_tips:
+        'Practice your weaker mode in low-pressure settings. Build flexibility gradually.',
+
+    // Decision-Making Style
+    trait_insight_decision_strong_description:
+        'Make thoughtful decisions, commit confidently.',
+    trait_insight_decision_strong_career:
+        'Leadership, entrepreneurship, medicine, law.',
+    trait_insight_decision_strong_tips:
+        'Seek higher-responsibility roles. Help others develop decision-making skills.',
+    trait_insight_decision_moderate_description:
+        'Approach decisions carefully, may take extra time.',
+    trait_insight_decision_moderate_career:
+        'Analytical roles: research, consulting, finance.',
+    trait_insight_decision_moderate_tips:
+        'Set decision deadlines. Use pros/cons lists. Trust your analysis more.',
+    trait_insight_decision_emerging_description:
+        'Making decisions feels stressful, may avoid or delay.',
+    trait_insight_decision_emerging_career:
+        'Roles with clear guidelines: administration, operations, support.',
+    trait_insight_decision_emerging_tips:
+        'Start with small decisions. Use a framework. Reflect on past good choices.',
+
     // ─── Career Clarity Descriptions (Student Page 4) ─────────────────────────
     clarity_good_title: 'Good Career Direction',
     clarity_good_text:
@@ -133,7 +254,7 @@ export const en: Record<string, string> = {
     perf_needs_improvement: 'Needs Improvement',
 
     // ─── Aptitude & RIASEC Page ─────────────────────────────────────────────
-    page_aptitude_career: 'Aptitude & Career Interests',
+    page_aptitude_career: 'Aptitude & Interests',
     aptitude_test_results: 'Aptitude Test Results',
     label_overall_aptitude_score: 'Overall Aptitude Score',
     label_correct_out_of_questions: 'correct out of',
@@ -142,7 +263,7 @@ export const en: Record<string, string> = {
     level_strong: 'Strong',
     level_average: 'Average',
     level_needs_practice: 'Needs Practice',
-    career_interest_riasec: 'Career Interest Profile (RIASEC)',
+    career_interest_riasec: 'Interest Profile (RIASEC)',
     label_your_holland_code: 'Your Holland Code:',
 
     // ─── Personality & Strengths Page ───────────────────────────────────────
@@ -154,8 +275,8 @@ export const en: Record<string, string> = {
     areas_for_growth: 'Areas for Growth',
 
     // ─── Readiness & Sector Page ────────────────────────────────────────────
-    page_readiness_sector: 'Career Readiness & Sector Analysis',
-    skill_career_readiness: 'Skill & Career Readiness',
+    page_readiness_sector: 'Readiness & Sector Analysis',
+    skill_career_readiness: 'Skill & Readiness',
     label_overall_readiness: 'Overall Readiness Score',
     sector_recommendations: 'Sector Recommendations',
     recommended_streams: 'Recommended Academic Streams',

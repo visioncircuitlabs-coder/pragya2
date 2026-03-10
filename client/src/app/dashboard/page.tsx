@@ -142,7 +142,7 @@ export default function DashboardPage() {
             <div className="max-w-7xl mx-auto px-4 lg:px-8">
 
                 {/* Welcome Section */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-8 overflow-hidden relative">
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-8 mb-8 overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
                     <div className="relative z-10">
@@ -264,22 +264,23 @@ export default function DashboardPage() {
                                 </h3>
                                 <div className="space-y-3">
                                     {completedAssessments.map((assessment) => (
-                                        <div key={assessment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                            <div>
-                                                <p className="font-medium text-gray-900">
+                                        <div key={assessment.id} className="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-xl">
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-gray-900 truncate">
                                                     {user.role === 'STUDENT' ? 'Student Aptitude Assessment' : 'Pragya Assessment'}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-gray-500 truncate">
                                                     Completed {assessment.completedAt && new Date(assessment.completedAt).toLocaleDateString()}
                                                     {assessment.totalScore !== undefined && ` • Score: ${assessment.totalScore.toFixed(0)}%`}
                                                 </p>
                                             </div>
                                             <Link
                                                 href={`/assessment/results/${assessment.id}`}
-                                                className="flex items-center gap-2 px-4 py-2 bg-[#0e6957] text-white rounded-lg font-medium hover:bg-[#0a4f41] transition-colors"
+                                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#0e6957] text-white rounded-lg font-medium hover:bg-[#0a4f41] transition-colors shrink-0 whitespace-nowrap text-sm sm:text-base"
                                             >
                                                 <Eye className="w-4 h-4" />
-                                                View Results
+                                                <span className="hidden sm:inline">View Results</span>
+                                                <span className="sm:hidden">View</span>
                                             </Link>
                                         </div>
                                     ))}

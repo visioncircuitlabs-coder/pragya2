@@ -33,6 +33,7 @@ import {
     Award,
     ArrowLeft,
     Sparkles,
+    ChevronDown,
 } from 'lucide-react';
 
 
@@ -60,6 +61,118 @@ const RIASEC_NAMES: Record<string, string> = {
     S: 'Social',
     E: 'Enterprising',
     C: 'Conventional',
+};
+
+// ─── Personality Trait Insights (Task 7) ─────────────────────────────────────
+interface TraitInsight {
+    description: string;
+    careerConnection: string;
+    tips: string[];
+}
+
+const PERSONALITY_INSIGHTS: Record<string, Record<string, TraitInsight>> = {
+    'Responsibility & Discipline': {
+        Strong: {
+            description: 'You take ownership of your commitments and follow through reliably. People trust you to get things done on time and do them well.',
+            careerConnection: 'This trait is highly valued in careers like project management, medicine, law, finance, and engineering — fields where reliability and precision matter.',
+            tips: ['Take on leadership roles in group projects to build on this strength', 'Mentor others in time management and organization'],
+        },
+        Moderate: {
+            description: 'You generally meet your responsibilities but may occasionally struggle with consistency, especially under pressure or with tasks you find less interesting.',
+            careerConnection: 'Most careers welcome this level of discipline. Strengthening it further will help in structured roles like accounting, teaching, or administration.',
+            tips: ['Use a simple daily planner or to-do list', 'Set small, specific goals and track your progress', 'Practice completing less exciting tasks before moving to fun ones'],
+        },
+        Emerging: {
+            description: 'You are still building habits around discipline and responsibility. It can be hard to stay consistent with commitments.',
+            careerConnection: 'Creative and flexible careers (design, content creation, startups) may suit you now, but building discipline opens doors to many more fields.',
+            tips: ['Start with one small habit — like finishing homework at the same time daily', 'Use reminders and alarms to build routines', 'Find an accountability partner'],
+        },
+    },
+    'Stress Tolerance': {
+        Strong: {
+            description: 'You handle pressure well and stay calm even in difficult situations. You can think clearly under stress and bounce back from setbacks.',
+            careerConnection: 'Ideal for high-pressure careers: emergency services, healthcare, finance, competitive fields, and leadership roles.',
+            tips: ['Channel this strength into challenging academic competitions', 'Help peers develop their stress management skills'],
+        },
+        Moderate: {
+            description: 'You manage stress reasonably well in most situations but may feel overwhelmed when multiple pressures pile up at once.',
+            careerConnection: 'You can handle moderately demanding roles. Building this trait will prepare you for leadership positions and competitive environments.',
+            tips: ['Practice deep breathing or short meditation when feeling overwhelmed', 'Break big tasks into smaller steps', 'Build a support network you can lean on'],
+        },
+        Emerging: {
+            description: 'Stressful situations can feel overwhelming, and you may struggle to stay focused or positive when things get tough.',
+            careerConnection: 'Consider careers with more predictable environments initially — research, library science, writing — while you build resilience.',
+            tips: ['Learn one stress-relief technique (box breathing, journaling, or walking)', 'Talk to someone you trust when feeling overwhelmed', 'Focus on what you CAN control, not what you cannot'],
+        },
+    },
+    'Curiosity & Openness': {
+        Strong: {
+            description: 'You love exploring new ideas, asking questions, and learning about different perspectives. You are naturally drawn to new experiences.',
+            careerConnection: 'Perfect for research, science, journalism, design, technology, and any innovation-driven career.',
+            tips: ['Explore subjects outside your comfort zone', 'Read widely — books, articles, documentaries on topics you know nothing about'],
+        },
+        Moderate: {
+            description: 'You are open to new things but also appreciate familiar approaches. You explore when interested but don\'t always seek novelty.',
+            careerConnection: 'Works well in careers that blend routine with learning — teaching, healthcare, business, and IT support.',
+            tips: ['Try one new activity or hobby each month', 'Ask "why?" more often in class discussions', 'Watch documentaries or podcasts on unfamiliar topics'],
+        },
+        Emerging: {
+            description: 'You tend to prefer what is familiar and may be hesitant to try new things or consider different viewpoints.',
+            careerConnection: 'Roles with clear structures (administration, operations, manufacturing) are a natural fit, but building curiosity will unlock more options.',
+            tips: ['Start small — try a new food, a new route to school, or a new genre of music', 'Ask one question in every class or conversation', 'Join a club or group that exposes you to new ideas'],
+        },
+    },
+    'Social Interaction': {
+        Strong: {
+            description: 'You are comfortable meeting new people, working in groups, and expressing your thoughts. Social situations energize rather than drain you.',
+            careerConnection: 'Great for careers involving people: sales, counseling, HR, teaching, public relations, and management.',
+            tips: ['Take on roles that involve public speaking or team coordination', 'Consider volunteering for community events to expand your network'],
+        },
+        Moderate: {
+            description: 'You can work well with others but also value your alone time. You are selective about social situations and comfortable in both settings.',
+            careerConnection: 'Balanced for most careers. Roles like software development, analysis, and consulting offer a mix of solo and team work.',
+            tips: ['Practice introducing yourself to new people at events', 'Join a debate club or discussion group to build confidence', 'Work on active listening skills'],
+        },
+        Emerging: {
+            description: 'Social situations can feel uncomfortable, and you may prefer working alone. You might find it hard to speak up in groups.',
+            careerConnection: 'Careers with limited social demands (programming, research, data analysis, writing) can work well while you build confidence.',
+            tips: ['Start with one-on-one conversations rather than large groups', 'Practice speaking up once in every group discussion', 'Join an online community around something you enjoy'],
+        },
+    },
+    'Team vs Independent Style': {
+        Strong: {
+            description: 'You adapt easily between working alone and working with others. You understand when to collaborate and when to focus independently.',
+            careerConnection: 'This flexibility is valued everywhere — consulting, engineering, creative agencies, and management all need people who can switch modes.',
+            tips: ['Volunteer for both solo projects and group assignments', 'Help bridge gaps between team members with different work styles'],
+        },
+        Moderate: {
+            description: 'You have a slight preference for one mode over the other but can adapt when needed. Most situations work fine for you.',
+            careerConnection: 'Suitable for most roles. Knowing your preference (team or solo) helps you choose roles that align better with your natural style.',
+            tips: ['Identify which mode you prefer and lean into it for important tasks', 'Practice the mode you find harder in low-stakes situations', 'Communicate your preferences to teammates'],
+        },
+        Emerging: {
+            description: 'You strongly prefer one working style and may struggle when forced into the other. This can limit your flexibility.',
+            careerConnection: 'Identify your preference: if solo, consider research, writing, or data work. If team-oriented, consider event management, teaching, or sales.',
+            tips: ['If you prefer solo work: try contributing one idea in every team meeting', 'If you prefer teamwork: practice completing one task entirely on your own', 'Reflect on what makes the other style uncomfortable and address it gradually'],
+        },
+    },
+    'Decision-Making Style': {
+        Strong: {
+            description: 'You make thoughtful decisions and commit to your choices with confidence. You weigh options well and don\'t second-guess yourself often.',
+            careerConnection: 'Essential for leadership, entrepreneurship, medicine, law, and any role requiring quick, confident judgment calls.',
+            tips: ['Take on decision-making roles in group settings', 'Practice making faster decisions on small things to build speed'],
+        },
+        Moderate: {
+            description: 'You approach decisions carefully and usually arrive at good choices, but may take extra time or seek multiple opinions before committing.',
+            careerConnection: 'Good for analytical roles (research, consulting, finance) where careful deliberation is an asset.',
+            tips: ['Set time limits for decisions — e.g., decide within 5 minutes for small choices', 'Write down pros and cons to speed up your process', 'Trust your first instinct more often on low-stakes decisions'],
+        },
+        Emerging: {
+            description: 'Making decisions can feel stressful. You may avoid choosing, delay, or feel regret after deciding.',
+            careerConnection: 'Roles with clear guidelines and procedures (administration, operations, support roles) can reduce decision stress while you build this skill.',
+            tips: ['Start by making small decisions quickly — what to eat, what to wear', 'Accept that no decision is perfect — a good-enough choice now beats a perfect choice never', 'Ask: "What\'s the worst that could happen?" to put decisions in perspective'],
+        },
+    },
 };
 
 interface PerformanceDimension {
@@ -179,6 +292,7 @@ export default function ResultsPage() {
     const [error, setError] = useState('');
     const [result, setResult] = useState<AssessmentResult | null>(null);
     const [downloading, setDownloading] = useState(false);
+    const [expandedTraits, setExpandedTraits] = useState<Set<string>>(new Set());
 
     // Fetch result
     useEffect(() => {
@@ -407,26 +521,28 @@ export default function ResultsPage() {
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
                         onClick={() => router.push('/dashboard')}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                        className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-gray-900 shrink-0"
                     >
                         <ArrowLeft className="w-5 h-5" />
-                        <span className="font-medium">Back to Dashboard</span>
+                        <span className="font-medium hidden sm:inline">Back to Dashboard</span>
+                        <span className="font-medium sm:hidden">Back</span>
                     </button>
 
                     <button
                         onClick={handleDownload}
                         disabled={downloading}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#0e6957] text-white rounded-xl font-semibold hover:bg-[#0a4f41] disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-[#0e6957] text-white rounded-xl font-semibold hover:bg-[#0a4f41] disabled:opacity-50 transition-colors shrink-0 text-sm sm:text-base"
                     >
                         {downloading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                Generating...
+                                <span className="hidden sm:inline">Generating...</span>
                             </>
                         ) : (
                             <>
                                 <Download className="w-5 h-5" />
-                                Download PDF
+                                <span className="hidden sm:inline">Download PDF</span>
+                                <span className="sm:hidden">PDF</span>
                             </>
                         )}
                     </button>
@@ -438,8 +554,8 @@ export default function ResultsPage() {
                 <div className="text-center mb-10">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                         {isStudentAssessment
-                            ? "PRAGYA Student Career Assessment Results"
-                            : "PRAGYA Employability Assessment Results"
+                            ? "Your Career Assessment Results"
+                            : "Your Employability Results"
                         }
                     </h1>
                     <p className="text-gray-600">
@@ -468,7 +584,7 @@ export default function ResultsPage() {
                         <div className="flex-shrink-0">
                             <div className="w-24 h-24 rounded-full bg-white/20 flex flex-col items-center justify-center border-4 border-white/30">
                                 <span className="text-3xl font-bold">{result.totalScore?.toFixed(0) || 0}</span>
-                                <span className="text-[10px] text-emerald-200 uppercase tracking-wider">Overall %</span>
+                                <span className="text-[10px] text-emerald-200 uppercase tracking-wider">Score</span>
                             </div>
                         </div>
                     </div>
@@ -499,60 +615,60 @@ export default function ResultsPage() {
                 )}
 
                 {/* Stats Grid - Shows all relevant metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-8">
                     {/* Aptitude */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                                <Brain className="w-5 h-5 text-blue-600" />
+                    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                                <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                             </div>
-                            <span className="text-sm text-gray-500">Aptitude</span>
+                            <span className="text-xs sm:text-sm text-gray-500">Aptitude</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">
                             {result.totalScore?.toFixed(0) || 0}%
                         </p>
                     </div>
 
                     {/* Career Clarity */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                                <Target className="w-5 h-5 text-orange-600" />
+                    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                             </div>
-                            <span className="text-sm text-gray-500">Career Clarity</span>
+                            <span className="text-xs sm:text-sm text-gray-500">Career Clarity</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">
                             {result.clarityIndex || 0}/100
                         </p>
                     </div>
 
                     {/* Readiness (Student) / Employability (Job Seeker) */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                                <Briefcase className="w-5 h-5 text-emerald-600" />
+                    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                             </div>
-                            <span className="text-sm text-gray-500">
-                                {isStudentAssessment ? 'Career Readiness' : 'Employability'}
+                            <span className="text-xs sm:text-sm text-gray-500">
+                                {isStudentAssessment ? 'Readiness' : 'Employability'}
                             </span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">
                             {isStudentAssessment
-                                ? `${overallReadiness.toFixed(0)}%`
-                                : `${result.employabilityScores?.['overall']?.percentage?.toFixed(0) || 0}%`
+                                ? <>{overallReadiness.toFixed(0)}%</>
+                                : <>{result.employabilityScores?.['overall']?.percentage?.toFixed(0) || 0}%</>
                             }
                         </p>
                     </div>
 
                     {/* Performance Level - Both */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className={`w-10 h-10 rounded-xl ${performanceInfo.bg} flex items-center justify-center`}>
-                                <Award className={`w-5 h-5 ${performanceInfo.color}`} />
+                    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${performanceInfo.bg} flex items-center justify-center shrink-0`}>
+                                <Award className={`w-4 h-4 sm:w-5 sm:h-5 ${performanceInfo.color}`} />
                             </div>
-                            <span className="text-sm text-gray-500">Performance</span>
+                            <span className="text-xs sm:text-sm text-gray-500">Performance</span>
                         </div>
-                        <p className={`text-2xl font-bold ${performanceInfo.color}`}>
+                        <p className={`text-lg sm:text-2xl font-bold ${performanceInfo.color}`}>
                             {performanceInfo.label}
                         </p>
                     </div>
@@ -597,7 +713,7 @@ export default function ResultsPage() {
                         <div className="bg-white rounded-2xl p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <Compass className="w-5 h-5 text-[#0e6957]" />
-                                Career Interests (RIASEC)
+                                What Interests You
                             </h3>
                             <ResponsiveContainer width="100%" height={300}>
                                 <RadarChart data={riasecChartData}>
@@ -622,15 +738,15 @@ export default function ResultsPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Brain className="w-5 h-5 text-[#0e6957]" />
-                            {isStudentAssessment ? "Aptitude Scores" : "Cognitive Aptitude"}
+                            {isStudentAssessment ? "Your Thinking Skills" : "Cognitive Aptitude"}
                         </h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={aptitudeChartData} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
+                                <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}`} />
                                 <YAxis type="category" dataKey="section" width={70} tick={{ fontSize: 11 }} />
                                 <Tooltip
-                                    formatter={(value: unknown) => [`${Number(value).toFixed(1)}%`, 'Score']}
+                                    formatter={(value: unknown) => [`${Number(value).toFixed(0)}%`, 'Score']}
                                     labelFormatter={(label) => aptitudeChartData.find(d => d.section === String(label))?.fullSection || String(label)}
                                 />
                                 <Bar dataKey="percentage" fill={COLORS.secondary} radius={[0, 4, 4, 0]}>
@@ -648,7 +764,7 @@ export default function ResultsPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-[#0e6957]" />
-                            Strengths & Growth Areas
+                            What You&apos;re Good At
                         </h3>
                         <div className="grid md:grid-cols-2 gap-6">
                             {derivedTopStrengths.length > 0 && (
@@ -692,7 +808,7 @@ export default function ResultsPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Users className="w-5 h-5 text-[#0e6957]" />
-                            Personality Profile
+                            Your Personality
                         </h3>
                         {result.aiInsights?.personalityAnalysis && (
                             <p className="text-sm text-gray-600 mb-4">{result.aiInsights.personalityAnalysis}</p>
@@ -746,6 +862,69 @@ export default function ResultsPage() {
                                 );
                             })}
                         </div>
+
+                        {/* Expandable Personality Trait Insights (Task 7) */}
+                        {isStudentAssessment && (
+                            <div className="mt-6 space-y-3">
+                                <p className="text-sm text-gray-500 mb-2">Click on a trait to learn more about what it means for you:</p>
+                                {personalityChartData.map((item) => {
+                                    const traitInsights = PERSONALITY_INSIGHTS[item.fullTrait];
+                                    const levelInsight = traitInsights?.[item.level || ''];
+                                    if (!levelInsight) return null;
+
+                                    const isExpanded = expandedTraits.has(item.fullTrait);
+                                    const toggleExpand = () => {
+                                        setExpandedTraits((prev) => {
+                                            const next = new Set(prev);
+                                            if (next.has(item.fullTrait)) next.delete(item.fullTrait);
+                                            else next.add(item.fullTrait);
+                                            return next;
+                                        });
+                                    };
+
+                                    const levelColor = item.level === 'Strong' ? 'bg-emerald-100 text-emerald-700'
+                                        : item.level === 'Moderate' ? 'bg-amber-100 text-amber-700'
+                                            : 'bg-orange-100 text-orange-700';
+
+                                    return (
+                                        <div key={item.fullTrait} className="border border-gray-200 rounded-xl overflow-hidden">
+                                            <button
+                                                onClick={toggleExpand}
+                                                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className="font-medium text-gray-900 text-sm">{item.fullTrait}</span>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelColor}`}>{item.level}</span>
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            {isExpanded && (
+                                                <div className="px-4 pb-4 space-y-3 border-t border-gray-100 bg-gray-50">
+                                                    <div className="pt-3">
+                                                        <p className="text-sm text-gray-700">{levelInsight.description}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-[#0e6957] mb-1">Career Connection</p>
+                                                        <p className="text-sm text-gray-600">{levelInsight.careerConnection}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-[#0e6957] mb-1">Tips to Grow</p>
+                                                        <ul className="space-y-1">
+                                                            {levelInsight.tips.map((tip, i) => (
+                                                                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                                                    <span className="text-[#0e6957] mt-1">-</span>
+                                                                    {tip}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -754,7 +933,7 @@ export default function ResultsPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-[#0e6957]" />
-                            Skill & Career Readiness
+                            Your Skills & Readiness
                         </h3>
                         {result.aiInsights?.readinessAnalysis && (
                             <p className="text-sm text-gray-600 mb-4">{result.aiInsights.readinessAnalysis}</p>
@@ -792,9 +971,9 @@ export default function ResultsPage() {
                     <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                             <Briefcase className="w-5 h-5 text-[#0e6957]" />
-                            Top Sector Matches
+                            Best Career Fields for You
                         </h3>
-                        <p className="text-sm text-gray-500 mb-6">Industries that best align with your interests, aptitude, personality, and readiness.</p>
+                        <p className="text-sm text-gray-500 mb-6">These industries match your interests, thinking skills, personality, and readiness the most.</p>
                         <div className="space-y-4">
                             {result.sectorMatches.slice(0, 6).map((sector, index) => (
                                 <div key={sector.id} className={`p-5 rounded-xl border-2 transition-all ${index === 0 ? 'border-[#0e6957] bg-emerald-50/50' :
@@ -816,7 +995,7 @@ export default function ResultsPage() {
                                             <p className="text-sm text-gray-600 mb-3">{sector.description}</p>
 
                                             {/* Score Breakdown */}
-                                            <div className="grid grid-cols-4 gap-2 mb-3">
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                                                 {[
                                                     { label: 'Interest', value: sector.riasecFit, color: 'bg-blue-500' },
                                                     { label: 'Aptitude', value: sector.aptitudeFit, color: 'bg-purple-500' },
@@ -937,8 +1116,8 @@ export default function ResultsPage() {
                                 <Sparkles className="w-6 h-6 text-purple-600" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900">AI-Powered Insights</h3>
-                                <p className="text-sm text-gray-500">Personalized analysis of your assessment</p>
+                                <h3 className="text-lg font-semibold text-gray-900">What Your Results Mean</h3>
+                                <p className="text-sm text-gray-500">A personalized look at what your scores say about you</p>
                             </div>
                         </div>
 
@@ -947,7 +1126,7 @@ export default function ResultsPage() {
                                 <div className="bg-white/60 rounded-xl p-5">
                                     <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
                                         <Award className="w-4 h-4 text-purple-600" />
-                                        {isStudentAssessment ? "Performance Summary" : "Employability Summary"}
+                                        {isStudentAssessment ? "How You Did Overall" : "Employability Summary"}
                                     </h4>
                                     <p className="text-gray-600">{result.aiSummary}</p>
                                 </div>
@@ -1187,14 +1366,14 @@ export default function ResultsPage() {
                         <TrendingUp className="w-5 h-5 text-[#0e6957]" />
                         Career Direction Clarity
                     </h3>
-                    <div className="flex items-center gap-6">
-                        <div className={`px-6 py-3 rounded-xl text-xl font-bold ${clarityLevel === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
+                        <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-lg sm:text-xl font-bold shrink-0 ${clarityLevel === 'HIGH' ? 'bg-emerald-100 text-emerald-700' :
                             clarityLevel === 'MEDIUM' ? 'bg-amber-100 text-amber-700' :
                                 'bg-red-100 text-red-700'
                             }`}>
                             {clarityLevel}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <p className="text-gray-600">
                                 {result.aiInsights?.clarityIndex?.justification ||
                                     `Your career direction clarity score is ${result.clarityIndex}/100. ${clarityLevel === 'HIGH' ? 'You have a clear understanding of your career interests.' :
