@@ -65,12 +65,12 @@ export default function FAQ() {
           {/* Left Column: Navigation / Contact */}
           <div className="lg:col-span-4 flex flex-col justify-between min-h-[400px] lg:min-h-[500px]">
             <div>
-              <span className="text-5xl md:text-6xl lg:text-8xl font-bold text-brand-secondary uppercase tracking-widest mb-4 block">FAQ</span>
+              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold text-brand-secondary uppercase tracking-widest mb-4 block">FAQ</span>
             </div>
 
             <div className="mt-auto">
-              <h3 className="text-4xl font-bold text-white mb-2">NOT FOUND?</h3>
-              <h3 className="text-4xl font-bold text-white/40 mb-8">STILL CURIOUS?</h3>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">NOT FOUND?</h3>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white/40 mb-8">STILL CURIOUS?</h3>
 
               <Link href="/contact">
                 <button className="group flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-brand-secondary transition-colors">

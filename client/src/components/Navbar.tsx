@@ -31,7 +31,7 @@ export default function Navbar() {
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="text-4xl lg:text-5xl xl:text-6xl font-samarkan text-[#0e6957] tracking-wide -mt-1 pb-1">pragya</span>
+            <span className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-samarkan text-[#0e6957] tracking-wide -mt-1 pb-1">pragya</span>
           </Link>
           <div className="hidden lg:block h-8 w-[1px] bg-gray-200 mx-4 xl:mx-6"></div>
         </div>

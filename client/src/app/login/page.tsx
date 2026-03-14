@@ -63,7 +63,7 @@ export default function Login() {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-[420px] z-10">
                 <div className="text-center mb-10">
-                    <h1 className="font-samarkan text-5xl text-[#0e6957] mb-2">pragya</h1>
+                    <h1 className="font-samarkan text-4xl sm:text-5xl text-[#0e6957] mb-2">pragya</h1>
                     <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
                     <p className="mt-2 text-gray-600">Sign in to continue to your dashboard</p>
                 </div>

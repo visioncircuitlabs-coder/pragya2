@@ -58,7 +58,7 @@ export default function Footer() {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-5xl font-samarkan text-white tracking-wide mt-2">pragya</span>
+              <span className="text-3xl sm:text-4xl md:text-5xl font-samarkan text-white tracking-wide mt-2">pragya</span>
             </div>
 
             <p className="text-gray-400 leading-relaxed mb-6 max-w-sm text-lg">

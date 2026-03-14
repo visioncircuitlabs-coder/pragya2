@@ -28,7 +28,7 @@ export default function AboutPage() {
               <div className="inline-block px-4 py-1.5 rounded-full border border-brand-primary/20 bg-brand-primary/5 text-brand-primary font-bold text-sm tracking-wider uppercase mb-6">
                 About Pragya
               </div>
-              <h1 className="text-5xl lg:text-7xl font-black leading-[0.9] mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-[0.9] mb-8">
                 Built by <span className="text-brand-secondary">Youth</span>, for <span className="text-brand-secondary">Youth</span>
               </h1>
               <div className="text-base md:text-lg lg:text-xl text-gray-600 space-y-6 leading-relaxed">
@@ -72,7 +72,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <span className="text-brand-primary font-bold tracking-wider uppercase text-sm">What Sets Us Apart</span>
-            <h2 className="text-4xl lg:text-5xl font-black mb-6 mt-3">What Makes Pragya Unique</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-6 mt-3">What Makes Pragya Unique</h2>
             <p className="text-gray-600 max-w-3xl mx-auto text-base md:text-lg lg:text-xl leading-relaxed">
               Pragya is not just another career guidance tool — it is a fully integrated platform that connects discovery, understanding, and opportunity. For the first time in India, career discovery, assessment, and opportunity access are integrated into a single structured platform.
             </p>
@@ -138,9 +138,9 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-brand-secondary/20 flex items-center justify-center">
                 <Target className="w-6 h-6 text-brand-secondary" />
               </div>
-              <h2 className="text-3xl font-bold text-brand-secondary">Our Vision</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-brand-secondary">Our Vision</h2>
             </div>
-            <p className="text-2xl font-light leading-relaxed opacity-90">
+            <p className="text-lg md:text-2xl font-light leading-relaxed opacity-90">
               To build a future-ready career platform that empowers youth with clarity, confidence, and meaningful career opportunities.
             </p>
           </div>
@@ -150,7 +150,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-full bg-brand-primary/40 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-3xl font-bold">Our Mission</h2>
+              <h2 className="text-2xl md:text-3xl font-bold">Our Mission</h2>
             </div>
             <div className="space-y-6 pl-4 border-l-2 border-white/10">
               <div className="pl-6">
@@ -175,7 +175,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <span className="text-brand-primary font-bold tracking-wider uppercase text-sm">What Drives Us</span>
-            <h2 className="text-4xl lg:text-5xl font-black mb-6 mt-3">Our Core Values</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-6 mt-3">Our Core Values</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -233,7 +233,7 @@ export default function AboutPage() {
                 <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center">
                   <Award className="w-6 h-6 text-brand-primary" />
                 </div>
-                <h2 className="text-3xl lg:text-4xl font-black">Our Commitment</h2>
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black">Our Commitment</h2>
               </div>
               <p className="text-base md:text-lg lg:text-xl text-gray-600 leading-relaxed mb-8">
                 At Pragya, we believe that every young person deserves the chance to understand themselves and their career choices with clarity and confidence. Our work is guided by:
@@ -275,7 +275,7 @@ export default function AboutPage() {
                 <div className="w-12 h-12 rounded-full bg-brand-secondary/10 flex items-center justify-center">
                   <Compass className="w-6 h-6 text-brand-secondary" />
                 </div>
-                <h2 className="text-3xl lg:text-4xl font-black">Why We Exist</h2>
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black">Why We Exist</h2>
               </div>
               <p className="text-base md:text-lg lg:text-xl text-gray-600 leading-relaxed mb-8">
                 In an era where careers evolve faster than ever, students and job seekers face information overload, pressure, and uncertainty. Pragya exists to bring order and clarity to that chaos — by offering research, structure, and actionable insight through a platform built for the youth of today and tomorrow.
@@ -297,7 +297,7 @@ export default function AboutPage() {
             <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
             <div className="relative z-10 text-center max-w-4xl mx-auto">
-              <h2 className="text-3xl lg:text-4xl font-black mb-6">An Integrated Platform</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black mb-6">An Integrated Platform</h2>
               <p className="text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-8">
                 We are committed to creating a career platform where direction, readiness, and opportunity come together for every learner, job seeker, and employer.
               </p>

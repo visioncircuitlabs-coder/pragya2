@@ -31,7 +31,7 @@ export default function CareerPage() {
       <section className="py-20 px-6 lg:px-12 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-gray-900 mb-6">
               Who We&apos;re Looking For
             </h2>
             <p className="text-base md:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
@@ -91,7 +91,7 @@ export default function CareerPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-secondary/10 rounded-2xl mb-6">
               <Send className="w-8 h-8 text-brand-secondary" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-gray-900 mb-6">
               How to Apply
             </h2>
             <p className="text-base md:text-lg lg:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
@@ -200,7 +200,7 @@ export default function CareerPage() {
             <CheckCircle className="w-10 h-10 text-brand-secondary" />
           </div>
 
-          <h2 className="text-3xl md:text-5xl font-black mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-black mb-6">
             Be Part of Something Meaningful
           </h2>
 
