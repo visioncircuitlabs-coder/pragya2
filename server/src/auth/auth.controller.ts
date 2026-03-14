@@ -2,6 +2,7 @@ import { Controller, Post, Body, Get, UseGuards, Req, HttpCode, HttpStatus, Forb
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshTokenDto, VerifyEmailDto, ResendVerificationDto } from './dto';
+import { LogoutDto } from './dto/logout.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 
@@ -26,6 +27,7 @@ export class AuthController {
     }
 
     @Post('refresh')
+    @Throttle({ default: { limit: 10, ttl: 60000 } })
     @HttpCode(HttpStatus.OK)
     async refresh(@Body() dto: RefreshTokenDto) {
         return this.authService.refreshToken(dto.refreshToken);
@@ -34,8 +36,8 @@ export class AuthController {
     @Post('logout')
     @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.OK)
-    async logout(@CurrentUser('id') userId: string, @Body() body: { refreshToken?: string }) {
-        return this.authService.logout(userId, body.refreshToken);
+    async logout(@CurrentUser('id') userId: string, @Body() dto: LogoutDto) {
+        return this.authService.logout(userId, dto.refreshToken);
     }
 
     @Post('verify-email')

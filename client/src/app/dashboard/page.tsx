@@ -25,28 +25,29 @@ const roleLabels: Record<string, string> = {
     [UserRole.ADMIN]: 'Administrator',
 };
 
-interface CompletedAssessment {
+interface UserAssessment {
     id: string;
     status: AssessmentStatus;
     completedAt?: string;
     totalScore?: number;
+    lastQuestionIndex?: number;
+    assessment?: { _count?: { questions: number } };
+    _count?: { responses: number };
 }
 
 export default function DashboardPage() {
     const router = useRouter();
     const { user, isLoading, isAuthenticated } = useAuth();
-    const [completedAssessments, setCompletedAssessments] = useState<CompletedAssessment[]>([]);
+    const [assessments, setAssessments] = useState<UserAssessment[]>([]);
 
-    // Fetch completed assessments
+    // Fetch all assessments (completed + in-progress)
     useEffect(() => {
         const fetchAssessments = async () => {
-            // Fetch assessments for both students and job seekers
             if (!isAuthenticated || !user || (user.role !== UserRole.JOB_SEEKER && user.role !== UserRole.STUDENT)) return;
 
             try {
                 const res = await api.get('/assessments/my-results');
-                const completed = res.data.filter((a: { status: AssessmentStatus }) => a.status === AssessmentStatus.COMPLETED);
-                setCompletedAssessments(completed);
+                setAssessments(res.data);
             } catch (err) {
                 console.error('Error fetching assessments:', err);
             }
@@ -67,7 +68,7 @@ export default function DashboardPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0e6957]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0e6957]" role="status"><span className="sr-only">Loading dashboard</span></div>
             </div>
         );
     }
@@ -163,11 +164,29 @@ export default function DashboardPage() {
                         {/* Profile Summary */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-[#0e6957]">
-                                    <User className="w-8 h-8" />
+                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-[#0e6957] overflow-hidden">
+                                    {(user as any).gender?.toLowerCase() === 'female' ? (
+                                        <svg viewBox="0 0 64 64" className="w-16 h-16">
+                                            <circle cx="32" cy="32" r="32" fill="#d1fae5" />
+                                            <circle cx="32" cy="26" r="10" fill="#065f46" />
+                                            <ellipse cx="32" cy="52" rx="16" ry="14" fill="#065f46" />
+                                            <path d="M22 20c0-8 4-14 10-14s10 6 10 14" fill="#1a1a2e" />
+                                            <path d="M18 22c-2 4-2 10 0 14" stroke="#1a1a2e" strokeWidth="2" fill="none" />
+                                            <path d="M46 22c2 4 2 10 0 14" stroke="#1a1a2e" strokeWidth="2" fill="none" />
+                                        </svg>
+                                    ) : (user as any).gender?.toLowerCase() === 'male' ? (
+                                        <svg viewBox="0 0 64 64" className="w-16 h-16">
+                                            <circle cx="32" cy="32" r="32" fill="#d1fae5" />
+                                            <circle cx="32" cy="26" r="10" fill="#065f46" />
+                                            <ellipse cx="32" cy="52" rx="16" ry="14" fill="#065f46" />
+                                            <path d="M20 22c0-8 5-14 12-14s12 6 12 14" fill="#1a1a2e" />
+                                        </svg>
+                                    ) : (
+                                        <User className="w-8 h-8" />
+                                    )}
                                 </div>
                                 <div>
-                                    <div className="font-bold text-lg text-gray-900">{user.fullName || 'User'}</div>
+                                    <div className="font-bold text-lg text-gray-900">{user.fullName || user.email?.split('@')[0] || 'User'}</div>
                                     <div className="text-sm text-gray-500">{user.email}</div>
                                 </div>
                             </div>
@@ -255,35 +274,74 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* Completed Assessments or Placeholder */}
-                        {completedAssessments.length > 0 ? (
+                        {/* Assessments Activity */}
+                        {assessments.length > 0 ? (
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     <BarChart3 className="w-5 h-5 text-[#0e6957]" />
-                                    Your Assessment Results
+                                    Your Assessments
                                 </h3>
                                 <div className="space-y-3">
-                                    {completedAssessments.map((assessment) => (
-                                        <div key={assessment.id} className="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-xl">
-                                            <div className="min-w-0">
-                                                <p className="font-medium text-gray-900 truncate">
-                                                    {user.role === 'STUDENT' ? 'Student Aptitude Assessment' : 'Pragya Assessment'}
-                                                </p>
-                                                <p className="text-sm text-gray-500 truncate">
-                                                    Completed {assessment.completedAt && new Date(assessment.completedAt).toLocaleDateString()}
-                                                    {assessment.totalScore !== undefined && ` • Score: ${assessment.totalScore.toFixed(0)}%`}
-                                                </p>
+                                    {assessments.map((assessment) => {
+                                        const isCompleted = assessment.status === AssessmentStatus.COMPLETED;
+                                        const isInProgress = assessment.status === AssessmentStatus.IN_PROGRESS;
+                                        const totalQuestions = assessment.assessment?._count?.questions || 180;
+                                        const answeredCount = assessment._count?.responses || 0;
+                                        const progressPct = isInProgress ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+
+                                        return (
+                                            <div key={assessment.id} className="p-4 bg-gray-50 rounded-xl">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-gray-900 truncate">
+                                                            {user.role === 'STUDENT' ? 'Career Assessment' : 'Pragya Assessment'}
+                                                        </p>
+                                                        {isCompleted && (
+                                                            <p className="text-sm text-gray-500 truncate">
+                                                                Completed {assessment.completedAt && new Date(assessment.completedAt).toLocaleDateString()}
+                                                                {assessment.totalScore !== undefined && ` • Score: ${assessment.totalScore.toFixed(0)}%`}
+                                                            </p>
+                                                        )}
+                                                        {isInProgress && (
+                                                            <p className="text-sm text-amber-600 truncate">
+                                                                In Progress • {answeredCount}/{totalQuestions} answered ({progressPct}%)
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <Link
+                                                        href={isCompleted ? `/assessment/results/${assessment.id}` : (user?.role === 'STUDENT' ? '/students/assessment' : '/assessment')}
+                                                        className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors shrink-0 whitespace-nowrap text-sm sm:text-base ${
+                                                            isCompleted
+                                                                ? 'bg-[#0e6957] text-white hover:bg-[#0a4f41]'
+                                                                : 'bg-amber-500 text-white hover:bg-amber-600'
+                                                        }`}
+                                                    >
+                                                        {isCompleted ? (
+                                                            <>
+                                                                <Eye className="w-4 h-4" />
+                                                                <span className="hidden sm:inline">View Results</span>
+                                                                <span className="sm:hidden">View</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ArrowRight className="w-4 h-4" />
+                                                                <span className="hidden sm:inline">Continue</span>
+                                                                <span className="sm:hidden">Resume</span>
+                                                            </>
+                                                        )}
+                                                    </Link>
+                                                </div>
+                                                {isInProgress && (
+                                                    <div className="mt-3 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-amber-500 rounded-full transition-all"
+                                                            style={{ width: `${progressPct}%` }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
-                                            <Link
-                                                href={`/assessment/results/${assessment.id}`}
-                                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#0e6957] text-white rounded-lg font-medium hover:bg-[#0a4f41] transition-colors shrink-0 whitespace-nowrap text-sm sm:text-base"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                                <span className="hidden sm:inline">View Results</span>
-                                                <span className="sm:hidden">View</span>
-                                            </Link>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ) : (

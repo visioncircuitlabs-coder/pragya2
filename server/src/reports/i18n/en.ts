@@ -6,18 +6,18 @@ export const en: Record<string, string> = {
     // ─── Common / Footer ─────────────────────────────────────────────────────
     footer_confidential: 'Confidential',
     powered_by: 'Powered by Vision Circuit Labs',
-    ecosystem_tagline: "India's Pioneer Youth-Developed Career Ecosystem",
+    ecosystem_tagline: "India's Pioneer Youth-Developed Career Platform",
 
     // ─── Disclaimer ──────────────────────────────────────────────────────────
     disclaimer_title: 'Disclaimer',
     disclaimer_student:
-        'This report is generated based on standardized psychometric assessments and AI-powered analysis. ' +
+        'This report is generated based on standardized personality assessments and AI-powered analysis. ' +
         'It provides career guidance and should be used as one of many inputs in career decision-making. ' +
         "Results reflect the student's state at the time of assessment and may change as skills develop and interests evolve. " +
         'The assessment is designed for educational guidance purposes and should not be used as the sole basis for major academic or career decisions. ' +
         'Consider consulting with a qualified career counselor for personalized advice.',
     disclaimer_jobseeker:
-        'This report is generated based on standardized psychometric assessments and AI analysis. It provides career guidance ' +
+        'This report is generated based on standardized personality assessments and AI analysis. It provides career guidance ' +
         'and should be used as one of many inputs in career decision-making. Consider consulting with a qualified career counselor. ' +
         "Results reflect the candidate's state at the time of assessment.",
 

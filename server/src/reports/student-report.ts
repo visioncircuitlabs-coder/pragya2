@@ -108,14 +108,13 @@ const generateReadinessText = (data: StudentReportData, lang: Lang = 'en'): stri
     const overallPct = overall ? Math.round(overall.percentage) : 0;
 
     if (lang === 'ml') {
-        let text = `നിങ്ങളുടെ മൊത്തം കരിയർ സന്നദ്ധത സൂചിക ${overallPct}% ആണ്. `;
-        if (sorted.length > 0) text += `നിങ്ങളുടെ ഏറ്റവും ശക്തമായ കഴിവ് ${sorted[0][0]} ആണ്, ${Math.round(sorted[0][1].percentage)}%. `;
-        if (sorted.length > 1) text += `${sorted[1][0]} ${Math.round(sorted[1][1].percentage)}% ആണ്. `;
+        let text = `Career readiness സ്കോർ ${overallPct}%. `;
+        if (sorted.length > 0) text += `best skill: ${sorted[0][0]} (${Math.round(sorted[0][1].percentage)}%). `;
+        if (sorted.length > 1) text += `${sorted[1][0]} ${Math.round(sorted[1][1].percentage)}%. `;
         if (sorted.length > 0) {
             const weakest = sorted[sorted.length - 1];
-            text += `${weakest[0]} ${Math.round(weakest[1].percentage)}% ആണ് നിങ്ങളുടെ പ്രധാന വികസന മേഖല. `;
+            text += `${weakest[0]} (${Math.round(weakest[1].percentage)}%) — ഇത് കൂടുതൽ നന്നാക്കാം.`;
         }
-        text += `കരിയർ സന്നദ്ധത കഴിവുകൾ തൊഴിൽദാതാക്കളും അക്കാദമിക് സ്ഥാപനങ്ങളും ഒരുപോലെ വിലമതിക്കുന്നു, പരിശീലനം, വർക്ക്ഷോപ്പുകൾ, പ്രായോഗിക പദ്ധതികൾ എന്നിവയിലൂടെ വികസിപ്പിക്കാം.`;
         return text;
     }
     let text = `Your overall career readiness index is ${overallPct}%. `;
@@ -132,9 +131,9 @@ const generateReadinessText = (data: StudentReportData, lang: Lang = 'en'): stri
 const generateStrengthsText = (data: StudentReportData, lang: Lang = 'en'): string => {
     if (data.topStrengths.length === 0) return '';
     if (lang === 'ml') {
-        return `നിങ്ങളുടെ മൂല്യാങ്കനം ${data.topStrengths.length} പ്രധാന ശക്തികൾ തിരിച്ചറിയുന്നു: ${data.topStrengths.join(', ')}. ` +
-            `ഈ ശക്തികൾ നിങ്ങളുടെ മത്സര നേട്ടങ്ങളാണ് — നിങ്ങളെ വ്യത്യസ്തരാക്കുന്ന സ്വാഭാവിക കഴിവുകളും വികസിത കഴിവുകളും. ` +
-            `നിങ്ങളുടെ അക്കാദമിക്, കരിയർ തിരഞ്ഞെടുപ്പുകളിൽ ഈ ശക്തികൾ പ്രയോജനപ്പെടുത്തുന്നത് മികച്ച പ്രകടനം നടത്താനും കൂടുതൽ സംതൃപ്തി കണ്ടെത്താനും സഹായിക്കും.`;
+        return `നിങ്ങളുടെ ${data.topStrengths.length} പ്രധാന strengths: ${data.topStrengths.join(', ')}. ` +
+            `ഇവ നിങ്ങളുടെ ഏറ്റവും നല്ല കഴിവുകൾ ആണ്. ` +
+            `പഠനത്തിലും career-ലും ഈ strengths നന്നായി ഉപയോഗിക്കൂ.`;
     }
     return `Your assessment identifies ${data.topStrengths.length} key strengths: ${data.topStrengths.join(', ')}. ` +
         `These strengths represent your competitive advantages — the natural abilities and developed skills that set you apart. ` +
@@ -144,16 +143,58 @@ const generateStrengthsText = (data: StudentReportData, lang: Lang = 'en'): stri
 const generateGrowthText = (data: StudentReportData, lang: Lang = 'en'): string => {
     if (data.areasForImprovement.length === 0) return '';
     if (lang === 'ml') {
-        return `ഇനിപ്പറയുന്ന മേഖലകൾ മെച്ചപ്പെടുത്തലിനുള്ള ഏറ്റവും വലിയ സാധ്യത നൽകുന്നു: ${data.areasForImprovement.join(', ')}. ` +
-            `ഇവ ദൗർബല്യങ്ങളല്ല, മറിച്ച് വളർച്ചയ്ക്കുള്ള അവസരങ്ങളാണ്. ` +
-            `ഘടനാപരമായ പഠനം, പരിശീലന പ്രവർത്തനങ്ങൾ, മെന്ററിംഗ് എന്നിവയിലൂടെ ഈ മേഖലകളിൽ ശ്രദ്ധ കേന്ദ്രീകരിക്കുന്നത് നിങ്ങളുടെ മൊത്തം പ്രൊഫൈൽ ഗണ്യമായി മെച്ചപ്പെടുത്തും.`;
+        return `ഈ areas-ൽ കൂടുതൽ നന്നാക്കാം: ${data.areasForImprovement.join(', ')}. ` +
+            `ഇവ weakness അല്ല — വളരാനുള്ള chance ആണ്. ` +
+            `പ്രാക്ടീസ് ചെയ്താൽ ഇവ നന്നായി improve ചെയ്യും.`;
     }
     return `The following areas offer the greatest potential for improvement: ${data.areasForImprovement.join(', ')}. ` +
         `These are not weaknesses but rather opportunities for growth. ` +
         `Focused effort in these areas — through structured learning, practice exercises, and mentorship — will significantly enhance your overall profile and expand your career options.`;
 };
 
-// ─── Inline Malayalam (Manglish) Helpers ─────────────────────────────────────
+// ─── Inline Malayalam Helpers ─────────────────────────────────────────────────
+
+const RIASEC_ML: Record<string, { name: string; desc: string }> = {
+    R: { name: 'റിയലിസ്റ്റിക്', desc: 'കൈകൊണ്ട് ജോലി ചെയ്യാൻ ഇഷ്ടം, tools-ഉം machines-ഉം ഉപയോഗിക്കും' },
+    I: { name: 'ഇൻവെസ്റ്റിഗേറ്റീവ്', desc: 'ചിന്തിക്കാനും research ചെയ്യാനും ഇഷ്ടം, science-ൽ interest' },
+    A: { name: 'ആർട്ടിസ്റ്റിക്', desc: 'creative ആയ കാര്യങ്ങൾ ഇഷ്ടം — art, music, writing' },
+    S: { name: 'സോഷ്യൽ', desc: 'ആളുകളെ help ചെയ്യാനും teach ചെയ്യാനും ഇഷ്ടം' },
+    E: { name: 'എന്റർപ്രൈസിംഗ്', desc: 'lead ചെയ്യാനും business ചെയ്യാനും ഇഷ്ടം' },
+    C: { name: 'കൺവെൻഷണൽ', desc: 'organized ആയ ജോലി ഇഷ്ടം — data, accounts, records' },
+};
+
+const TRAIT_ML: Record<string, string> = {
+    'Responsibility & Discipline': 'ഉത്തരവാദിത്തവും അച്ചടക്കവും',
+    'Stress Tolerance': 'സമ്മർദ്ദ സഹിഷ്ണുത',
+    'Curiosity & Openness': 'ജിജ്ഞാസയും തുറന്ന മനസ്സും',
+    'Social Interaction': 'സാമൂഹിക ഇടപെടൽ',
+    'Team vs Independent Style': 'ടീം/സ്വതന്ത്ര പ്രവർത്തന ശൈലി',
+    'Decision-Making Style': 'തീരുമാനമെടുക്കൽ ശൈലി',
+};
+
+const SKILL_ML: Record<string, string> = {
+    'Communication & Expression': 'ആശയവിനിമയവും ആവിഷ്കാരവും',
+    'Problem-Solving Approach': 'പ്രശ്നപരിഹാര സമീപനം',
+    'Creativity & Idea Generation': 'സർഗ്ഗാത്മകതയും ആശയ രൂപീകരണവും',
+    'Adaptability': 'പൊരുത്തപ്പെടൽ ശേഷി',
+    'Time Management & Responsibility': 'സമയ ക്രമീകരണവും ഉത്തരവാദിത്തവും',
+    'Digital Awareness': 'ഡിജിറ്റൽ അവബോധം',
+};
+
+const APT_ML: Record<string, string> = {
+    'Numerical Reasoning': 'സംഖ്യാ യുക്തി',
+    'Verbal Reasoning': 'വാക്കുകളിലൂടെയുള്ള യുക്തി',
+    'Abstract-Fluid Reasoning': 'അമൂർത്ത യുക്തി',
+    'Spatial Ability': 'സ്ഥല ബോധം',
+    'Mechanical Reasoning': 'യാന്ത്രിക യുക്തി',
+    'Processing Speed & Accuracy': 'വേഗതയും കൃത്യതയും',
+};
+
+const getLevelMl = (level: string): string => {
+    if (level === 'Strong') return 'ശക്തം';
+    if (level === 'Moderate') return 'മിതമായത്';
+    return 'വളരുന്ന ഘട്ടത്തിൽ';
+};
 
 const generateInlineMl = (section: string, data: StudentReportData): string => {
     const apt = data.aptitudeScores['overall'];
@@ -165,37 +206,75 @@ const generateInlineMl = (section: string, data: StudentReportData): string => {
 
     const aptEntries = Object.entries(data.aptitudeScores).filter(([k]) => k !== 'overall');
     const aptSorted = [...aptEntries].sort((a, b) => b[1].percentage - a[1].percentage);
-    const strongest = aptSorted[0]?.[0] || '';
-    const weakest = aptSorted[aptSorted.length - 1]?.[0] || '';
+    const top2 = aptSorted.slice(0, 2);
+    const bottom2 = aptSorted.slice(-2);
 
     switch (section) {
-        case 'overview':
-            return `${data.studentName}-ന്റെ overall performance score ${data.weightedScore}% (${perfInfo.label}) ആണ്. ` +
-                `Aptitude score ${aptPct}%, career readiness ${readPct}%. ` +
-                (code ? `Holland Code ${code} ആണ്, ഇത് നിങ്ങളുടെ primary career interests indicate ചെയ്യുന്നു. ` : '') +
-                `Academic Readiness Index ${data.academicReadinessIndex}% ആണ്.`;
+        case 'overview': {
+            const codeLetters = code.split('');
+            const codeDesc = codeLetters.map(c => RIASEC_ML[c]?.name || c).join(', ');
+            return `${data.studentName} ന്റെ ടെസ്റ്റ് റിസൾട്ട് ഇതാ. ` +
+                `മൊത്തം സ്കോർ ${data.weightedScore}% — "${perfInfo.label}" ലെവൽ. ` +
+                `Aptitude ${aptPct}%, Readiness ${readPct}%, ` +
+                `അക്കാദമിക് റെഡിനെസ് ${data.academicReadinessIndex}%. ` +
+                (code ? `Holland Code: ${code} (${codeDesc}). ` : '') +
+                `ഈ report നിങ്ങളുടെ കഴിവുകളും interests-ഉം personality-യും നോക്കി തയ്യാറാക്കിയതാണ്. ` +
+                `ഇത് വായിച്ച് നിങ്ങൾക്ക് ഏറ്റവും നല്ല career path കണ്ടെത്താം.`;
+        }
 
-        case 'aptitude':
-            return `നിങ്ങളുടെ aptitude score ${aptPct}% ആണ്. ` +
-                (strongest ? `${strongest} section-ൽ നിങ്ങൾ well perform ചെയ്തു. ` : '') +
-                (weakest && weakest !== strongest ? `Practice through ചെയ്യുക ${weakest} improve ചെയ്യാൻ.` : '');
+        case 'aptitude': {
+            const topNames = top2.map(([k, v]) => `${APT_ML[k] || k} (${Math.round(v.percentage)}%)`).join(', ');
+            let text = `ആകെ Aptitude സ്കോർ ${aptPct}%. `;
+            text += `നിങ്ങളുടെ best: ${topNames}. `;
+            text += `ഈ areas-ൽ നിങ്ങൾ നന്നായി think ചെയ്യുന്നു. `;
+            if (bottom2.length > 0 && bottom2[0][0] !== top2[0][0]) {
+                const bottomNames = bottom2.map(([k, v]) => `${APT_ML[k] || k} (${Math.round(v.percentage)}%)`).join(', ');
+                text += `${bottomNames} — ഇവ കൂടുതൽ practice ചെയ്താൽ improve ആകും. `;
+            }
+            text += `ദിവസവും 15-20 minutes practice ചെയ്താൽ മതി.`;
+            return text;
+        }
 
         case 'riasec': {
             if (!code) return '';
-            const primaryType = RIASEC_NAMES[code[0]] || code[0];
-            return `നിങ്ങളുടെ Holland Code ${code} ആണ്. ${primaryType} type career-കൾ നിങ്ങൾക്ക് suitable ആണ്. ` +
-                (code.length > 1 ? `${RIASEC_NAMES[code[1]] || code[1]} secondary interest ആണ്.` : '');
+            const codeLetters = code.split('');
+            const primary = RIASEC_ML[codeLetters[0]];
+            const secondary = codeLetters[1] ? RIASEC_ML[codeLetters[1]] : null;
+            const tertiary = codeLetters[2] ? RIASEC_ML[codeLetters[2]] : null;
+            let text = `നിങ്ങളുടെ Holland Code ${code} ആണ്. `;
+            if (primary) {
+                text += `ഒന്നാമത്തെ ഇഷ്ടം: ${primary.name} — ${primary.desc}. `;
+            }
+            if (secondary) {
+                text += `രണ്ടാമത്തെ ഇഷ്ടം: ${secondary.name} — ${secondary.desc}. `;
+            }
+            if (tertiary) {
+                text += `മൂന്നാമത്തെ ഇഷ്ടം: ${tertiary.name}. `;
+            }
+            text += `ഈ combination match ചെയ്യുന്ന jobs-ൽ നിങ്ങൾ happy ആയിരിക്കും.`;
+            return text;
         }
 
         case 'personality': {
             if (!data.personalityScores) return '';
             const entries = Object.entries(data.personalityScores);
-            const strong = entries.filter(([, v]) => v.level === 'Strong').map(([k]) => k);
-            const emerging = entries.filter(([, v]) => v.level === 'Emerging').map(([k]) => k);
-            let text = '';
-            if (strong.length > 0) text += `${strong.join(', ')} traits-ൽ നിങ്ങൾ strong ആണ്. `;
-            if (emerging.length > 0) text += `${emerging.join(', ')} areas-ൽ improvement സാധ്യമാണ്. `;
-            text += 'ഈ traits career success-ന് important ആണ്.';
+            const strong = entries.filter(([, v]) => v.level === 'Strong');
+            const moderate = entries.filter(([, v]) => v.level === 'Moderate');
+            const emerging = entries.filter(([, v]) => v.level === 'Emerging');
+            let text = `നിങ്ങളുടെ personality-യിൽ 6 qualities check ചെയ്തു. `;
+            if (strong.length > 0) {
+                const names = strong.map(([k]) => TRAIT_ML[k] || k).join(', ');
+                text += `${names} — ഇവയിൽ നിങ്ങൾ നല്ല ലെവലിൽ ആണ്. ` +
+                    `ഇത് നിങ്ങളുടെ strong point ആണ്. `;
+            }
+            if (moderate.length > 0) {
+                const names = moderate.map(([k]) => TRAIT_ML[k] || k).join(', ');
+                text += `${names} — ഇവ okay ലെവലിൽ ഉണ്ട്, ഇനിയും നന്നാക്കാം. `;
+            }
+            if (emerging.length > 0) {
+                const names = emerging.map(([k]) => TRAIT_ML[k] || k).join(', ');
+                text += `${names} — ഇവ വളരുന്ന stage-ൽ ആണ്, practice-ലൂടെ better ആകും.`;
+            }
             return text;
         }
 
@@ -203,25 +282,68 @@ const generateInlineMl = (section: string, data: StudentReportData): string => {
             if (!data.readinessScores) return '';
             const rEntries = Object.entries(data.readinessScores).filter(([k]) => k !== 'overall');
             const rSorted = [...rEntries].sort((a, b) => b[1].percentage - a[1].percentage);
-            const strongSkill = rSorted[0]?.[0] || '';
-            const weakSkill = rSorted[rSorted.length - 1]?.[0] || '';
-            return `Career readiness score ${readPct}% ആണ്. ` +
-                (strongSkill ? `${strongSkill} നിങ്ങളുടെ strongest skill ആണ്. ` : '') +
-                (weakSkill && weakSkill !== strongSkill ? `${weakSkill} develop ചെയ്യേണ്ടതുണ്ട്. ` : '') +
-                'Practice, workshops, projects എന്നിവ through skills improve ചെയ്യാം.';
+            const topSkills = rSorted.slice(0, 2);
+            const bottomSkills = rSorted.slice(-2);
+            let text = `Readiness സ്കോർ ${readPct}%. `;
+            if (topSkills.length > 0) {
+                const names = topSkills.map(([k, v]) => `${SKILL_ML[k] || k} (${Math.round(v.percentage)}%)`).join(', ');
+                text += `നിങ്ങളുടെ best skills: ${names}. `;
+                text += `ഇവ നിങ്ങളുടെ career-ൽ വളരെ useful ആണ്. `;
+            }
+            if (bottomSkills.length > 0 && bottomSkills[0][0] !== topSkills[0]?.[0]) {
+                const weakNames = bottomSkills.map(([k, v]) => `${SKILL_ML[k] || k} (${Math.round(v.percentage)}%)`).join(', ');
+                text += `${weakNames} — ഇവ കൂടുതൽ practice ചെയ്യണം. `;
+            }
+            text += `Projects, presentations, team work ചെയ്ത് ഈ skills improve ചെയ്യാം.`;
+            return text;
         }
 
         case 'career': {
             const { suggestedCareers } = normalizeCareers(data.aiInsights);
             const topCareers = suggestedCareers.slice(0, 3).map(c => c.role);
             const sectorNames = data.sectorMatches?.slice(0, 3).map(s => stripEmoji(s.name)) || [];
+            const careerNames = topCareers.length > 0
+                ? topCareers
+                : (data.careerMatches?.slice(0, 3).map(c => c.title) || []);
             let text = '';
-            if (topCareers.length > 0) text += `${topCareers.join(', ')} career options നിങ്ങൾക്ക് suitable ആണ്. `;
-            else if (data.careerMatches && data.careerMatches.length > 0)
-                text += `${data.careerMatches.slice(0, 3).map(c => c.title).join(', ')} career options consider ചെയ്യുക. `;
-            if (sectorNames.length > 0) text += `${sectorNames.join(', ')} sectors explore ചെയ്യുക. `;
-            text += 'Internships, mentoring, online courses എന്നിവ try ചെയ്യുക.';
+            if (careerNames.length > 0) {
+                text += `നിങ്ങൾക്ക് best ആയ careers: ${careerNames.join(', ')}. `;
+                text += `നിങ്ങളുടെ aptitude-ഉം interest-ഉം personality-യും ഇവയ്ക്ക് match ആണ്. `;
+            }
+            if (sectorNames.length > 0) {
+                text += `Best sectors: ${sectorNames.join(', ')}. `;
+            }
+            text += `ഇവയിൽ internships, online courses, mentoring try ചെയ്യൂ. ` +
+                `Teacher-മാരോടും career counselor-മാരോടും സംസാരിക്കൂ.`;
             return text;
+        }
+
+        case 'skills_develop': {
+            const { skillsToDevelop } = normalizeCareers(data.aiInsights);
+            if (skillsToDevelop.length === 0) return '';
+            const skillNames = skillsToDevelop.slice(0, 4).join(', ');
+            return `ഈ skills develop ചെയ്യണം: ${skillNames}. ` +
+                `ഇവ നിങ്ങളുടെ career-ന് വളരെ important ആണ്. ` +
+                `ഓരോന്നും step by step practice ചെയ്തു improve ചെയ്യാം. ` +
+                `Online courses, workshops, projects ഇവ വഴി learn ചെയ്യാം.`;
+        }
+
+        case 'study_tips': {
+            const studyTips = toStringArray(data.aiInsights?.studyTips);
+            if (studyTips.length === 0) return '';
+            return `നിങ്ങളുടെ strengths use ചെയ്ത് smart ആയി പഠിക്കൂ. ` +
+                `ദിവസവും ഒരു fixed time study-ക്ക് മാറ്റിവയ്ക്കൂ. ` +
+                `Difficult subjects-ന് extra time കൊടുക്കൂ. ` +
+                `Group study-യും self study-യും mix ചെയ്യൂ.`;
+        }
+
+        case 'final_remarks': {
+            return `ഈ report ${data.studentName} ന്റെ കഴിവുകൾ, interests, personality, readiness ` +
+                `എല്ലാം check ചെയ്ത് ഉണ്ടാക്കിയതാണ്. ` +
+                `ഇത് ഒരു guide ആണ് — career plan ചെയ്യാനും goals set ചെയ്യാനും ഇത് use ചെയ്യൂ. ` +
+                `Career counselor-മായും teachers-മായും ഇത് discuss ചെയ്യൂ. ` +
+                `ഓർക്കുക — interests-ഉം abilities-ഉം time-ന്റെ കൂടെ change ആകും. ` +
+                `അതുകൊണ്ട് ഇടയ്ക്കിടെ reassessment ചെയ്യുന്നത് നല്ലതാണ്.`;
         }
 
         default:
@@ -235,14 +357,14 @@ const InlineMalayalam = ({ heading, body }: { heading: string; body: string }): 
             backgroundColor: '#e8f5e9',
             padding: 8,
             borderRadius: 4,
-            marginTop: 8,
+            marginTop: 6,
             marginBottom: 4,
         }
     },
         h(Text, {
             style: {
                 fontFamily: 'NotoSansMalayalam',
-                fontSize: 8,
+                fontSize: 9,
                 fontWeight: 'bold' as any,
                 color: '#1b5e20',
                 marginBottom: 3,
@@ -251,9 +373,9 @@ const InlineMalayalam = ({ heading, body }: { heading: string; body: string }): 
         h(Text, {
             style: {
                 fontFamily: 'NotoSansMalayalam',
-                fontSize: 7,
+                fontSize: 8,
                 color: '#2e7d32',
-                lineHeight: 1.5,
+                lineHeight: 1.4,
             }
         }, body)
     );
@@ -280,7 +402,7 @@ const StudentPage1 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     const apt = data.aptitudeScores['overall'];
     const readiness = data.readinessScores?.['overall'];
 
-    return h(Page, { size: 'A4', style: getPageStyle(lang) },
+    return h(View, {},
         // Header
         h(View, { style: styles.header },
             h(Text, { style: { ...styles.headerTitle, fontFamily: 'Nunito' } },
@@ -410,7 +532,6 @@ const StudentPage1 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
             )
         ),
 
-        h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
 };
 
@@ -432,7 +553,7 @@ const StudentPage2 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     const overallPct = overallAptitude ? Math.round(overallAptitude.percentage) : 0;
     const aptitudeText = (lang === 'ml' ? aiText(ai as any, 'strengthsAnalysis', lang) : '') || ai?.strengthsAnalysis || generateAptitudeText(data, lang);
 
-    return h(Page, { size: 'A4', style: getPageStyle(lang) },
+    return h(View, {},
         h(Text, { style: pageTitleStyle(lang) }, t('page_aptitude_career', lang)),
 
         // Aptitude Section
@@ -471,7 +592,7 @@ const StudentPage2 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
         // RIASEC Section
         data.riasecScores && h(View, { style: styles.section },
             h(Text, { style: sectionTitleStyle(lang) }, t('career_interest_riasec', lang)),
-            h(View, { style: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' } },
+            h(View, { style: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' }, wrap: false } as any,
                 // Radar chart
                 h(View, { style: { flex: 1, alignItems: 'center' } },
                     h(RadarChart, {
@@ -508,8 +629,6 @@ const StudentPage2 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
 
         // Inline Malayalam — RIASEC insight
         data.riasecCode && h(InlineMalayalam, { heading: 'കരിയർ താൽപ്പര്യ വിശകലനം', body: generateInlineMl('riasec', data) }),
-
-        h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
 };
 
@@ -521,7 +640,7 @@ const StudentPage3 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     const personalityEntries = Object.entries(data.personalityScores || {});
     const personalityText = (lang === 'ml' ? aiText(ai as any, 'personalityAnalysis', lang) : '') || ai?.personalityAnalysis || generatePersonalityText(data, lang);
 
-    return h(Page, { size: 'A4', style: getPageStyle(lang) },
+    return h(View, {},
         h(Text, { style: pageTitleStyle(lang) }, t('page_personality_strengths', lang)),
 
         // Personality Section
@@ -535,7 +654,8 @@ const StudentPage3 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                     gap: 6,
                     marginTop: 2,
                     marginBottom: 4,
-                }
+                },
+                wrap: false,
             },
                 ...personalityEntries.map(([trait, info]) =>
                     h(CircularProgress, {
@@ -626,8 +746,6 @@ const StudentPage3 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                 )
             )
         ),
-
-        h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
 };
 
@@ -647,7 +765,7 @@ const StudentPage4 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     const overallReadiness = data.readinessScores?.['overall'];
     const readinessText = (lang === 'ml' ? aiText(ai as any, 'readinessAnalysis', lang) : '') || ai?.readinessAnalysis || generateReadinessText(data, lang);
 
-    return h(Page, { size: 'A4', style: getPageStyle(lang) },
+    return h(View, {},
         h(Text, { style: pageTitleStyle(lang) }, t('page_readiness_sector', lang)),
 
         // Skill & Career Readiness
@@ -746,8 +864,6 @@ const StudentPage4 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
                 )
             )
         ),
-
-        h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
 };
 
@@ -758,7 +874,7 @@ const StudentPage5 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     const studyTips = toStringArray(ai?.studyTips);
     const nextSteps = toStringArray(ai?.nextSteps);
 
-    return h(Page, { size: 'A4', style: getPageStyle(lang) },
+    return h(View, {},
         h(Text, { style: pageTitleStyle(lang) }, t('page_career_guidance', lang)),
 
         // Suggested Careers (2-col grid)
@@ -832,10 +948,20 @@ const StudentPage5 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
             )
         ),
 
+        // Inline Malayalam — skills to develop
+        skillsToDevelop.length > 0 && h(InlineMalayalam, {
+            heading: 'വളർത്തേണ്ട Skills',
+            body: generateInlineMl('skills_develop', data),
+        }),
+
+        // Inline Malayalam — study tips
+        studyTips.length > 0 && h(InlineMalayalam, {
+            heading: 'പഠന Tips',
+            body: generateInlineMl('study_tips', data),
+        }),
+
         // Inline Malayalam — career guidance insight
         h(InlineMalayalam, { heading: 'കരിയർ മാർഗ്ഗനിർദ്ദേശം', body: generateInlineMl('career', data) }),
-
-        h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
 };
 
@@ -847,13 +973,13 @@ const StudentPage6 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
     const aptitudeOverall = data.aptitudeScores['overall'];
     const readinessOverall = data.readinessScores?.['overall'];
 
-    return h(Page, { size: 'A4', style: getPageStyle(lang) },
+    return h(View, {},
         h(Text, { style: pageTitleStyle(lang) }, t('summary_dashboard', lang)),
 
         // Summary grid with score rings
         h(View, { style: { ...styles.section, padding: 12 } },
             h(Text, { style: sectionTitleStyle(lang) }, t('key_metrics', lang)),
-            h(View, { style: { flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap', gap: 8, marginTop: 4 } },
+            h(View, { style: { flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap', gap: 8, marginTop: 4 }, wrap: false } as any,
                 h(ScoreRing, { value: data.weightedScore, max: 100, label: t('label_overall_score', lang), color: performanceInfo.color }),
                 h(ScoreRing, { value: data.academicReadinessIndex, max: 100, label: t('label_academic_readiness', lang) }),
                 aptitudeOverall && h(ScoreRing, { value: Math.round(aptitudeOverall.percentage), max: 100, label: t('label_aptitude', lang) }),
@@ -1004,6 +1130,12 @@ const StudentPage6 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
             )
         ),
 
+        // Malayalam final remarks
+        h(InlineMalayalam, {
+            heading: 'അവസാന കുറിപ്പ്',
+            body: generateInlineMl('final_remarks', data),
+        }),
+
         // Disclaimer
         h(View, { style: styles.disclaimer },
             h(Text, { style: styles.disclaimerTitle }, t('disclaimer_title', lang)),
@@ -1011,13 +1143,12 @@ const StudentPage6 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
         ),
 
         // Branding footer
-        h(View, { style: { marginTop: 'auto', alignItems: 'center', paddingTop: 8 } },
+        h(View, { style: { marginTop: 16, alignItems: 'center', paddingTop: 8 } },
             h(Text, { style: { fontSize: 11, fontWeight: 700, color: COLORS.PRIMARY, marginBottom: 2, fontFamily: 'Nunito' } }, 'PRAGYA'),
             h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED } }, t('ecosystem_tagline', lang)),
             h(Text, { style: { fontSize: 7, color: COLORS.TEXT_MUTED, marginTop: 2 } }, t('powered_by', lang))
         ),
 
-        h(PageFooter, { reportType: REPORT_TYPE, lang })
     );
 };
 
@@ -1025,12 +1156,14 @@ const StudentPage6 = ({ data, lang = 'en' }: { data: StudentReportData; lang?: L
 
 export const StudentReportDocument = ({ data }: { data: StudentReportData }) => {
     return h(Document, {},
-        // English pages (1-6) with inline Malayalam insights
-        h(StudentPage1, { data, lang: 'en' }),
-        h(StudentPage2, { data, lang: 'en' }),
-        h(StudentPage3, { data, lang: 'en' }),
-        h(StudentPage4, { data, lang: 'en' }),
-        h(StudentPage5, { data, lang: 'en' }),
-        h(StudentPage6, { data, lang: 'en' }),
+        h(Page, { size: 'A4', style: getPageStyle('en') },
+            h(StudentPage1, { data, lang: 'en' }),
+            h(StudentPage2, { data, lang: 'en' }),
+            h(StudentPage3, { data, lang: 'en' }),
+            h(StudentPage4, { data, lang: 'en' }),
+            h(StudentPage5, { data, lang: 'en' }),
+            h(StudentPage6, { data, lang: 'en' }),
+            h(PageFooter, { reportType: REPORT_TYPE, lang: 'en' }),
+        ),
     );
 };

@@ -14,7 +14,7 @@ const plans = [
         period: "one-time",
         description: "Scientific career assessment designed to help students discover their ideal career path based on aptitude, personality, and interests.",
         features: [
-            "Comprehensive aptitude & psychometric assessment",
+            "Comprehensive aptitude & personality assessment",
             "AI-powered personality and interest profiling",
             "Detailed career-fit analysis across 2,000+ career options",
             "Personalised career recommendations report",
@@ -253,6 +253,9 @@ export default function PricingPage() {
                             <div key={i} className="border border-gray-200 rounded-2xl overflow-hidden">
                                 <button
                                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                                    aria-expanded={openFaq === i}
+                                    aria-controls={`pricing-faq-${i}`}
+                                    id={`pricing-faq-btn-${i}`}
                                     className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors"
                                 >
                                     <span className="text-gray-900 font-semibold pr-4">{faq.q}</span>
@@ -261,7 +264,7 @@ export default function PricingPage() {
                                     </span>
                                 </button>
                                 {openFaq === i && (
-                                    <div className="px-6 pb-5">
+                                    <div className="px-6 pb-5" id={`pricing-faq-${i}`} role="region" aria-labelledby={`pricing-faq-btn-${i}`}>
                                         <p className="text-gray-600 leading-relaxed">{faq.a}</p>
                                         {faq.q.includes("refund") && (
                                             <Link href="/refund-policy" className="text-brand-primary hover:underline font-semibold text-sm mt-2 inline-block">

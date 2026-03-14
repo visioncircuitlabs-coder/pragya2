@@ -32,7 +32,7 @@ export default function TermsPage() {
                             Agreement Overview
                         </h2>
                         <p className="text-gray-700 leading-relaxed">
-                            These Terms &amp; Conditions (&quot;Terms&quot;) govern your use of the Pragya platform, website, and services operated by <strong>Pragya Career Ecosystem</strong> (referred to as &quot;Pragya&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;). By accessing or using our platform, you agree to be bound by these Terms.
+                            These Terms &amp; Conditions (&quot;Terms&quot;) govern your use of the Pragya platform, website, and services operated by <strong>Pragya Career Platform</strong> (referred to as &quot;Pragya&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;). By accessing or using our platform, you agree to be bound by these Terms.
                         </p>
                     </div>
 
@@ -40,7 +40,7 @@ export default function TermsPage() {
                     <div className="mb-10">
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">1. About Pragya</h2>
                         <p className="text-gray-700 leading-relaxed mb-4">
-                            Pragya is a career ecosystem platform that provides:
+                            Pragya is a career platform that provides:
                         </p>
                         <ul className="space-y-2 text-gray-700">
                             <li className="flex items-start gap-3">
@@ -49,7 +49,7 @@ export default function TermsPage() {
                             </li>
                             <li className="flex items-start gap-3">
                                 <span className="w-2 h-2 rounded-full bg-brand-primary mt-2 flex-shrink-0"></span>
-                                <span>Aptitude, psychometric, AI-driven, personality, and interest assessments</span>
+                                <span>Aptitude, personality, AI-driven, and interest assessments</span>
                             </li>
                             <li className="flex items-start gap-3">
                                 <span className="w-2 h-2 rounded-full bg-brand-primary mt-2 flex-shrink-0"></span>
@@ -156,7 +156,7 @@ export default function TermsPage() {
                     <div className="mb-10">
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Intellectual Property</h2>
                         <p className="text-gray-700 leading-relaxed">
-                            All content on the Pragya platform, including but not limited to assessment questions, scoring algorithms, AI analysis reports, digital career library content, training modules, courseware, psychometric inventories, and proprietary software, is owned by Pragya and protected by applicable intellectual property laws. You may not reproduce, distribute, modify, or create derivative works from any content on our platform without express written permission.
+                            All content on the Pragya platform, including but not limited to assessment questions, scoring algorithms, AI analysis reports, digital career library content, training modules, courseware, personality assessment inventories, and proprietary software, is owned by Pragya and protected by applicable intellectual property laws. You may not reproduce, distribute, modify, or create derivative works from any content on our platform without express written permission.
                         </p>
                     </div>
 

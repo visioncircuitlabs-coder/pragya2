@@ -33,13 +33,13 @@ export default function AboutPage() {
               </h1>
               <div className="text-base md:text-lg lg:text-xl text-gray-600 space-y-6 leading-relaxed">
                 <p>
-                  Pragya is a youth-led career ecosystem, built by youth, for youth, with a clear focus on research, guidance, and employability advancement.
+                  Pragya is a youth-led career platform, built by youth, for youth, with a clear focus on research, guidance, and employability advancement.
                 </p>
                 <p>
                   In today&apos;s fast-changing world, career paths are no longer linear. Students and job seekers face constant confusion due to rapidly evolving industries, emerging roles, and changing skill requirements. Pragya was created to address this reality by offering a structured, future-focused approach to career development.
                 </p>
                 <p>
-                  Pragya is India&apos;s First Youth-Developed Career Ecosystem, designed to help students, job seekers, and employers make informed career and employability decisions. The platform moves beyond opinion-based counselling and brings clarity through structured assessments, curated knowledge, and opportunity alignment.
+                  Pragya is India&apos;s First Youth-Developed Career Platform, designed to help students, job seekers, and employers make informed career and employability decisions. The platform moves beyond opinion-based counselling and brings clarity through structured assessments, curated knowledge, and opportunity alignment.
                 </p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold text-brand-secondary">Our Vision</h2>
             </div>
             <p className="text-2xl font-light leading-relaxed opacity-90">
-              To build a future-ready career ecosystem that empowers youth with clarity, confidence, and meaningful career opportunities.
+              To build a future-ready career platform that empowers youth with clarity, confidence, and meaningful career opportunities.
             </p>
           </div>
 
@@ -297,9 +297,9 @@ export default function AboutPage() {
             <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
             <div className="relative z-10 text-center max-w-4xl mx-auto">
-              <h2 className="text-3xl lg:text-4xl font-black mb-6">An Integrated Ecosystem</h2>
+              <h2 className="text-3xl lg:text-4xl font-black mb-6">An Integrated Platform</h2>
               <p className="text-base md:text-lg lg:text-xl text-white/90 leading-relaxed mb-8">
-                We are committed to creating a career ecosystem where direction, readiness, and opportunity come together for every learner, job seeker, and employer.
+                We are committed to creating a career platform where direction, readiness, and opportunity come together for every learner, job seeker, and employer.
               </p>
               <p className="text-base md:text-lg lg:text-xl text-brand-secondary font-medium">
                 Understanding that traditional guidance often falls short in a rapidly evolving world, Pragya brings together structured research, clear insights, and practical pathways that help individuals make informed decisions about education, skills, and career direction.

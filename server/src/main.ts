@@ -31,7 +31,7 @@ async function bootstrap() {
     // CORS configuration
     const isProd = process.env.NODE_ENV === 'production';
     const allowedOrigins = isProd
-        ? (process.env.ALLOWED_ORIGINS || 'https://pragya.in').split(',')
+        ? (process.env.ALLOWED_ORIGINS || 'https://pragyacareer.com').split(',')
         : ['http://localhost:3001', 'http://localhost:3000'];
 
     app.enableCors({

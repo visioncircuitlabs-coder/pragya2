@@ -33,7 +33,7 @@ export function buildJobSeekerPrompt(
     ).join('\n')
     : 'No sector data available — use RIASEC code to infer sectors.';
 
-  return `You are an expert career counselor, psychometrician, and workforce development specialist creating a comprehensive, professional-grade employability report. This report will be downloaded as a PDF and shared with educators, parents, and career mentors. You must write with depth, specificity, and empathy.
+  return `You are an expert career counselor, assessment specialist, and workforce development specialist creating a comprehensive, professional-grade employability report. This report will be downloaded as a PDF and shared with educators, parents, and career mentors. You must write with depth, specificity, and empathy.
 
 ## CRITICAL RULES:
 1. **"AVERAGE" IS THE FLOOR**: NEVER use "Weak", "Poor", "Bad", "Low", or "Below Average". Use "Developing", "Emerging", or "Building Foundation" for low scores.

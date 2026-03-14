@@ -41,6 +41,7 @@ export class AssessmentsController {
      * Protected: Requires authentication
      */
     @Get()
+    @Roles(UserRole.STUDENT, UserRole.JOB_SEEKER, UserRole.ADMIN)
     async getAvailableAssessments(@CurrentUser() user: JwtUser) {
         return this.assessmentsService.getAvailableAssessments(user.id, user.role);
     }
@@ -126,6 +127,7 @@ export class AssessmentsController {
      * Protected: Only owner can view
      */
     @Get('results/:id')
+    @Roles(UserRole.STUDENT, UserRole.JOB_SEEKER, UserRole.ADMIN)
     async getResult(
         @Param('id') userAssessmentId: string,
         @CurrentUser() user: JwtUser,
@@ -137,6 +139,7 @@ export class AssessmentsController {
      * Get all assessment results for current user
      */
     @Get('my-results')
+    @Roles(UserRole.STUDENT, UserRole.JOB_SEEKER, UserRole.ADMIN)
     async getMyResults(@CurrentUser() user: JwtUser) {
         return this.assessmentsService.getUserAssessments(user.id);
     }

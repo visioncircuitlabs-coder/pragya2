@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +8,14 @@ import { Loader2, ChevronRight, Eye, EyeOff, Lock, Phone } from 'lucide-react';
 
 export default function Login() {
     const router = useRouter();
-    const { login } = useAuth();
+    const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+
+    // Redirect already-authenticated users to dashboard
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            router.push('/dashboard');
+        }
+    }, [authLoading, isAuthenticated, router]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -119,18 +126,20 @@ export default function Login() {
                             </div>
                         </div>
 
-                        {error && (
-                            <div className="rounded-xl bg-red-50 p-4 border border-red-100">
-                                <div className="flex">
-                                    <div className="ml-3">
-                                        <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
-                                        <div className="mt-2 text-sm text-red-700">
-                                            <p>{error}</p>
+                        <div aria-live="assertive" aria-atomic="true">
+                            {error && (
+                                <div className="rounded-xl bg-red-50 p-4 border border-red-100" role="alert">
+                                    <div className="flex">
+                                        <div className="ml-3">
+                                            <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
+                                            <div className="mt-2 text-sm text-red-700">
+                                                <p>{error}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         <div>
                             <button

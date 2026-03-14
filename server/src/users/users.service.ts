@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
+import { UpdateStudentProfileDto, UpdateJobSeekerProfileDto, UpdateEmployerProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -24,7 +25,7 @@ export class UsersService {
         return sanitized;
     }
 
-    async updateStudentProfile(userId: string, data: any) {
+    async updateStudentProfile(userId: string, dto: UpdateStudentProfileDto) {
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
         if (!user || user.role !== UserRole.STUDENT) {
@@ -33,12 +34,25 @@ export class UsersService {
 
         return this.prisma.studentProfile.upsert({
             where: { userId },
-            update: data,
-            create: { userId, fullName: data.fullName || '', ...data },
+            update: {
+                ...(dto.fullName !== undefined && { fullName: dto.fullName }),
+                ...(dto.grade !== undefined && { grade: dto.grade }),
+                ...(dto.schoolName !== undefined && { schoolName: dto.schoolName }),
+                ...(dto.gender !== undefined && { gender: dto.gender }),
+                ...(dto.location !== undefined && { location: dto.location }),
+            },
+            create: {
+                userId,
+                fullName: dto.fullName || '',
+                grade: dto.grade,
+                schoolName: dto.schoolName,
+                gender: dto.gender,
+                location: dto.location,
+            },
         });
     }
 
-    async updateJobSeekerProfile(userId: string, data: any) {
+    async updateJobSeekerProfile(userId: string, dto: UpdateJobSeekerProfileDto) {
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
         if (!user || user.role !== UserRole.JOB_SEEKER) {
@@ -47,12 +61,33 @@ export class UsersService {
 
         return this.prisma.jobSeekerProfile.upsert({
             where: { userId },
-            update: data,
-            create: { userId, fullName: data.fullName || '', ...data },
+            update: {
+                ...(dto.fullName !== undefined && { fullName: dto.fullName }),
+                ...(dto.gender !== undefined && { gender: dto.gender }),
+                ...(dto.location !== undefined && { location: dto.location }),
+                ...(dto.state !== undefined && { state: dto.state }),
+                ...(dto.phone !== undefined && { phone: dto.phone }),
+                ...(dto.educationLevel !== undefined && { educationLevel: dto.educationLevel }),
+                ...(dto.fieldOfStudy !== undefined && { fieldOfStudy: dto.fieldOfStudy }),
+                ...(dto.currentStatus !== undefined && { currentStatus: dto.currentStatus }),
+                ...(dto.yearsOfExperience !== undefined && { yearsOfExperience: dto.yearsOfExperience }),
+            },
+            create: {
+                userId,
+                fullName: dto.fullName || '',
+                gender: dto.gender,
+                location: dto.location,
+                state: dto.state,
+                phone: dto.phone,
+                educationLevel: dto.educationLevel,
+                fieldOfStudy: dto.fieldOfStudy,
+                currentStatus: dto.currentStatus,
+                yearsOfExperience: dto.yearsOfExperience,
+            },
         });
     }
 
-    async updateEmployerProfile(userId: string, data: any) {
+    async updateEmployerProfile(userId: string, dto: UpdateEmployerProfileDto) {
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
         if (!user || user.role !== UserRole.EMPLOYER) {
@@ -61,8 +96,25 @@ export class UsersService {
 
         return this.prisma.employerProfile.upsert({
             where: { userId },
-            update: data,
-            create: { userId, companyName: data.companyName || '', ...data },
+            update: {
+                ...(dto.companyName !== undefined && { companyName: dto.companyName }),
+                ...(dto.industry !== undefined && { industry: dto.industry }),
+                ...(dto.companySize !== undefined && { companySize: dto.companySize }),
+                ...(dto.website !== undefined && { website: dto.website }),
+                ...(dto.contactPerson !== undefined && { contactPerson: dto.contactPerson }),
+                ...(dto.phone !== undefined && { phone: dto.phone }),
+                ...(dto.address !== undefined && { address: dto.address }),
+            },
+            create: {
+                userId,
+                companyName: dto.companyName || '',
+                industry: dto.industry,
+                companySize: dto.companySize,
+                website: dto.website,
+                contactPerson: dto.contactPerson,
+                phone: dto.phone,
+                address: dto.address,
+            },
         });
     }
 

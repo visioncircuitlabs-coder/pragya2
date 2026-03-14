@@ -319,35 +319,39 @@ export default function ResultsPage() {
         }
     }, [params?.id, authLoading, isAuthenticated, router]);
 
-    // Download PDF report
-    const handleDownload = () => {
+    // Download PDF report via fetch + blob (token sent in header, not URL)
+    const handleDownload = async () => {
         if (!result?.id) return;
 
         setDownloading(true);
-        const token = localStorage.getItem('accessToken');
-        const downloadUrl = `/api/download-report/${result.id}?token=${token}`;
-
-        // Use a hidden iframe to trigger a native browser download.
-        // This is the most reliable method — the browser processes
-        // Content-Disposition: attachment natively without any JS blob involvement.
-        let iframe = document.getElementById('pdf-download-frame') as HTMLIFrameElement | null;
-        if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'pdf-download-frame';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`/api/download-report/${result.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error('Download failed');
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pragya_career_report.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download failed:', error);
+            alert('Failed to download report. Please try again.');
+        } finally {
+            setDownloading(false);
         }
-        iframe.src = downloadUrl;
-
-        // Reset downloading state after a delay
-        setTimeout(() => setDownloading(false), 4000);
     };
 
     // Loading state
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
+                <div className="text-center" role="status">
                     <Loader2 className="w-12 h-12 animate-spin text-[#0e6957] mx-auto mb-4" />
                     <p className="text-gray-600">Loading your results...</p>
                 </div>

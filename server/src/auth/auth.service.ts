@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException, BadRequestExcepti
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { LoggerService } from '../logger/logger.service';
@@ -22,8 +22,6 @@ export class AuthService {
     }
 
     async register(dto: RegisterDto) {
-        const startTime = Date.now();
-
         // Check if user exists
         const existingUser = await this.prisma.user.findUnique({
             where: { email: dto.email.toLowerCase() },
@@ -79,10 +77,13 @@ export class AuthService {
     }
 
     async login(dto: LoginDto) {
-        const startTime = Date.now();
-
         const user = await this.prisma.user.findUnique({
             where: { email: dto.email.toLowerCase() },
+            include: {
+                studentProfile: true,
+                jobSeekerProfile: true,
+                employerProfile: true,
+            },
         });
 
         if (!user) {
@@ -129,7 +130,15 @@ export class AuthService {
     async refreshToken(refreshToken: string) {
         const storedToken = await this.prisma.refreshToken.findUnique({
             where: { token: refreshToken },
-            include: { user: true },
+            include: {
+                user: {
+                    include: {
+                        studentProfile: true,
+                        jobSeekerProfile: true,
+                        employerProfile: true,
+                    },
+                },
+            },
         });
 
         if (!storedToken || storedToken.expiresAt < new Date()) {
@@ -344,7 +353,7 @@ export class AuthService {
 
     private async createEmailVerificationToken(userId: string): Promise<string> {
         // Generate 6-digit OTP (100000–999999)
-        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        const otp = String(randomInt(100000, 1000000));
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minutes
 
@@ -365,6 +374,10 @@ export class AuthService {
             user.studentProfile?.fullName ||
             user.jobSeekerProfile?.fullName ||
             user.employerProfile?.contactPerson ||
+            undefined;
+        sanitized.gender =
+            user.studentProfile?.gender ||
+            user.jobSeekerProfile?.gender ||
             undefined;
         return sanitized;
     }

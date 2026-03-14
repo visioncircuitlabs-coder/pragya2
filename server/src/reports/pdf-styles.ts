@@ -129,7 +129,7 @@ export const getPageStyle = (lang: Lang) => ({
     flexDirection: 'column' as const,
     backgroundColor: COLORS.BG_WHITE,
     padding: lang === 'ml' ? 26 : 30,
-    paddingBottom: lang === 'ml' ? 44 : 50,
+    paddingBottom: lang === 'ml' ? 38 : 38,
     fontFamily: getFontFamily(lang),
     fontSize: lang === 'ml' ? 9 : 9,
     lineHeight: lang === 'ml' ? 1.35 : undefined,

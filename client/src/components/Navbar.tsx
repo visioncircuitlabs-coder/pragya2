@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -68,7 +68,9 @@ export default function Navbar() {
         <div className="flex items-center gap-3 lg:gap-4 ml-3">
           {/* Auth Buttons (Desktop) */}
           <div className="hidden lg:flex items-center gap-4 mr-2">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="w-24 h-8 bg-gray-100 rounded-full animate-pulse" />
+            ) : isAuthenticated ? (
               <>
                 <Link
                   href="/dashboard"
@@ -125,6 +127,7 @@ export default function Navbar() {
               href="https://www.instagram.com/pragya_career/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Follow us on Instagram"
               className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"
             >
               <Instagram className="w-5 h-5 text-white" />
@@ -133,6 +136,7 @@ export default function Navbar() {
               href="https://www.youtube.com/@pragyacareer"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Subscribe on YouTube"
               className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
             >
               <Youtube className="w-5 h-5 text-white" />
@@ -153,7 +157,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
-        <div className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300 max-h-[calc(100vh-100px)] overflow-y-auto">
+        <div className="lg:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl transition-all duration-300 max-h-[calc(100vh-100px)] overflow-y-auto">
           <div className="flex flex-col p-6 gap-6 font-bold text-gray-600">
             {isAuthenticated ? (
               <div className="flex flex-col gap-4 border-b border-gray-100 pb-4">

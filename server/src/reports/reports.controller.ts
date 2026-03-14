@@ -38,15 +38,21 @@ export class ReportsController {
         const reportPath = await this.reportsService.getReportPath(userAssessmentId, user.id);
 
         const fileName = `pragya_report_${userAssessmentId}.pdf`;
-        const stat = fs.statSync(reportPath);
-        const fileStream = fs.createReadStream(reportPath);
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Length', stat.size);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        try {
+            const stat = fs.statSync(reportPath);
+            const fileStream = fs.createReadStream(reportPath);
 
-        fileStream.pipe(res);
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Length', stat.size);
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+            fileStream.pipe(res);
+        } catch (error) {
+            this.logger.error(`Failed to read report file: ${reportPath}`, error);
+            res.status(404).json({ message: 'Report file not found. Please regenerate.' });
+        }
     }
 
     /**

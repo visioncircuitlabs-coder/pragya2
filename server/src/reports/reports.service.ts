@@ -13,6 +13,7 @@ import { JobSeekerReportDocument } from './job-seeker-report';
 @Injectable()
 export class ReportsService {
     private readonly reportsDir: string;
+    private readonly activeGenerations = new Map<string, Promise<string>>();
 
     constructor(
         private prisma: PrismaService,
@@ -207,7 +208,22 @@ export class ReportsService {
         const fileName = `pragya_${reportType}_report_${userAssessmentId}_${Date.now()}.pdf`;
         const filePath = path.join(this.reportsDir, fileName);
 
-        await renderToFile(pdfDocument, filePath);
+        // Delete old report file if it exists (prevent disk accumulation)
+        const oldReport = assessment.reportUrl as string | null;
+        if (oldReport && fs.existsSync(oldReport) && oldReport !== filePath) {
+            try { fs.unlinkSync(oldReport); } catch { /* ignore cleanup errors */ }
+        }
+
+        try {
+            await renderToFile(pdfDocument, filePath);
+        } catch (err) {
+            // Clean up partial file on render failure
+            if (fs.existsSync(filePath)) {
+                try { fs.unlinkSync(filePath); } catch { /* ignore */ }
+            }
+            this.logger.error(`PDF rendering failed for ${userAssessmentId}: ${err instanceof Error ? err.message : err}`);
+            throw new NotFoundException('Report generation failed — please try again');
+        }
 
         const fileSize = fs.statSync(filePath).size;
         const duration = Date.now() - startTime;
@@ -256,11 +272,27 @@ export class ReportsService {
             fs.existsSync(reportPath) &&
             (!aiAnalyzedAt || reportGenAt > aiAnalyzedAt)
         ) {
+            // Path traversal protection
+            const resolvedPath = path.resolve(reportPath);
+            const resolvedDir = path.resolve(this.reportsDir);
+            if (!resolvedPath.startsWith(resolvedDir + path.sep) && !resolvedPath.startsWith(resolvedDir + '/')) {
+                throw new NotFoundException('Report not found');
+            }
             this.logger.log(`Returning cached report for assessment ${userAssessmentId}`);
             return reportPath;
         }
 
+        // Deduplicate concurrent generation requests
+        if (this.activeGenerations.has(userAssessmentId)) {
+            this.logger.log(`Waiting for in-progress report generation for ${userAssessmentId}`);
+            return this.activeGenerations.get(userAssessmentId)!;
+        }
+
         this.logger.log(`Generating fresh report for assessment ${userAssessmentId}`);
-        return this.generateReport(userAssessmentId);
+        const promise = this.generateReport(userAssessmentId).finally(() => {
+            this.activeGenerations.delete(userAssessmentId);
+        });
+        this.activeGenerations.set(userAssessmentId, promise);
+        return promise;
     }
 }

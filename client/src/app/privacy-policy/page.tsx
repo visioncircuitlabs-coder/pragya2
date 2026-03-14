@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
                     {/* Overview */}
                     <div className="bg-brand-primary/5 rounded-2xl p-8 border border-brand-primary/10 mb-12">
                         <p className="text-gray-700 leading-relaxed">
-                            Pragya Career Ecosystem (&quot;Pragya&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your personal information. This Privacy Policy describes our practices regarding the collection, use, storage, and disclosure of information through our website and services.
+                            Pragya Career Platform (&quot;Pragya&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your personal information. This Privacy Policy describes our practices regarding the collection, use, storage, and disclosure of information through our website and services.
                         </p>
                     </div>
 
@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
                                     </li>
                                     <li className="flex items-start gap-3">
                                         <span className="w-2 h-2 rounded-full bg-brand-primary mt-2 flex-shrink-0"></span>
-                                        <span><strong>Assessment Responses:</strong> Your answers to career, aptitude, personality, and psychometric assessments</span>
+                                        <span><strong>Assessment Responses:</strong> Your answers to career, aptitude, personality, and interest assessments</span>
                                     </li>
                                     <li className="flex items-start gap-3">
                                         <span className="w-2 h-2 rounded-full bg-brand-primary mt-2 flex-shrink-0"></span>

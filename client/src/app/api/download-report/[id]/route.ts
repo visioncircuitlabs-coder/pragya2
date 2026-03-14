@@ -7,7 +7,7 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> },
 ) {
     const { id } = await params;
-    const token = request.nextUrl.searchParams.get('token');
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -35,6 +35,7 @@ export async function GET(
                 'Content-Disposition': `attachment; filename="pragya_report_${id}.pdf"`,
                 'Content-Length': pdfBuffer.byteLength.toString(),
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'X-Content-Type-Options': 'nosniff',
             },
         });
     } catch {

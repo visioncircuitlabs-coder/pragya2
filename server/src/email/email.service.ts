@@ -47,7 +47,7 @@ export class EmailService {
           <p style="color: #666;">Or copy and paste this link: <br/>${verificationUrl}</p>
           <p style="color: #666; font-size: 12px;">This link expires in 24 hours.</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"/>
-          <p style="color: #999; font-size: 12px;">Pragya - India's Pioneer Youth-Developed Career Ecosystem</p>
+          <p style="color: #999; font-size: 12px;">Pragya - India's Pioneer Youth-Developed Career Platform</p>
         </div>
       `,
         };
@@ -89,7 +89,7 @@ export class EmailService {
           <p style="color: #666;">This code expires in <strong>10 minutes</strong>.</p>
           <p style="color: #666;">If you didn't create a Pragya account, you can safely ignore this email.</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"/>
-          <p style="color: #999; font-size: 12px;">Pragya - India's Pioneer Youth-Developed Career Ecosystem</p>
+          <p style="color: #999; font-size: 12px;">Pragya - India's Pioneer Youth-Developed Career Platform</p>
         </div>
       `,
         };

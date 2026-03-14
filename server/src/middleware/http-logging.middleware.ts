@@ -57,7 +57,7 @@ export class HttpLoggingMiddleware implements NestMiddleware {
     }
 
     private shouldSkip(url: string): boolean {
-        const skipPaths = ['/health', '/favicon.ico', '/_next', '/static'];
+        const skipPaths = ['/health', '/favicon.ico', '/_next', '/static', '/api/v1/assessments/save-progress'];
         return skipPaths.some((path) => url.startsWith(path));
     }
 }

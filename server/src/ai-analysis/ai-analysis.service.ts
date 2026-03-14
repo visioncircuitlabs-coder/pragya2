@@ -109,7 +109,11 @@ export interface StudentProfile {
 @Injectable()
 export class AiAnalysisService {
     private readonly apiKey: string;
-    private readonly apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    private readonly apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+    // TODO: gemini-3.1-flash-lite-preview is a preview model (launched 2026-03-03).
+    // Monitor for GA release and switch to stable model ID (e.g., gemini-3.1-flash-lite).
+    // Falls back to getStudentMalayalamFallback / getJobSeekerMalayalamFallback if model is unavailable.
+    private readonly mlApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent';
 
     constructor(
         private prisma: PrismaService,
@@ -123,12 +127,29 @@ export class AiAnalysisService {
         }
     }
 
-    /** Fetch from Gemini with a 15-second timeout */
+    /** Fetch from Gemini with a 30-second timeout */
     private async geminiRequest(body: object): Promise<Response> {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
         try {
             const response = await fetch(`${this.apiUrl}?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify(body),
+            });
+            return response;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
+    /** Fetch from Gemini 3.1 Flash Lite (used for Malayalam) */
+    private async geminiMlRequest(body: object): Promise<Response> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        try {
+            const response = await fetch(`${this.mlApiUrl}?key=${this.apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 signal: controller.signal,
@@ -878,7 +899,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
         });
 
         try {
-            const response = await this.geminiRequest({
+            const response = await this.geminiMlRequest({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
                     temperature: 0.7,
@@ -891,7 +912,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
 
             if (!response.ok) {
                 const error = await response.text();
-                this.logger.warn(`Malayalam analysis Gemini error (${duration}ms): ${error.substring(0, 200)}`);
+                this.logger.warn(`Malayalam analysis Gemini 3.1 Flash Lite error (${duration}ms): ${error.substring(0, 200)}`);
                 return this.getStudentMalayalamFallback(
                     profile, aptitudeScores, riasecScores, riasecCode,
                     personalityScores, readinessScores, careerMatches, sectorMatches,
@@ -902,7 +923,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (!generatedText) {
-                this.logger.warn('Empty response from Gemini for Malayalam analysis');
+                this.logger.warn('Empty response from Gemini 3.1 Flash Lite for Malayalam analysis');
                 return this.getStudentMalayalamFallback(
                     profile, aptitudeScores, riasecScores, riasecCode,
                     personalityScores, readinessScores, careerMatches, sectorMatches,
@@ -912,7 +933,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
             const result = JSON.parse(generatedText) as { title_ml: string; analysis_ml: string };
 
             if (!result.title_ml || !result.analysis_ml) {
-                this.logger.warn('Incomplete Malayalam analysis from Gemini');
+                this.logger.warn('Incomplete Malayalam analysis from Gemini 3.1 Flash Lite');
                 return this.getStudentMalayalamFallback(
                     profile, aptitudeScores, riasecScores, riasecCode,
                     personalityScores, readinessScores, careerMatches, sectorMatches,
@@ -921,6 +942,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
 
             this.logger.logBusinessEvent('GEMINI_STUDENT_ML_SUCCESS', {
                 student: profile.fullName,
+                model: 'gemini-3.1-flash-lite-preview',
                 duration: `${duration}ms`,
                 analysisLength: result.analysis_ml.length,
             });
@@ -1121,7 +1143,8 @@ ${JSON.stringify(sourceDict, null, 2)}`;
         });
 
         try {
-            const response = await this.geminiRequest({
+            // Use gemini-3.1-flash-lite-preview for Malayalam generation
+            const response = await this.geminiMlRequest({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
                     temperature: 0.7,
@@ -1134,7 +1157,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
 
             if (!response.ok) {
                 const error = await response.text();
-                this.logger.warn(`Job-seeker Malayalam Gemini error (${duration}ms): ${error.substring(0, 200)}`);
+                this.logger.warn(`Job-seeker Malayalam Gemini 3.1 Flash Lite error (${duration}ms): ${error.substring(0, 200)}`);
                 return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
             }
 
@@ -1142,7 +1165,7 @@ ${JSON.stringify(sourceDict, null, 2)}`;
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (!generatedText) {
-                this.logger.warn('Empty response from Gemini for job-seeker Malayalam analysis');
+                this.logger.warn('Empty response from Gemini 3.1 Flash Lite for job-seeker Malayalam');
                 return this.getJobSeekerMalayalamFallback(profile, scores, careerMatches, sectorMatches);
             }
 

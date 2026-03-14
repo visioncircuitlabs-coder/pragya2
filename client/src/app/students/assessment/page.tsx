@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
@@ -131,13 +131,18 @@ function BreakOverlay({ breakInfo, onContinue }: { breakInfo: BreakInfo; onConti
         return () => clearInterval(timer);
     }, [secondsLeft]);
 
+    // Auto-continue when timer finishes
+    useEffect(() => {
+        if (secondsLeft <= 0) onContinue();
+    }, [secondsLeft, onContinue]);
+
     const mins = Math.floor(secondsLeft / 60);
     const secs = secondsLeft % 60;
     const canContinue = secondsLeft <= 0;
     const progress = ((totalSeconds - secondsLeft) / totalSeconds) * 100;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Assessment break">
             <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-5 md:p-8 text-center">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Timer className="w-8 h-8 md:w-10 md:h-10 text-violet-600" />
@@ -239,8 +244,10 @@ export default function StudentsAssessmentPage() {
     const [submitting, setSubmitting] = useState(false);
     const [showIntro, setShowIntro] = useState(true);
 
+    // Track visited question indices (for skipped question detection)
+    const visitedIndicesRef = useRef<Set<number>>(new Set());
+
     // Break timer state
-    const [completedBreaks, setCompletedBreaks] = useState<Set<string>>(new Set());
     const [activeBreak, setActiveBreak] = useState<BreakInfo | null>(null);
     const [pendingNavIndex, setPendingNavIndex] = useState<number | null>(null);
 
@@ -300,7 +307,12 @@ export default function StudentsAssessmentPage() {
                 // Restore saved answers
                 if (data.savedAnswers && Object.keys(data.savedAnswers).length > 0) {
                     setAnswers(data.savedAnswers);
-                    setCurrentQuestionIndex(data.lastQuestionIndex || 0);
+                    const resumeIdx = data.lastQuestionIndex || 0;
+                    setCurrentQuestionIndex(resumeIdx);
+                    // Mark all questions up to resumeIdx as visited
+                    for (let i = 0; i <= resumeIdx; i++) {
+                        visitedIndicesRef.current.add(i);
+                    }
                 }
             }
 
@@ -373,6 +385,11 @@ export default function StudentsAssessmentPage() {
         }
     }, [authLoading, isAuthenticated, user, fetchAssessment, router]);
 
+    // Mark current question as visited
+    useEffect(() => {
+        visitedIndicesRef.current.add(currentQuestionIndex);
+    }, [currentQuestionIndex]);
+
     // Handle answer selection — auto-save to server
     const handleSelectOption = (questionId: string, optionId: string) => {
         setAnswers((prev) => ({
@@ -397,10 +414,11 @@ export default function StudentsAssessmentPage() {
     const goToQuestion = useCallback((index: number) => {
         if (index < 0 || index >= questions.length) return;
 
-        // Only check breaks on forward navigation
-        if (index > currentQuestionIndex && questions.length > 0) {
+        // Only check breaks when moving forward to an unvisited question
+        // If the target question was already visited, skip break entirely
+        if (index > currentQuestionIndex && questions.length > 0 && !visitedIndicesRef.current.has(index)) {
             const breakInfo = detectBreak(currentQuestionIndex, index, questions);
-            if (breakInfo && !completedBreaks.has(breakInfo.key)) {
+            if (breakInfo) {
                 setActiveBreak(breakInfo);
                 setPendingNavIndex(index);
                 return; // Don't navigate yet — show break overlay
@@ -408,19 +426,16 @@ export default function StudentsAssessmentPage() {
         }
 
         setCurrentQuestionIndex(index);
-    }, [currentQuestionIndex, questions, completedBreaks]);
+    }, [currentQuestionIndex, questions]);
 
-    // Called when break timer finishes and user clicks Continue
+    // Called when break timer finishes
     const handleBreakComplete = useCallback(() => {
-        if (activeBreak) {
-            setCompletedBreaks((prev) => new Set([...prev, activeBreak.key]));
-        }
         setActiveBreak(null);
         if (pendingNavIndex !== null) {
             setCurrentQuestionIndex(pendingNavIndex);
             setPendingNavIndex(null);
         }
-    }, [activeBreak, pendingNavIndex]);
+    }, [pendingNavIndex]);
 
     // Submit assessment
     const handleSubmit = async () => {
@@ -465,11 +480,18 @@ export default function StudentsAssessmentPage() {
     // Get current section info
     const currentSectionInfo = currentQuestion ? SECTION_INFO[currentQuestion.section] : null;
 
+    // Compute skipped questions: visited but not answered (excluding current)
+    const skippedQuestions = questions.length > 0
+        ? Array.from(visitedIndicesRef.current)
+            .filter((idx) => idx !== currentQuestionIndex && questions[idx] && !answers[questions[idx].id])
+            .sort((a, b) => a - b)
+        : [];
+
     // Loading state
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-violet-50 to-indigo-50 flex items-center justify-center">
-                <div className="text-center">
+                <div className="text-center" role="status">
                     <Loader2 className="w-12 h-12 animate-spin text-violet-600 mx-auto mb-4" />
                     <p className="text-gray-600">Loading assessment...</p>
                 </div>
@@ -571,7 +593,7 @@ export default function StudentsAssessmentPage() {
                                             {card.icon}
                                         </div>
                                         <p className="font-semibold text-gray-900 text-sm md:text-base">{card.label}</p>
-                                        <p className="text-xs md:text-sm text-gray-500">{card.questions} questions</p>
+                                        <p className="text-xs md:text-sm text-gray-500">{card.questions} items</p>
                                     </div>
                                 ))}
                             </div>
@@ -602,7 +624,7 @@ export default function StudentsAssessmentPage() {
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="font-bold">4.</span>
-                                    <span>Answer all questions before submitting. You can go back to previous questions.</span>
+                                    <span>Answer all items before submitting. You can go back to previous items.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="font-bold">5.</span>
@@ -648,22 +670,22 @@ export default function StudentsAssessmentPage() {
                         <div>
                             <h1 className="text-base md:text-lg font-bold text-gray-900 truncate max-w-[180px] sm:max-w-none">{currentQuestion?.section}</h1>
                             <p className="text-sm text-gray-500">
-                                Question {currentQuestionIndex + 1} of {questions.length}
+                                Item {currentQuestion ? questions.slice(0, currentQuestionIndex + 1).filter(q => q.section === currentQuestion.section).length : 0} of {currentQuestion ? questions.filter(q => q.section === currentQuestion.section).length : 0}
                             </p>
                         </div>
                     </div>
 
                     <div className="text-right">
                         <p className="text-sm text-gray-500">Answered</p>
-                        <p className="font-bold text-violet-600">{answeredCount}/{questions.length}</p>
+                        <p className="font-bold text-violet-600">{currentQuestion ? questions.filter(q => q.section === currentQuestion.section && answers[q.id]).length : 0}/{currentQuestion ? questions.filter(q => q.section === currentQuestion.section).length : 0}</p>
                     </div>
                 </div>
 
-                {/* Progress Bar */}
+                {/* Progress Bar — section-relative */}
                 <div className="h-1 bg-gray-200">
                     <div
                         className="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-300"
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${currentQuestion ? (questions.filter(q => q.section === currentQuestion.section && answers[q.id]).length / questions.filter(q => q.section === currentQuestion.section).length) * 100 : 0}%` }}
                     />
                 </div>
             </header>
@@ -725,6 +747,26 @@ export default function StudentsAssessmentPage() {
                     </div>
                 )}
 
+                {/* Skipped Questions */}
+                {skippedQuestions.length > 0 && (
+                    <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-5">
+                        <h3 className="text-sm font-semibold text-amber-800 mb-3">
+                            Skipped Questions ({skippedQuestions.length})
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                            {skippedQuestions.map((idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => goToQuestion(idx)}
+                                    className="w-9 h-9 rounded-lg bg-white border border-amber-300 text-amber-700 text-sm font-medium hover:bg-amber-100 transition-colors"
+                                >
+                                    {idx + 1}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
             </main>
 
             {/* Footer Navigation */}
@@ -740,7 +782,7 @@ export default function StudentsAssessmentPage() {
                     </button>
 
                     <div className="text-xs sm:text-sm text-gray-500 text-center min-w-0">
-                        {answeredCount}/{questions.length}
+                        {currentQuestion ? questions.filter(q => q.section === currentQuestion.section && answers[q.id]).length : 0}/{currentQuestion ? questions.filter(q => q.section === currentQuestion.section).length : 0}
                         <span className="hidden sm:inline"> answered</span>
                     </div>
 

@@ -10,7 +10,7 @@ export default function FAQ() {
   const faqs = [
     {
       question: "What is Pragya?",
-      answer: "Pragya is a platform for research and guidance for youth advancement. It is India's First Youth-Developed Career Ecosystem, created to support informed career and employability decisions for students, job seekers, and employers. Pragya brings together: India's First Structured Digital Career Library, Career-Assessment Integrated Talent Analytics Portal, and Career & Employability Assessment. For the first time in India, career discovery, assessment, and opportunity access are integrated into a single structured platform."
+      answer: "Pragya is a platform for research and guidance for youth advancement. It is India's First Youth-Developed Career Platform, created to support informed career and employability decisions for students, job seekers, and employers. Pragya brings together: India's First Structured Digital Career Library, Career-Assessment Integrated Talent Analytics Portal, and Career & Employability Assessment. For the first time in India, career discovery, assessment, and opportunity access are integrated into a single structured platform."
     },
     {
       question: "What is the Career Assessment?",
@@ -94,6 +94,9 @@ export default function FAQ() {
                   >
                     <button
                       onClick={() => toggleFAQ(index)}
+                      aria-expanded={openIndex === index}
+                      aria-controls={`faq-panel-${index}`}
+                      id={`faq-btn-${index}`}
                       className="w-full py-8 flex items-start justify-between gap-6 text-left group"
                     >
                       <span className={`text-xl md:text-2xl font-bold transition-colors duration-300 ${openIndex === index ? 'text-brand-secondary' : 'text-white group-hover:text-white/80'}`}>
@@ -105,9 +108,12 @@ export default function FAQ() {
                     </button>
 
                     <div
+                      id={`faq-panel-${index}`}
+                      role="region"
+                      aria-labelledby={`faq-btn-${index}`}
                       className={`overflow-hidden transition-all duration-500 ease-in-out ${openIndex === index ? 'max-h-96 opacity-100 mb-8' : 'max-h-0 opacity-0'}`}
                     >
-                      <p className="text-base lg:text-lg text-gray-400 leading-relaxed pr-8">
+                      <p className="text-base lg:text-lg text-gray-300 leading-relaxed pr-8">
                         {faq.answer}
                       </p>
                     </div>

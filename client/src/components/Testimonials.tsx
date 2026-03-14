@@ -224,10 +224,12 @@ export default function Testimonials() {
 
         {/* Category Tabs */}
         <div className="flex justify-center mb-8 lg:mb-10">
-          <div className="inline-flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-x-auto max-w-full">
+          <div role="tablist" aria-label="Testimonial categories" className="inline-flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-x-auto max-w-full">
             {categories.map((category) => (
               <button
                 key={category.id}
+                role="tab"
+                aria-selected={activeTab === category.id}
                 onClick={() => setActiveTab(category.id)}
                 className={`flex items-center gap-2 md:gap-3 px-4 py-2.5 md:px-8 md:py-4 rounded-xl font-bold text-sm md:text-base lg:text-lg transition-all duration-300 whitespace-nowrap ${activeTab === category.id
                   ? `${category.bgColor} ${category.accentColor} shadow-md`

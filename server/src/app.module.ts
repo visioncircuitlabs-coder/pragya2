@@ -23,7 +23,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
         ThrottlerModule.forRoot([{
             name: 'default',
             ttl: 60000,   // 1 minute window
-            limit: 100,   // 100 requests per minute per IP
+            limit: 200,   // 200 requests per minute per IP (handles concurrent auto-save assessments)
         }, {
             name: 'auth',
             ttl: 60000,   // 1 minute window

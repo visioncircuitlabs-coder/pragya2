@@ -105,7 +105,9 @@ export class AssessmentsService {
                 userId_assessmentId: { userId, assessmentId },
             },
             include: {
-                responses: true, // Fetch saved responses
+                responses: {
+                    select: { questionId: true, selectedOptionId: true },
+                },
             },
         });
 
@@ -231,33 +233,42 @@ export class AssessmentsService {
             throw new BadRequestException('Assessment already submitted');
         }
 
-        // Upsert the response
-        await this.prisma.userResponse.upsert({
-            where: {
-                userAssessmentId_questionId: {
+        // Validate questionId belongs to this assessment and selectedOptionId is valid
+        const question = await this.prisma.question.findFirst({
+            where: { id: questionId, assessmentId: userAssessment.assessmentId },
+            select: { id: true, options: { where: { id: selectedOptionId }, select: { id: true } } },
+        });
+        if (!question || question.options.length === 0) {
+            throw new BadRequestException('Invalid question or option for this assessment');
+        }
+
+        // Use transaction to batch the upsert + index update into one round trip
+        await this.prisma.$transaction([
+            this.prisma.userResponse.upsert({
+                where: {
+                    userAssessmentId_questionId: {
+                        userAssessmentId,
+                        questionId,
+                    },
+                },
+                update: {
+                    selectedOptionId,
+                    answeredAt: new Date(),
+                },
+                create: {
                     userAssessmentId,
                     questionId,
+                    selectedOptionId,
                 },
-            },
-            update: {
-                selectedOptionId,
-                answeredAt: new Date(),
-            },
-            create: {
-                userAssessmentId,
-                questionId,
-                selectedOptionId,
-            },
-        });
-
-        // Update the last question index
-        await this.prisma.userAssessment.update({
-            where: { id: userAssessmentId },
-            data: {
-                lastQuestionIndex: currentQuestionIndex,
-                updatedAt: new Date(),
-            },
-        });
+            }),
+            this.prisma.userAssessment.update({
+                where: { id: userAssessmentId },
+                data: {
+                    lastQuestionIndex: currentQuestionIndex,
+                    updatedAt: new Date(),
+                },
+            }),
+        ]);
 
     }
 
@@ -535,7 +546,7 @@ export class AssessmentsService {
         const perfMetrics = this.scoringService.calculateJobSeekerPerformanceMetrics(scores);
 
         // Serialize sector matches for storage (top 6 sectors)
-        const sectorMatchesForStorage = sectorMatches.topSectors.slice(0, 6).map(sm => ({
+        const sectorMatchesForStorage = (sectorMatches?.topSectors?.slice(0, 6) || []).map(sm => ({
             id: sm.sector.id,
             name: sm.sector.name,
             nameMl: sm.sector.nameMl,
@@ -648,8 +659,13 @@ export class AssessmentsService {
             where: { userId },
             include: {
                 assessment: {
-                    select: { title: true, type: true },
+                    select: {
+                        title: true,
+                        type: true,
+                        _count: { select: { questions: true } },
+                    },
                 },
+                _count: { select: { responses: true } },
             },
             orderBy: { createdAt: 'desc' },
             take: 50,

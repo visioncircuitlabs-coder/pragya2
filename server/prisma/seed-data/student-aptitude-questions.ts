@@ -108,7 +108,7 @@ export const studentAptitudeQuestions = [
         ]
     },
     {
-        "section": "Abstract-Fluid Reasoning",
+        "section": "Numerical Reasoning",
         "text": "If all Zogs are Tals and some Tals are Rims, which is true?",
         "textMl": "എല്ലാ 'ജോഗുകളും' (Zogs) 'ടാലുകൾ' (Tals) ആണെന്നും, ചില 'ടാലുകൾ' 'റിമ്മുകൾ' (Rims) ആണെന്നും കരുതുക. എങ്കിൽ താഴെ പറയുന്നതിൽ ഏതാണ് ശരി?",
         "options": [
@@ -221,7 +221,7 @@ export const studentAptitudeQuestions = [
         "textMl": "ഇതിൽ ഏത് സാഹചര്യമാണ് 'എക്സ്പോണൻഷ്യൽ വളർച്ച' (Exponential growth) കാണിക്കുന്നത്?",
         "options": [
             {
-                "text": "Salary increases by ₹1000 yearly (ശമ്പളം എല്ലാ വർഷവും ₹1000 വീതം കൂടുന്നു)",
+                "text": "Salary increases by ₹1000 yearly",
                 "textMl": "ശമ്പളം എല്ലാ വർഷവും ₹1000 വീതം കൂടുന്നു",
                 "isCorrect": false
             },
@@ -231,7 +231,7 @@ export const studentAptitudeQuestions = [
                 "isCorrect": true
             },
             {
-                "text": "Distance increases by 10 km daily (ദൂരം എല്ലാ ദിവസവും 10 കി. മീ വീതം കൂടുന്നു)",
+                "text": "Distance increases by 10 km daily",
                 "textMl": "ദൂരം എല്ലാ ദിവസവും 10 കി. മീ വീതം കൂടുന്നു",
                 "isCorrect": false
             },
@@ -356,22 +356,22 @@ export const studentAptitudeQuestions = [
         "textMl": "കൂട്ടത്തിൽ പെടാത്ത ബന്ധം (Odd Relationship) ഏതാണ്?",
         "options": [
             {
-                "text": "Doctor : Hospital (ഡോക്ടർ : ഹോസ്പിറ്റൽ)",
+                "text": "Doctor : Hospital",
                 "textMl": "",
                 "isCorrect": false
             },
             {
-                "text": "Teacher : School (ടീച്ചർ : സ്കൂൾ)",
+                "text": "Teacher : School",
                 "textMl": "",
                 "isCorrect": false
             },
             {
-                "text": "Pilot : Airport (പൈലറ്റ് : എയർപോർട്ട്)",
+                "text": "Pilot : Airport",
                 "textMl": "",
                 "isCorrect": false
             },
             {
-                "text": "Farmer : Crops (കർഷകൻ : കൃഷി)",
+                "text": "Farmer : Crops",
                 "textMl": "",
                 "isCorrect": true
             }
@@ -491,22 +491,22 @@ export const studentAptitudeQuestions = [
         "textMl": "'ഐഡിയ : കണ്ടുപിടുത്തം' (Idea : Innovation) എന്ന ബന്ധത്തിന് സമാനമായത് ഏതാണ്?",
         "options": [
             {
-                "text": "Seed : Plant (വിത്ത് : ചെടി)",
+                "text": "Seed : Plant",
                 "textMl": "",
                 "isCorrect": true
             },
             {
-                "text": "Plan : Success (പ്ലാൻ : വിജയം)",
+                "text": "Plan : Success",
                 "textMl": "",
                 "isCorrect": false
             },
             {
-                "text": "Theory : Practice (സിദ്ധാന്തം : പ്രായോഗികം)",
+                "text": "Theory : Practice",
                 "textMl": "",
                 "isCorrect": false
             },
             {
-                "text": "Word : Sentence (വാക്ക് : വാചകം)",
+                "text": "Word : Sentence",
                 "textMl": "",
                 "isCorrect": false
             }
@@ -783,7 +783,7 @@ export const studentAptitudeQuestions = [
         ]
     },
     {
-        "section": "Numerical Reasoning",
+        "section": "Abstract-Fluid Reasoning",
         "text": "If ★ = 3 and ◆ = 5, what is ★ + ◆ + ★?",
         "textMl": "★ = 3 ഉം ◆ = 5 ഉം ആണെങ്കിൽ, ★ + ◆ + ★ = ?",
         "options": [
@@ -879,7 +879,7 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
-                "text": "Zigzag pattern (സിഗ്-സാഗ് ആകൃതിയിലുള്ളത്)",
+                "text": "Zigzag pattern",
                 "textMl": "",
                 "isCorrect": false
             },
@@ -901,12 +901,12 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
-                "text": "Reversed 'L' (ഇടത്തോട്ട് തിരിഞ്ഞ 'L')",
+                "text": "Reversed 'L'",
                 "textMl": "",
                 "isCorrect": true
             },
             {
-                "text": "Upside down 'L' (തലതിരിഞ്ഞ 'L')",
+                "text": "Upside down 'L'",
                 "textMl": "",
                 "isCorrect": false
             },
@@ -933,7 +933,7 @@ export const studentAptitudeQuestions = [
                 "isCorrect": false
             },
             {
-                "text": "Rectangle/Grid (ചതുരങ്ങൾ / ഗ്രിഡ്)",
+                "text": "Rectangle/Grid",
                 "textMl": "",
                 "isCorrect": true
             },
@@ -1058,7 +1058,7 @@ export const studentAptitudeQuestions = [
         "textMl": "ഒരു ആകൃതിയുടെ ദിശ മാറ്റാതെ അതിന്റെ സ്ഥാനം മാത്രം മാറുന്നതിനെ (Transformation) എന്ത് പറയുന്നു?",
         "options": [
             {
-                "text": "Translation (ട്രാൻസ്‌ലേഷൻ)",
+                "text": "Translation",
                 "textMl": "",
                 "isCorrect": true
             },

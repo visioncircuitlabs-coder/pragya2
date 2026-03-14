@@ -29,7 +29,7 @@ export default function RefundPolicyPage() {
                     {/* Overview */}
                     <div className="bg-brand-primary/5 rounded-2xl p-8 border border-brand-primary/10 mb-12">
                         <p className="text-gray-700 leading-relaxed">
-                            This Refund &amp; Cancellation Policy applies to all paid services offered by Pragya Career Ecosystem, including the Career Assessment for Students and the Employability Assessment for Job Seekers.
+                            This Refund &amp; Cancellation Policy applies to all paid services offered by Pragya Career Platform, including the Career Assessment for Students and the Employability Assessment for Job Seekers.
                         </p>
                     </div>
 
@@ -88,7 +88,7 @@ export default function RefundPolicyPage() {
                                 },
                                 {
                                     title: "Dissatisfaction with assessment results",
-                                    desc: "Assessment results are generated based on your responses using validated psychometric and AI methodologies. Disagreement with results does not qualify for a refund."
+                                    desc: "Assessment results are generated based on your responses using validated personality test and AI methodologies. Disagreement with results does not qualify for a refund."
                                 },
                                 {
                                     title: "Failure to complete within allotted time",

@@ -19,7 +19,7 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 1,
-    title: "India's First Youth-Developed Career Ecosystem",
+    title: "India's First Youth-Developed Career Platform",
     subtitle: "Built to solve career confusion and improve employability outcomes.",
     ctaText: "Pragya Digital Career Library",
     ctaLink: "#",
@@ -198,13 +198,13 @@ export default function Hero() {
             ].map((stat, index) => (
               <div key={index} className="text-center">
                 <div
-                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1"
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-1"
                   style={{ fontFamily: 'Arial, sans-serif' }}
                 >
                   {stat.value}
                 </div>
                 <div
-                  className="text-[10px] md:text-xs text-white/95 uppercase tracking-wide font-semibold"
+                  className="text-[10px] md:text-xs text-gray-800 uppercase tracking-wide font-semibold"
                   style={{ fontFamily: 'Arial, sans-serif' }}
                 >
                   {stat.label}

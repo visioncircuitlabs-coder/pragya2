@@ -22,7 +22,7 @@ export default function CareerPage() {
           </h1>
 
           <p className="text-base md:text-lg lg:text-xl md:text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
-            We are currently building and expanding the Pragya Career Ecosystem.
+            We are currently building and expanding the Pragya Career Platform.
           </p>
         </div>
       </section>
@@ -205,7 +205,7 @@ export default function CareerPage() {
           </h2>
 
           <p className="text-base md:text-lg lg:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
-            Join us in building India&apos;s most comprehensive career guidance ecosystem and help shape the future of millions of young Indians.
+            Join us in building India&apos;s most comprehensive career guidance platform and help shape the future of millions of young Indians.
           </p>
 
           <a

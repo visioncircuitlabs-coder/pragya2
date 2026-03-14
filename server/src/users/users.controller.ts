@@ -5,6 +5,7 @@ import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { UpdateStudentProfileDto, UpdateJobSeekerProfileDto, UpdateEmployerProfileDto } from './dto/update-profile.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -21,9 +22,9 @@ export class UsersController {
     @UseGuards(RolesGuard)
     async updateStudentProfile(
         @CurrentUser('id') userId: string,
-        @Body() body: any,
+        @Body() dto: UpdateStudentProfileDto,
     ) {
-        return this.usersService.updateStudentProfile(userId, body);
+        return this.usersService.updateStudentProfile(userId, dto);
     }
 
     @Patch('profile/job-seeker')
@@ -31,9 +32,9 @@ export class UsersController {
     @UseGuards(RolesGuard)
     async updateJobSeekerProfile(
         @CurrentUser('id') userId: string,
-        @Body() body: any,
+        @Body() dto: UpdateJobSeekerProfileDto,
     ) {
-        return this.usersService.updateJobSeekerProfile(userId, body);
+        return this.usersService.updateJobSeekerProfile(userId, dto);
     }
 
     @Patch('profile/employer')
@@ -41,9 +42,9 @@ export class UsersController {
     @UseGuards(RolesGuard)
     async updateEmployerProfile(
         @CurrentUser('id') userId: string,
-        @Body() body: any,
+        @Body() dto: UpdateEmployerProfileDto,
     ) {
-        return this.usersService.updateEmployerProfile(userId, body);
+        return this.usersService.updateEmployerProfile(userId, dto);
     }
 
     // Admin endpoints
@@ -55,11 +56,9 @@ export class UsersController {
         @Query('limit') limit?: string,
         @Query('role') role?: UserRole,
     ) {
-        return this.usersService.listUsers(
-            page ? parseInt(page) : 1,
-            limit ? parseInt(limit) : 10,
-            role,
-        );
+        const pageNum = Math.max(1, Math.min(10000, parseInt(page || '1') || 1));
+        const limitNum = Math.max(1, Math.min(100, parseInt(limit || '10') || 10));
+        return this.usersService.listUsers(pageNum, limitNum, role);
     }
 
     @Patch('admin/:userId/toggle-status')

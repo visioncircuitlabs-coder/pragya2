@@ -86,8 +86,15 @@ run_student_test.js
 # Playwright
 .playwright-mcp/
 
+# Debug/test scripts
+server/check_*.cjs
+server/delete_*.cjs
+server/test-*.cjs
+test-report.pdf
+
 # Miscellaneous
 *.pem
 *.key
 *.cert
 .pnp.*
+.claude/worktrees/
