@@ -539,17 +539,17 @@ export default function StudentsAssessmentPage() {
         ];
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 py-8 md:py-12 px-4">
-                <div className="max-w-4xl mx-auto">
+            <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 py-8 md:py-12 px-4 overflow-x-hidden">
+                <div className="max-w-4xl mx-auto w-full">
                     {/* Header */}
                     <div className="text-center mb-8 md:mb-10">
                         <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-lg mb-5">
                             <GraduationCap className="w-8 h-8 md:w-10 md:h-10 text-white" />
                         </div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
+                        <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3">
                             Discover Your True Career Direction
                         </h1>
-                        <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed px-2">
                             Choosing the right career should not be based only on marks, trends, or others&apos; opinions.
                             The PRAGYA Career Assessment helps you understand your natural strengths, interests, personality,
                             and future readiness using a scientifically designed evaluation system. Instead of guessing your future,
