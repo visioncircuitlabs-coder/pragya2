@@ -21,8 +21,8 @@ const slides: Slide[] = [
     id: 1,
     title: "India's First Youth-Developed Career Platform",
     subtitle: "Built to solve career confusion and improve employability outcomes.",
-    ctaText: "Pragya Digital Career Library",
-    ctaLink: "#",
+    ctaText: "Pragya Career Assessment",
+    ctaLink: "/students",
     image: "/images/hero-person-1.webp",
     bgGradient: "from-white via-white to-white"
   },
@@ -30,8 +30,8 @@ const slides: Slide[] = [
     id: 2,
     title: "India's First Digital Career Library",
     subtitle: "Explore modern career paths with clear information, skill requirements, and real-world relevance.",
-    ctaText: "Pragya Digital Career Library",
-    ctaLink: "#",
+    ctaText: "Pragya Career Assessment",
+    ctaLink: "/students",
     image: "/images/hero-person-2.webp",
     bgGradient: "from-white via-white to-white"
   },
@@ -39,8 +39,8 @@ const slides: Slide[] = [
     id: 3,
     title: "India's First Career-Assessment Integrated Talent Analytics Portal",
     subtitle: "Career assessment meets opportunity discovery — aligned to individual strengths.",
-    ctaText: "Pragya Digital Career Library",
-    ctaLink: "#",
+    ctaText: "Pragya Career Assessment",
+    ctaLink: "/students",
     image: "/images/hero-person-3.webp",
     bgGradient: "from-white via-white to-white"
   }
