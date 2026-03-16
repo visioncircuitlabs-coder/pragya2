@@ -113,7 +113,7 @@ const detectBreak = (fromIdx: number, toIdx: number, qs: Question[]): BreakInfo 
         return {
             type: '2min',
             key: `aptitude:${fromSection}->${toSection}`,
-            label: `You just finished ${fromSection}. Take a short 2-minute break before moving on to ${toSection}.`,
+            label: `You just finished ${fromSection}. Take a short 1-minute break before moving on to ${toSection}.`,
         };
     }
 
@@ -122,14 +122,19 @@ const detectBreak = (fromIdx: number, toIdx: number, qs: Question[]): BreakInfo 
 
 // ─── Break Overlay Component ────────────────────────────────────────────────
 function BreakOverlay({ breakInfo, onContinue }: { breakInfo: BreakInfo; onContinue: () => void }) {
-    const totalSeconds = breakInfo.type === '5min' ? 5 * 60 : 2 * 60;
+    const totalSeconds = breakInfo.type === '5min' ? 5 * 60 : 60;
+    const [startTime] = useState(() => Date.now());
     const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
 
     useEffect(() => {
         if (secondsLeft <= 0) return;
-        const timer = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
+        const timer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const remaining = Math.max(0, totalSeconds - elapsed);
+            setSecondsLeft(remaining);
+        }, 1000);
         return () => clearInterval(timer);
-    }, [secondsLeft]);
+    }, [secondsLeft, startTime, totalSeconds]);
 
     // Auto-continue when timer finishes
     useEffect(() => {
